@@ -1,4 +1,4 @@
-from dnd_combat_engine.models import Character, HitPoints
+from dnd_combat_engine.models import Character, HitPoints, Spell, SpellSchool
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import PersistenceService
 
@@ -15,6 +15,24 @@ def test_persistence_service_saves_and_loads_character(tmp_path) -> None:
 
     assert service.list_character_ids() == ["fighter-1"]
     assert service.load_character("fighter-1") == character
+
+
+def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+    spell = Spell(
+        spell_id="shield",
+        name="Shield",
+        level=1,
+        school=SpellSchool.ABJURATION,
+        casting_time="1 reaction",
+        range_text="Self",
+        duration="1 round",
+    )
+
+    service.save_spell(spell)
+
+    assert service.list_spell_ids() == ["shield"]
+    assert service.load_spell("shield") == spell
 
 
 def test_store_lists_missing_collection_as_empty(tmp_path) -> None:

@@ -8,6 +8,7 @@ from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.resources import ResourcePool
+from dnd_combat_engine.models.spells import Spell, SpellSchool
 
 __all__ = [
     "AbilityScores",
@@ -22,5 +23,7 @@ __all__ = [
     "InventoryItem",
     "ItemCategory",
     "ResourcePool",
+    "Spell",
+    "SpellSchool",
     "Weapon",
 ]
