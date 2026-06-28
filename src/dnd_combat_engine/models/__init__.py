@@ -7,6 +7,7 @@ from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, Dama
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
+from dnd_combat_engine.models.monsters import CreatureSize, CreatureType, Monster
 from dnd_combat_engine.models.resources import ResourcePool
 from dnd_combat_engine.models.spells import Spell, SpellSchool
 
@@ -16,12 +17,15 @@ __all__ = [
     "Character",
     "Condition",
     "ConditionName",
+    "CreatureSize",
+    "CreatureType",
     "DamageComponent",
     "DamageProfile",
     "DamageType",
     "HitPoints",
     "InventoryItem",
     "ItemCategory",
+    "Monster",
     "ResourcePool",
     "Spell",
     "SpellSchool",

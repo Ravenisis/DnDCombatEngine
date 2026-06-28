@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dnd_combat_engine.models.character import Character
+from dnd_combat_engine.models.monsters import Monster
 from dnd_combat_engine.models.spells import Spell
 from dnd_combat_engine.persistence.json_store import JsonFileStore
 
@@ -37,3 +38,15 @@ class PersistenceService:
     def list_spell_ids(self) -> list[str]:
         """List saved spell ids."""
         return self.store.list_ids("spells")
+
+    def save_monster(self, monster: Monster) -> None:
+        """Save a monster as a JSON document."""
+        self.store.save("monsters", monster.monster_id, monster.to_dict())
+
+    def load_monster(self, monster_id: str) -> Monster:
+        """Load a monster from a JSON document."""
+        return Monster.from_dict(self.store.load("monsters", monster_id))
+
+    def list_monster_ids(self) -> list[str]:
+        """List saved monster ids."""
+        return self.store.list_ids("monsters")

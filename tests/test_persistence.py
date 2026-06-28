@@ -1,4 +1,13 @@
-from dnd_combat_engine.models import Character, HitPoints, Spell, SpellSchool
+from fractions import Fraction
+
+from dnd_combat_engine.models import (
+    AbilityScores,
+    Character,
+    HitPoints,
+    Monster,
+    Spell,
+    SpellSchool,
+)
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import PersistenceService
 
@@ -33,6 +42,23 @@ def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:
 
     assert service.list_spell_ids() == ["shield"]
     assert service.load_spell("shield") == spell
+
+
+def test_persistence_service_saves_and_loads_monster(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+    monster = Monster(
+        monster_id="goblin",
+        name="Goblin",
+        armor_class=15,
+        hit_points=HitPoints(current=7, maximum=7),
+        abilities=AbilityScores(dexterity=14),
+        challenge_rating=Fraction(1, 4),
+    )
+
+    service.save_monster(monster)
+
+    assert service.list_monster_ids() == ["goblin"]
+    assert service.load_monster("goblin") == monster
 
 
 def test_store_lists_missing_collection_as_empty(tmp_path) -> None:
