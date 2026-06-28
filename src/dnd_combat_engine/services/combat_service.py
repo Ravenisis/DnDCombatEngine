@@ -36,8 +36,14 @@ class CombatService:
             raise TypeError("attack.started payload request must be an AttackRequest")
 
         attack_roll = self.dice_service.roll(final_request.attack_dice, rng=rng)
+        attack_bonus_rolls = tuple(
+            self.dice_service.roll(notation, rng=rng)
+            for notation in final_request.attack_bonus_dice
+        )
         natural = max(attack_roll.kept)
-        attack_total = natural + final_request.attack_bonus
+        attack_total = natural + final_request.attack_bonus + sum(
+            roll.total for roll in attack_bonus_rolls
+        )
         hit = natural == 20 or (natural != 1 and attack_total >= final_request.target_armor_class)
         critical = hit and natural >= final_request.critical_threshold
         damage_rolls = self._roll_damage(final_request, critical=critical, rng=rng) if hit else ()
@@ -47,6 +53,7 @@ class CombatService:
             attack_total=attack_total,
             hit=hit,
             critical=critical,
+            attack_bonus_rolls=attack_bonus_rolls,
             damage_rolls=damage_rolls,
             damage_bonus=final_request.damage_bonus if hit else 0,
         )
@@ -66,7 +73,8 @@ class CombatService:
         rng: random.Random | None,
     ) -> tuple[DamageRoll, ...]:
         rolls = []
-        for component in request.weapon.damage.components:
+        components = (*request.weapon.damage.components, *request.extra_damage)
+        for component in components:
             notation = _critical_notation(component.dice) if critical else component.dice
             rolls.append(
                 DamageRoll(component.damage_type, self.dice_service.roll(notation, rng=rng))

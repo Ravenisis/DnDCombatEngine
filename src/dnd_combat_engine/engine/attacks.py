@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from dnd_combat_engine.models.character import Character
-from dnd_combat_engine.models.damage import DamageType
+from dnd_combat_engine.models.damage import DamageComponent, DamageType
 from dnd_combat_engine.models.equipment import Weapon
 from dnd_combat_engine.utils.dice import DiceRollResult
 
@@ -21,6 +21,9 @@ class AttackRequest:
     attack_bonus: int = 0
     damage_bonus: int = 0
     critical_threshold: int = 20
+    attack_bonus_dice: tuple[str, ...] = field(default_factory=tuple)
+    extra_damage: tuple[DamageComponent, ...] = field(default_factory=tuple)
+    active_features: tuple[str, ...] = field(default_factory=tuple)
     advantage: bool = False
     disadvantage: bool = False
 
@@ -63,6 +66,7 @@ class AttackResult:
     attack_total: int
     hit: bool
     critical: bool
+    attack_bonus_rolls: tuple[DiceRollResult, ...] = field(default_factory=tuple)
     damage_rolls: tuple[DamageRoll, ...] = field(default_factory=tuple)
     damage_bonus: int = 0
     damage_applied: int = 0
@@ -84,4 +88,3 @@ class AttackResult:
         for damage in self.damage_rolls:
             totals[damage.damage_type] = totals.get(damage.damage_type, 0) + damage.total
         return totals
-
