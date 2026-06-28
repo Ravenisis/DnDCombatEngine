@@ -1,0 +1,37 @@
+import pytest
+
+from dnd_combat_engine.gui.actions import (
+    GuiActionSpec,
+    action_specs_by_menu,
+    default_action_specs,
+)
+
+
+def test_default_action_specs_include_core_commands() -> None:
+    specs = default_action_specs()
+
+    assert {spec.action_id for spec in specs} >= {
+        "file.exit",
+        "view.reset_layout",
+        "combat.quick_attack",
+        "dice.roll_d20",
+    }
+    assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut == "Ctrl+R"
+
+
+def test_action_specs_group_by_menu_preserves_order() -> None:
+    grouped = action_specs_by_menu(default_action_specs())
+
+    assert tuple(grouped) == ("File", "View", "Combat", "Dice")
+    assert grouped["Combat"][0].action_id == "combat.quick_attack"
+
+
+def test_action_spec_rejects_missing_metadata() -> None:
+    with pytest.raises(ValueError):
+        GuiActionSpec("", "File", "Exit", "Close")
+    with pytest.raises(ValueError):
+        GuiActionSpec("file.exit", "", "Exit", "Close")
+    with pytest.raises(ValueError):
+        GuiActionSpec("file.exit", "File", "", "Close")
+    with pytest.raises(ValueError):
+        GuiActionSpec("file.exit", "File", "Exit", "")

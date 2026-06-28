@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
+from dnd_combat_engine.gui.actions import action_specs_by_menu, default_action_specs
 from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
 from dnd_combat_engine.gui.theme import dark_theme_stylesheet
@@ -60,10 +61,15 @@ def _add_dock(window, qt, title: str, widget) -> None:
 
 def _configure_menus(window, qt) -> None:
     menu_bar = window.menuBar()
-    file_menu = menu_bar.addMenu("File")
-    file_menu.addAction(qt.QtWidgets.QAction("Exit", window))
-    view_menu = menu_bar.addMenu("View")
-    view_menu.addAction(qt.QtWidgets.QAction("Reset Layout", window))
+    for menu_name, specs in action_specs_by_menu(default_action_specs()).items():
+        menu = menu_bar.addMenu(menu_name)
+        for spec in specs:
+            action = qt.QtWidgets.QAction(spec.text, window)
+            if spec.shortcut and hasattr(action, "setShortcut"):
+                action.setShortcut(spec.shortcut)
+            if hasattr(action, "setStatusTip"):
+                action.setStatusTip(spec.status_tip)
+            menu.addAction(action)
 
 
 def _set_status(window, message: str) -> None:
