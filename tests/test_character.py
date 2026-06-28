@@ -7,6 +7,8 @@ from dnd_combat_engine.models import (
     DamageProfile,
     DamageType,
     HitPoints,
+    InventoryItem,
+    ItemCategory,
     ResourcePool,
     Weapon,
 )
@@ -23,6 +25,13 @@ def test_character_round_trips_to_plain_data() -> None:
         name="Vale",
         hit_points=HitPoints(current=9, maximum=12, temporary=4),
         abilities=AbilityScores(dexterity=16),
+        inventory=(
+            InventoryItem(
+                item_id="thieves_tools",
+                name="Thieves' Tools",
+                category=ItemCategory.TOOL,
+            ),
+        ),
         weapons=(rapier,),
         features=("Sneak Attack",),
         conditions=(Condition(ConditionName.POISONED, remaining_rounds=2),),
@@ -42,10 +51,12 @@ def test_character_loads_legacy_condition_and_resource_shapes() -> None:
             "name": "Legacy",
             "hit_points": {"current": 8, "maximum": 8, "temporary": 0},
             "abilities": AbilityScores().to_dict(),
+            "inventory": ["rope"],
             "conditions": ["prone"],
             "resources": {"hit_dice": 1},
         }
     )
 
+    assert character.inventory == (InventoryItem(item_id="rope", name="rope"),)
     assert character.conditions == (Condition(ConditionName.PRONE),)
     assert character.resources["hit_dice"] == ResourcePool("hit_dice", 1, 1)

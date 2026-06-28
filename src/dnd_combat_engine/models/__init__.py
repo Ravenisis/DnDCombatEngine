@@ -6,6 +6,7 @@ from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, DamageType
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
+from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.resources import ResourcePool
 
 __all__ = [
@@ -18,6 +19,8 @@ __all__ = [
     "DamageProfile",
     "DamageType",
     "HitPoints",
+    "InventoryItem",
+    "ItemCategory",
     "ResourcePool",
     "Weapon",
 ]

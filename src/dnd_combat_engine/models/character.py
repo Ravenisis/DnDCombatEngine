@@ -9,6 +9,7 @@ from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
+from dnd_combat_engine.models.inventory import InventoryItem
 from dnd_combat_engine.models.resources import ResourcePool
 
 
@@ -22,7 +23,7 @@ class Character:
     abilities: AbilityScores = field(default_factory=AbilityScores)
     level: int = 1
     skills: tuple[str, ...] = field(default_factory=tuple)
-    inventory: tuple[str, ...] = field(default_factory=tuple)
+    inventory: tuple[InventoryItem, ...] = field(default_factory=tuple)
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
     features: tuple[str, ...] = field(default_factory=tuple)
@@ -47,7 +48,7 @@ class Character:
             "abilities": self.abilities.to_dict(),
             "level": self.level,
             "skills": list(self.skills),
-            "inventory": list(self.inventory),
+            "inventory": [item.to_dict() for item in self.inventory],
             "weapons": [weapon.to_dict() for weapon in self.weapons],
             "armor": self.armor.to_dict() if self.armor else None,
             "features": list(self.features),
@@ -68,7 +69,7 @@ class Character:
             abilities=AbilityScores.from_dict(data["abilities"]),  # type: ignore[arg-type]
             level=int(data.get("level", 1)),
             skills=tuple(str(item) for item in data.get("skills", [])),
-            inventory=tuple(str(item) for item in data.get("inventory", [])),
+            inventory=tuple(_inventory_item_from_data(item) for item in data.get("inventory", [])),
             weapons=tuple(
                 Weapon.from_dict(item) for item in data.get("weapons", [])  # type: ignore[arg-type]
             ),
@@ -88,6 +89,13 @@ def _condition_from_data(data: object) -> Condition:
     if isinstance(data, dict):
         return Condition.from_dict(data)
     return Condition(ConditionName(str(data)))
+
+
+def _inventory_item_from_data(data: object) -> InventoryItem:
+    if isinstance(data, dict):
+        return InventoryItem.from_dict(data)
+    name = str(data)
+    return InventoryItem(item_id=name, name=name)
 
 
 def _resource_from_data(name: str, data: object) -> ResourcePool:
