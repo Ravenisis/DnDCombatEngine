@@ -1,0 +1,76 @@
+"""Character model."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Self
+
+from dnd_combat_engine.models.abilities import AbilityScores
+from dnd_combat_engine.models.equipment import Armor, Weapon
+from dnd_combat_engine.models.hit_points import HitPoints
+
+
+@dataclass(slots=True)
+class Character:
+    """A character data model with no combat workflow logic."""
+
+    character_id: str
+    name: str
+    hit_points: HitPoints
+    abilities: AbilityScores = field(default_factory=AbilityScores)
+    level: int = 1
+    skills: tuple[str, ...] = field(default_factory=tuple)
+    inventory: tuple[str, ...] = field(default_factory=tuple)
+    weapons: tuple[Weapon, ...] = field(default_factory=tuple)
+    armor: Armor | None = None
+    features: tuple[str, ...] = field(default_factory=tuple)
+    conditions: tuple[str, ...] = field(default_factory=tuple)
+    resources: dict[str, int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate character identity and level."""
+        if not self.character_id:
+            raise ValueError("character_id is required")
+        if not self.name:
+            raise ValueError("name is required")
+        if self.level < 1:
+            raise ValueError("level must be at least 1")
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize the character to plain JSON-compatible data."""
+        return {
+            "character_id": self.character_id,
+            "name": self.name,
+            "hit_points": self.hit_points.to_dict(),
+            "abilities": self.abilities.to_dict(),
+            "level": self.level,
+            "skills": list(self.skills),
+            "inventory": list(self.inventory),
+            "weapons": [weapon.to_dict() for weapon in self.weapons],
+            "armor": self.armor.to_dict() if self.armor else None,
+            "features": list(self.features),
+            "conditions": list(self.conditions),
+            "resources": self.resources,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Self:
+        """Build a character from JSON-compatible data."""
+        armor_data = data.get("armor")
+        return cls(
+            character_id=str(data["character_id"]),
+            name=str(data["name"]),
+            hit_points=HitPoints.from_dict(data["hit_points"]),  # type: ignore[arg-type]
+            abilities=AbilityScores.from_dict(data["abilities"]),  # type: ignore[arg-type]
+            level=int(data.get("level", 1)),
+            skills=tuple(str(item) for item in data.get("skills", [])),
+            inventory=tuple(str(item) for item in data.get("inventory", [])),
+            weapons=tuple(
+                Weapon.from_dict(item) for item in data.get("weapons", [])  # type: ignore[arg-type]
+            ),
+            armor=Armor.from_dict(armor_data) if isinstance(armor_data, dict) else None,
+            features=tuple(str(item) for item in data.get("features", [])),
+            conditions=tuple(str(item) for item in data.get("conditions", [])),
+            resources={str(key): int(value) for key, value in data.get("resources", {}).items()},
+        )
+
