@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("quick-attack", help="Run the seeded quick attack")
     subparsers.add_parser("list-spells", help="List known spell ids")
     subparsers.add_parser("list-monsters", help="List known monster ids")
+    subparsers.add_parser("gui", help="Launch the PySide6 GUI")
     return parser
 
 
@@ -45,6 +46,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "quick-attack":
         return _quick_attack(app)
+    if args.command == "gui":
+        from dnd_combat_engine.gui import run_gui
+
+        return run_gui(Path(args.data_root))
     raise ValueError(f"unsupported command: {args.command}")
 
 
@@ -74,4 +79,3 @@ def _quick_attack(app) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

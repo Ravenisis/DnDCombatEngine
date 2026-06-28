@@ -36,6 +36,13 @@ dnd-combat-engine roll 4d6dl1
 dnd-combat-engine quick-attack
 ```
 
+Install and launch the GUI:
+
+```bash
+python -m pip install -e ".[gui]"
+dnd-combat-engine gui
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich
@@ -52,6 +59,7 @@ an attack, spell, or condition update.
   inventory workflows.
 - Application wiring through `dnd_combat_engine.app.create_app`.
 - Combat log models, service, and controller for UI display.
+- PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a character, a monster, spells, and

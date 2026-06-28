@@ -27,3 +27,17 @@ def test_cli_quick_attack_outputs_combat_log(capsys) -> None:
     assert exit_code == 0
     assert "Vale" in output
 
+
+def test_cli_gui_command_delegates_to_gui_runner(monkeypatch) -> None:
+    import dnd_combat_engine.gui
+
+    called = {}
+
+    def fake_run_gui(data_root):
+        called["data_root"] = data_root
+        return 7
+
+    monkeypatch.setattr(dnd_combat_engine.gui, "run_gui", fake_run_gui)
+
+    assert main(["--data-root", "data", "gui"]) == 7
+    assert str(called["data_root"]) == "data"

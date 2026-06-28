@@ -21,6 +21,9 @@ dev = [
   "pytest-cov>=5.0",
   "ruff>=0.5",
 ]
+gui = [
+  "PySide6>=6.7",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
