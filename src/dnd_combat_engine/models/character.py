@@ -6,8 +6,10 @@ from dataclasses import dataclass, field
 from typing import Self
 
 from dnd_combat_engine.models.abilities import AbilityScores
+from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
+from dnd_combat_engine.models.resources import ResourcePool
 
 
 @dataclass(slots=True)
@@ -24,8 +26,8 @@ class Character:
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
     features: tuple[str, ...] = field(default_factory=tuple)
-    conditions: tuple[str, ...] = field(default_factory=tuple)
-    resources: dict[str, int] = field(default_factory=dict)
+    conditions: tuple[Condition, ...] = field(default_factory=tuple)
+    resources: dict[str, ResourcePool] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate character identity and level."""
@@ -49,8 +51,10 @@ class Character:
             "weapons": [weapon.to_dict() for weapon in self.weapons],
             "armor": self.armor.to_dict() if self.armor else None,
             "features": list(self.features),
-            "conditions": list(self.conditions),
-            "resources": self.resources,
+            "conditions": [condition.to_dict() for condition in self.conditions],
+            "resources": {
+                name: resource.to_dict() for name, resource in self.resources.items()
+            },
         }
 
     @classmethod
@@ -70,7 +74,24 @@ class Character:
             ),
             armor=Armor.from_dict(armor_data) if isinstance(armor_data, dict) else None,
             features=tuple(str(item) for item in data.get("features", [])),
-            conditions=tuple(str(item) for item in data.get("conditions", [])),
-            resources={str(key): int(value) for key, value in data.get("resources", {}).items()},
+            conditions=tuple(
+                _condition_from_data(item) for item in data.get("conditions", [])
+            ),
+            resources={
+                str(key): _resource_from_data(str(key), value)
+                for key, value in data.get("resources", {}).items()
+            },
         )
 
+
+def _condition_from_data(data: object) -> Condition:
+    if isinstance(data, dict):
+        return Condition.from_dict(data)
+    return Condition(ConditionName(str(data)))
+
+
+def _resource_from_data(name: str, data: object) -> ResourcePool:
+    if isinstance(data, dict):
+        return ResourcePool.from_dict(data)
+    value = int(data)
+    return ResourcePool(name=name, current=value, maximum=value)
