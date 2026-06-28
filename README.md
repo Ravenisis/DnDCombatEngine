@@ -13,7 +13,7 @@ Utilities
 ```
 
 Milestone 1 establishes the foundation: domain models, a dice parser and roller, JSON
-persistence, and a test suite.
+persistence, seed data, and a test suite.
 
 ## Development
 
@@ -29,3 +29,22 @@ The project keeps combat behavior event-driven. Characters and weapons are data-
 domain objects, while services and future feature plugins decide what happens during
 an attack, spell, or condition update.
 
+## Current Foundation
+
+- Domain models for characters, hit points, damage, equipment, inventory, conditions,
+  resources, spells, monsters, and encounters.
+- Services for characters, combat, dice, initiative, inventory, monsters, spells,
+  encounters, and JSON persistence.
+- Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
+  Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
+- Seed JSON under `data/` for starter equipment, a character, a monster, spells, and
+  an encounter.
+
+## Release Gate
+
+Milestone code should pass:
+
+```bash
+python -m ruff check .
+python -m pytest
+```

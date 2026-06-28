@@ -1,0 +1,20 @@
+{
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": true,
+  "damage": null,
+  "description": "Up to three creatures add 1d4 to attack rolls and saving throws.",
+  "duration": "Concentration, up to 1 minute",
+  "level": 1,
+  "name": "Bless",
+  "range_text": "30 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "school": "enchantment",
+  "spell_id": "bless"
+}
+

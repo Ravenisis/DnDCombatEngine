@@ -10,7 +10,7 @@ from typing import Self
 
 _DICE_RE = re.compile(
     r"^(?P<count>\d*)d(?P<sides>\d+)"
-    r"(?:(?P<keep>kh|kl)(?P<keep_count>\d+))?"
+    r"(?:(?P<selector>kh|kl|dh|dl)(?P<select_count>\d+))?"
     r"(?P<explode>!)?"
     r"(?:(?P<reroll>r(?:<=|>=|<|>|=)?\d+))?"
     r"(?P<modifier>[+-]\d+)?$",
@@ -38,6 +38,8 @@ class DiceExpression:
     modifier: int = 0
     keep_highest: int | None = None
     keep_lowest: int | None = None
+    drop_highest: int | None = None
+    drop_lowest: int | None = None
     explode: bool = False
     reroll_threshold: int | None = None
 
@@ -47,11 +49,17 @@ class DiceExpression:
             raise ValueError("dice count must be at least 1")
         if self.sides < 2:
             raise ValueError("dice must have at least 2 sides")
-        if self.keep_highest is not None and self.keep_lowest is not None:
-            raise ValueError("cannot keep both highest and lowest dice")
-        keep_count = self.keep_highest if self.keep_highest is not None else self.keep_lowest
+        selectors = [
+            self.keep_highest,
+            self.keep_lowest,
+            self.drop_highest,
+            self.drop_lowest,
+        ]
+        if sum(selector is not None for selector in selectors) > 1:
+            raise ValueError("cannot combine keep/drop selectors")
+        keep_count = next((selector for selector in selectors if selector is not None), None)
         if keep_count is not None and not 1 <= keep_count <= self.count:
-            raise ValueError("keep count must be between 1 and dice count")
+            raise ValueError("selector count must be between 1 and dice count")
         if self.reroll_threshold is not None and not 1 <= self.reroll_threshold <= self.sides:
             raise ValueError("reroll threshold must be within die sides")
 
@@ -63,6 +71,10 @@ class DiceExpression:
             keep = f"kh{self.keep_highest}"
         if self.keep_lowest is not None:
             keep = f"kl{self.keep_lowest}"
+        if self.drop_highest is not None:
+            keep = f"dh{self.drop_highest}"
+        if self.drop_lowest is not None:
+            keep = f"dl{self.drop_lowest}"
         explode = "!" if self.explode else ""
         reroll = f"r<={self.reroll_threshold}" if self.reroll_threshold is not None else ""
         modifier = f"{self.modifier:+d}" if self.modifier else ""
@@ -77,18 +89,25 @@ class DiceExpression:
             raise ValueError(f"unsupported dice notation: {notation}")
         count = int(match.group("count") or "1")
         sides = int(match.group("sides"))
-        keep_highest = None
-        keep_lowest = None
-        if match.group("keep") == "kh":
-            keep_highest = int(match.group("keep_count"))
-        elif match.group("keep") == "kl":
-            keep_lowest = int(match.group("keep_count"))
+        keep_highest = keep_lowest = drop_highest = drop_lowest = None
+        selector = match.group("selector")
+        select_count = int(match.group("select_count")) if selector else None
+        if selector == "kh":
+            keep_highest = select_count
+        elif selector == "kl":
+            keep_lowest = select_count
+        elif selector == "dh":
+            drop_highest = select_count
+        elif selector == "dl":
+            drop_lowest = select_count
         return cls(
             count=count,
             sides=sides,
             modifier=int(match.group("modifier") or "0"),
             keep_highest=keep_highest,
             keep_lowest=keep_lowest,
+            drop_highest=drop_highest,
+            drop_lowest=drop_lowest,
             explode=bool(match.group("explode")),
             reroll_threshold=_parse_reroll_threshold(match.group("reroll")),
         )
@@ -144,6 +163,10 @@ class DiceExpression:
             return tuple(sorted(rolls, reverse=True)[: self.keep_highest])
         if self.keep_lowest is not None:
             return tuple(sorted(rolls)[: self.keep_lowest])
+        if self.drop_highest is not None:
+            return tuple(sorted(rolls)[: self.count - self.drop_highest])
+        if self.drop_lowest is not None:
+            return tuple(sorted(rolls, reverse=True)[: self.count - self.drop_lowest])
         return rolls
 
     def _kept_count(self) -> int:
@@ -151,6 +174,10 @@ class DiceExpression:
             return self.keep_highest
         if self.keep_lowest is not None:
             return self.keep_lowest
+        if self.drop_highest is not None:
+            return self.count - self.drop_highest
+        if self.drop_lowest is not None:
+            return self.count - self.drop_lowest
         return self.count
 
     def _enumerated_average(self) -> float:
@@ -184,4 +211,3 @@ def _parse_reroll_threshold(value: str | None) -> int | None:
     if value.startswith(("r>", "r>=")):
         raise ValueError("only low reroll thresholds are supported")
     return int(threshold)
-

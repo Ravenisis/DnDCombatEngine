@@ -29,11 +29,24 @@ def test_parse_keep_highest_and_keep_lowest() -> None:
     assert DiceExpression.parse("3d20kl1").keep_lowest == 1
 
 
+def test_parse_drop_highest_and_drop_lowest() -> None:
+    assert DiceExpression.parse("4d6dl1").drop_lowest == 1
+    assert DiceExpression.parse("4d6dh1").drop_highest == 1
+    assert DiceExpression.parse("4d6dl1").notation == "4d6dl1"
+
+
 def test_keep_lowest_changes_minimum_and_maximum() -> None:
     expression = DiceExpression.parse("3d20kl1")
 
     assert expression.minimum() == 1
     assert expression.maximum() == 20
+
+
+def test_drop_lowest_changes_minimum_and_maximum() -> None:
+    expression = DiceExpression.parse("4d6dl1")
+
+    assert expression.minimum() == 3
+    assert expression.maximum() == 18
 
 
 def test_roll_is_deterministic_with_seeded_rng() -> None:
@@ -66,3 +79,8 @@ def test_unsupported_high_reroll_raises_value_error() -> None:
 def test_invalid_notation_raises_value_error() -> None:
     with pytest.raises(ValueError):
         DiceExpression.parse("not dice")
+
+
+def test_combined_keep_and_drop_selector_is_invalid() -> None:
+    with pytest.raises(ValueError):
+        DiceExpression(count=4, sides=6, keep_highest=3, drop_lowest=1)
