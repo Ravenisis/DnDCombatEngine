@@ -1,6 +1,7 @@
 """Business service layer."""
 
 from dnd_combat_engine.services.character_service import CharacterService
+from dnd_combat_engine.services.combat_log_service import CombatLogService
 from dnd_combat_engine.services.combat_service import CombatService
 from dnd_combat_engine.services.dice_service import DiceService
 from dnd_combat_engine.services.encounter_service import EncounterService
@@ -12,6 +13,7 @@ from dnd_combat_engine.services.spell_service import SpellService
 
 __all__ = [
     "CharacterService",
+    "CombatLogService",
     "CombatService",
     "DiceService",
     "EncounterService",

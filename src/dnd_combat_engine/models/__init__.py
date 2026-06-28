@@ -2,6 +2,7 @@
 
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.character import Character
+from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
 from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, DamageType
 from dnd_combat_engine.models.encounters import (
@@ -21,6 +22,9 @@ __all__ = [
     "AbilityScores",
     "Armor",
     "Character",
+    "CombatLog",
+    "CombatLogEntry",
+    "CombatLogEntryType",
     "Condition",
     "ConditionName",
     "CreatureSize",

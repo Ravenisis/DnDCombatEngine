@@ -23,6 +23,12 @@ python -m pytest
 python -m ruff check .
 ```
 
+Run the sample attack:
+
+```bash
+python examples/quick_attack.py
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich
@@ -37,6 +43,8 @@ an attack, spell, or condition update.
   encounters, and JSON persistence.
 - Controllers for UI-facing character, combat, compendium, dice, encounter, and
   inventory workflows.
+- Application wiring through `dnd_combat_engine.app.create_app`.
+- Combat log models, service, and controller for UI display.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a character, a monster, spells, and
