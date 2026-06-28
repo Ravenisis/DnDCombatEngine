@@ -139,7 +139,12 @@ class DiceExpression:
         """Return the expected average total."""
         if self.explode or self.reroll_threshold is not None:
             return self._enumerated_average()
-        if self.keep_highest is None and self.keep_lowest is None:
+        if (
+            self.keep_highest is None
+            and self.keep_lowest is None
+            and self.drop_highest is None
+            and self.drop_lowest is None
+        ):
             return self.count * (self.sides + 1) / 2 + self.modifier
         return self._enumerated_average()
 

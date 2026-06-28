@@ -35,7 +35,8 @@ an attack, spell, or condition update.
   resources, spells, monsters, and encounters.
 - Services for characters, combat, dice, initiative, inventory, monsters, spells,
   encounters, and JSON persistence.
-- Controllers for UI-facing combat and encounter workflows.
+- Controllers for UI-facing character, combat, compendium, dice, encounter, and
+  inventory workflows.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a character, a monster, spells, and
