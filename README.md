@@ -29,6 +29,13 @@ Run the sample attack:
 python examples/quick_attack.py
 ```
 
+Or use the CLI:
+
+```bash
+dnd-combat-engine roll 4d6dl1
+dnd-combat-engine quick-attack
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich

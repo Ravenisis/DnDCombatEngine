@@ -12,6 +12,9 @@ license = { text = "MIT" }
 authors = [{ name = "Ravenisis" }]
 dependencies = []
 
+[project.scripts]
+dnd-combat-engine = "dnd_combat_engine.cli:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.2",
