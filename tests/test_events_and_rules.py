@@ -1,5 +1,5 @@
 from dnd_combat_engine.engine.events import AttackFinishedEvent, AttackStartedEvent, EngineEvent
-from dnd_combat_engine.rules import Feature
+from dnd_combat_engine.rules import Feature, FeatureEngine
 
 
 class EchoFeature:
@@ -31,3 +31,12 @@ def test_feature_protocol_shape_can_handle_events() -> None:
     assert feature.applies_to(event) is True
     assert handled.payload["handled"] is True
 
+
+def test_feature_engine_runs_applicable_features_in_order() -> None:
+    first: Feature = EchoFeature()
+    second: Feature = EchoFeature()
+    event = AttackStartedEvent()
+
+    handled = FeatureEngine([first, second]).process(event)
+
+    assert handled.payload["handled"] is True
