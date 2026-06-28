@@ -4,6 +4,12 @@ from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, DamageType
+from dnd_combat_engine.models.encounters import (
+    Encounter,
+    EncounterParticipant,
+    EncounterStatus,
+    ParticipantKind,
+)
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
@@ -22,10 +28,14 @@ __all__ = [
     "DamageComponent",
     "DamageProfile",
     "DamageType",
+    "Encounter",
+    "EncounterParticipant",
+    "EncounterStatus",
     "HitPoints",
     "InventoryItem",
     "ItemCategory",
     "Monster",
+    "ParticipantKind",
     "ResourcePool",
     "Spell",
     "SpellSchool",

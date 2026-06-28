@@ -3,8 +3,11 @@ from fractions import Fraction
 from dnd_combat_engine.models import (
     AbilityScores,
     Character,
+    Encounter,
+    EncounterParticipant,
     HitPoints,
     Monster,
+    ParticipantKind,
     Spell,
     SpellSchool,
 )
@@ -59,6 +62,28 @@ def test_persistence_service_saves_and_loads_monster(tmp_path) -> None:
 
     assert service.list_monster_ids() == ["goblin"]
     assert service.load_monster("goblin") == monster
+
+
+def test_persistence_service_saves_and_loads_encounter(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+    encounter = Encounter(
+        encounter_id="ambush-1",
+        name="Roadside Ambush",
+        participants=(
+            EncounterParticipant(
+                participant_id="goblin",
+                name="Goblin",
+                kind=ParticipantKind.MONSTER,
+                source_id="goblin",
+                quantity=3,
+            ),
+        ),
+    )
+
+    service.save_encounter(encounter)
+
+    assert service.list_encounter_ids() == ["ambush-1"]
+    assert service.load_encounter("ambush-1") == encounter
 
 
 def test_store_lists_missing_collection_as_empty(tmp_path) -> None:
