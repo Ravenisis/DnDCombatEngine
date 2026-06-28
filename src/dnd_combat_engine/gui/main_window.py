@@ -6,17 +6,26 @@ from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
 from dnd_combat_engine.gui.qt import load_qt
+from dnd_combat_engine.gui.session import GuiSession
 from dnd_combat_engine.gui.theme import dark_theme_stylesheet
-from dnd_combat_engine.gui.widgets import CharacterSheetWidget, CombatLogWidget, DiceTrayWidget
+from dnd_combat_engine.gui.widgets import (
+    AttackPanelWidget,
+    CharacterSheetWidget,
+    CombatLogWidget,
+    DiceTrayWidget,
+    EncounterTrackerWidget,
+    InitiativeWidget,
+)
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
     """Create the main application window."""
     qt = load_qt()
     application = app or create_app(Path("data"))
+    session = GuiSession()
     window = qt.QtWidgets.QMainWindow()
     window.setWindowTitle("DnDCombatEngine")
-    window.resize(1200, 800)
+    window.resize(session.window_width, session.window_height)
     window.setStyleSheet(dark_theme_stylesheet())
 
     central = qt.QtWidgets.QLabel("Combat workspace")
@@ -26,6 +35,11 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     _add_dock(window, qt, "Character Sheet", CharacterSheetWidget.create(application, qt))
     _add_dock(window, qt, "Combat Log", CombatLogWidget.create(qt))
     _add_dock(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
+    _add_dock(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
+    _add_dock(window, qt, "Initiative", InitiativeWidget.create(application, qt))
+    _add_dock(window, qt, "Attack", AttackPanelWidget.create(application, qt))
+    _configure_menus(window, qt)
+    _set_status(window, "Ready")
     return window
 
 
@@ -43,3 +57,14 @@ def _add_dock(window, qt, title: str, widget) -> None:
     dock.setWidget(widget)
     window.addDockWidget(qt.QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, dock)
 
+
+def _configure_menus(window, qt) -> None:
+    menu_bar = window.menuBar()
+    file_menu = menu_bar.addMenu("File")
+    file_menu.addAction(qt.QtWidgets.QAction("Exit", window))
+    view_menu = menu_bar.addMenu("View")
+    view_menu.addAction(qt.QtWidgets.QAction("Reset Layout", window))
+
+
+def _set_status(window, message: str) -> None:
+    window.statusBar().showMessage(message)

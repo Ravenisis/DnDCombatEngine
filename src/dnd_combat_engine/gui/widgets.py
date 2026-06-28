@@ -3,6 +3,12 @@
 from __future__ import annotations
 
 from dnd_combat_engine.app import DnDCombatEngineApp
+from dnd_combat_engine.gui.panels import (
+    attack_summary_text,
+    character_sheet_rows,
+    encounter_rows,
+    initiative_rows,
+)
 from dnd_combat_engine.models import CombatLog
 
 
@@ -50,16 +56,81 @@ class CharacterSheetWidget:
     def create(app: DnDCombatEngineApp, qt, character_id: str = "vale"):
         """Create a compact character sheet widget."""
         character = app.characters.load(character_id)
-        table = qt.QtWidgets.QTableWidget(4, 2)
+        rows = character_sheet_rows(character)
+        table = qt.QtWidgets.QTableWidget(len(rows), 2)
         table.setHorizontalHeaderLabels(["Field", "Value"])
-        rows = [
-            ("Name", character.name),
-            ("HP", f"{character.hit_points.current}/{character.hit_points.maximum}"),
-            ("Level", str(character.level)),
-            ("Features", ", ".join(character.features)),
-        ]
         for row, (field, value) in enumerate(rows):
             table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
             table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
         return table
 
+
+class EncounterTrackerWidget:
+    """Factory for the encounter tracker widget."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, encounter_id: str = "roadside_ambush"):
+        """Create a compact encounter tracker widget."""
+        encounter = app.encounters.load(encounter_id)
+        rows = encounter_rows(encounter)
+        table = qt.QtWidgets.QTableWidget(len(rows), 2)
+        table.setHorizontalHeaderLabels(["Field", "Value"])
+        for row, (field, value) in enumerate(rows):
+            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
+            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
+        return table
+
+
+class InitiativeWidget:
+    """Factory for the initiative widget."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, character_id: str = "vale"):
+        """Create a compact initiative widget."""
+        character = app.characters.load(character_id)
+        encounter = app.encounters.add_character(app.encounters.load("roadside_ambush"), character)
+        _, tracker = app.encounters.start_and_roll_initiative(encounter, (character,))
+        rows = initiative_rows(tracker)
+        table = qt.QtWidgets.QTableWidget(len(rows), 2)
+        table.setHorizontalHeaderLabels(["Position", "Combatant"])
+        for row, (field, value) in enumerate(rows):
+            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
+            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
+        return table
+
+
+class AttackPanelWidget:
+    """Factory for the quick attack widget."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt):
+        """Create a quick attack widget backed by controllers."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        button = qt.QtWidgets.QPushButton("Quick Attack")
+        output = qt.QtWidgets.QTextEdit()
+        output.setReadOnly(True)
+
+        def attack() -> None:
+            attacker = app.characters.load("vale")
+            monster = app.compendium.load_monster("goblin")
+            target = attacker.__class__(
+                character_id=monster.monster_id,
+                name=monster.name,
+                hit_points=monster.hit_points,
+                abilities=monster.abilities,
+            )
+            result = app.combat.attack_with_weapon(
+                attacker=attacker,
+                target=target,
+                weapon=attacker.weapons[0],
+                target_armor_class=monster.armor_class,
+                attack_bonus=5,
+                active_features=("Sneak Attack",),
+            )
+            output.append(attack_summary_text(result))
+
+        button.clicked.connect(attack)
+        layout.addWidget(button)
+        layout.addWidget(output)
+        return widget

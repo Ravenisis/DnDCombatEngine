@@ -44,6 +44,12 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
         def setReadOnly(self, value) -> None:
             self.read_only = value
 
+        def append(self, value) -> None:
+            self.appended = value
+
+        def text(self) -> str:
+            return self.args[0] if self.args else ""
+
         def setAlignment(self, value) -> None:
             self.alignment = value
 
@@ -83,12 +89,32 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
         def addDockWidget(self, area, dock) -> None:
             self.dock = (area, dock)
 
+        def menuBar(self):
+            return FakeMenuBar()
+
+        def statusBar(self):
+            return FakeStatusBar()
+
     class FakeDockWidget(FakeWidget):
         def setWidget(self, widget) -> None:
             self.widget = widget
 
+    class FakeMenu:
+        def addAction(self, action) -> None:
+            self.action = action
+
+    class FakeMenuBar:
+        def addMenu(self, name):
+            self.name = name
+            return FakeMenu()
+
+    class FakeStatusBar:
+        def showMessage(self, message) -> None:
+            self.message = message
+
     class FakeQtWidgets:
         QMainWindow = FakeMainWindow
+        QAction = FakeWidget
         QLabel = FakeWidget
         QDockWidget = FakeDockWidget
         QWidget = FakeWidget
@@ -109,4 +135,3 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     assert window.title == "DnDCombatEngine"
     assert window.size == (1200, 800)
-
