@@ -78,6 +78,40 @@ python -m pytest
 
 ## Patch Notes
 
+### Milestone 1 foundation
+
+- Added project configuration, development tooling, package metadata, and GitHub
+  test workflow.
+- Added core domain models for abilities, hit points, damage profiles, weapons,
+  armor, characters, inventory, resources, conditions, spells, monsters, and
+  encounters.
+- Added the dice engine with parser support for common dice notation, keep/drop
+  modifiers, exploding dice, rerolls, minimums, maximums, and averages.
+- Added JSON persistence, starter seed data, examples, CLI entry points, and the
+  first unit test suite.
+
+### Milestone 2 layered combat and controllers
+
+- Added event-driven combat resolution, attack requests/results, initiative
+  tracking, and combat log models.
+- Added rules-engine feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
+  Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
+- Added service-layer workflows for characters, combat, dice, initiative,
+  inventory, monsters, spells, encounters, combat logs, and persistence.
+- Added UI-facing controllers and compact view models for combat, compendium,
+  dice, encounters, inventory, characters, logs, and summaries.
+
+### Milestone 3 GUI foundation
+
+- Added optional PySide6 support, GUI dependency handling, dark theme styling, and
+  GUI session persistence.
+- Added dockable GUI shell with character sheet, combat log, dice tray, encounter,
+  initiative, attack, menus, and status bar.
+- Added pure GUI panel/table helpers plus GUI action metadata, preferences, and
+  controller-backed command dispatch.
+- Added CLI support for launching the GUI and tests that keep GUI logic verifiable
+  without requiring PySide6 at test time.
+
 ### Begin milestone 4 campaign management
 
 - Added campaign domain models, status lifecycle, and JSON serialization.
