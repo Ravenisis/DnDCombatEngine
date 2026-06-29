@@ -15,7 +15,7 @@ a = Analysis(
         (str(src_root / "dnd_combat_engine" / "data"), "dnd_combat_engine/data"),
         (str(project_root / "LICENSE"), "."),
     ],
-    hiddenimports=["PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets"],
+    hiddenimports=["pypdf", "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets"],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

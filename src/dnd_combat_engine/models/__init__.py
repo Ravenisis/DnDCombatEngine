@@ -14,6 +14,7 @@ from dnd_combat_engine.models.encounters import (
 )
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
+from dnd_combat_engine.models.imports import CharacterImportDraft
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.monsters import CreatureSize, CreatureType, Monster
 from dnd_combat_engine.models.resources import ResourcePool
@@ -25,6 +26,7 @@ __all__ = [
     "Campaign",
     "CampaignStatus",
     "Character",
+    "CharacterImportDraft",
     "CombatLog",
     "CombatLogEntry",
     "CombatLogEntryType",

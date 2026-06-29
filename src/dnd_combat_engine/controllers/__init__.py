@@ -2,6 +2,10 @@
 
 from dnd_combat_engine.controllers.campaign_controller import CampaignController
 from dnd_combat_engine.controllers.character_controller import CharacterController
+from dnd_combat_engine.controllers.character_import_controller import (
+    CharacterImportController,
+    CharacterImportResult,
+)
 from dnd_combat_engine.controllers.combat_controller import CombatController
 from dnd_combat_engine.controllers.combat_log_controller import CombatLogController
 from dnd_combat_engine.controllers.compendium_controller import CompendiumController
@@ -25,6 +29,8 @@ __all__ = [
     "CampaignController",
     "CampaignSummary",
     "CharacterController",
+    "CharacterImportController",
+    "CharacterImportResult",
     "CharacterSummary",
     "CombatController",
     "CombatLogController",

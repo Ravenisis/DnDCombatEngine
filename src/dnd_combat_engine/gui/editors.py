@@ -18,6 +18,19 @@ def add_character_to_campaign(
     return f"Added character {character.name} to {updated.name}."
 
 
+def import_character_pdf_to_campaign(
+    app: DnDCombatEngineApp,
+    campaign_id: str,
+    pdf_path: str,
+) -> str:
+    """Import a character PDF and add the character to a campaign."""
+    result = app.character_imports.import_pdf_to_campaign(pdf_path, campaign_id)
+    return (
+        f"Imported {result.character.name} as {result.character.character_id} "
+        f"and added them to {result.campaign.name}."
+    )
+
+
 def remove_character_from_campaign(
     app: DnDCombatEngineApp,
     campaign_id: str,

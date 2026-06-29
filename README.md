@@ -86,6 +86,8 @@ an attack, spell, or condition update.
 - PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
 - Campaign workspace support with campaign persistence, controller workflows, seed
   campaign data, CLI inspection, GUI campaign editing, and encounter editing docks.
+- PDF character sheet import support for creating a character draft, saving it as
+  JSON, and linking the imported character to a campaign.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
@@ -129,9 +131,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 1,913,221 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,493,497 bytes
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 38,764,544 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,841,216 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
 
 Latest verified local install smoke test:
@@ -276,3 +278,13 @@ dnd-combat-engine init-user-data
 - Added GitHub Actions packaging support for building and uploading the MSI
   artifact.
 - Documented the local MSI build workflow and expanded packaging tests.
+
+### Add PDF character sheet import
+
+- Added a PDF character import service for text and fillable PDF sheets using
+  extracted sheet fields and text.
+- Added a reviewable character import draft model and controller workflow that
+  saves the imported character and links it to a selected campaign.
+- Added a GUI campaign editor action for importing a character PDF into the
+  active campaign.
+- Added parser, controller, app wiring, and GUI helper tests for the import flow.

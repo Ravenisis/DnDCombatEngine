@@ -15,16 +15,16 @@ class QtModules:
     """Imported PySide6 modules used by the GUI."""
 
     QtCore: Any
+    QtGui: Any
     QtWidgets: Any
 
 
 def load_qt() -> QtModules:
     """Load PySide6 modules or raise a helpful dependency error."""
     try:
-        from PySide6 import QtCore, QtWidgets
+        from PySide6 import QtCore, QtGui, QtWidgets
     except ImportError as exc:
         raise GuiDependencyError(
             'PySide6 is not installed. Install GUI dependencies with: pip install ".[gui]"'
         ) from exc
-    return QtModules(QtCore=QtCore, QtWidgets=QtWidgets)
-
+    return QtModules(QtCore=QtCore, QtGui=QtGui, QtWidgets=QtWidgets)

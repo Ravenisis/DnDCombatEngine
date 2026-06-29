@@ -1,6 +1,7 @@
 import pytest
 
 from dnd_combat_engine.app import create_app
+from dnd_combat_engine.controllers import CharacterImportResult
 from dnd_combat_engine.gui.editors import (
     add_character_to_campaign,
     add_character_to_encounter,
@@ -8,6 +9,7 @@ from dnd_combat_engine.gui.editors import (
     add_monster_to_encounter,
     advance_encounter_round,
     complete_encounter,
+    import_character_pdf_to_campaign,
     remove_character_from_campaign,
     remove_encounter_from_campaign,
     remove_participant_from_encounter,
@@ -44,6 +46,34 @@ def test_campaign_editor_helpers_update_and_save_references(tmp_path) -> None:
     campaign = Campaign.from_dict(store.load("campaigns", "empty"))
     assert campaign.character_ids == ()
     assert campaign.encounter_ids == ()
+
+
+def test_campaign_editor_imports_character_pdf(tmp_path, monkeypatch) -> None:
+    data_root = initialize_user_data(tmp_path / "data")
+    store = JsonFileStore(data_root)
+    store.save("campaigns", "empty", Campaign("empty", "Empty").to_dict())
+    app = create_app(data_root)
+
+    def fake_import(controller, pdf_path, campaign_id, character_id=None):
+        draft = app.character_imports.import_service.parse_text(
+            """
+            Character Name: Lyra Thorn
+            Level: 3
+            Hit Points: 19
+            """,
+            source=str(pdf_path),
+        )
+        return CharacterImportResult(
+            draft,
+            draft.to_character(character_id or "lyra_thorn"),
+            Campaign("empty", "Empty", character_ids=("lyra_thorn",)),
+        )
+
+    monkeypatch.setattr(type(app.character_imports), "import_pdf_to_campaign", fake_import)
+
+    assert import_character_pdf_to_campaign(app, "empty", "sheet.pdf") == (
+        "Imported Lyra Thorn as lyra_thorn and added them to Empty."
+    )
 
 
 def test_encounter_editor_helpers_update_participants_and_lifecycle(tmp_path) -> None:

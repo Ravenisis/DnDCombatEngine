@@ -7,6 +7,7 @@ def test_create_app_wires_controllers_to_seed_data() -> None:
     app = create_app(Path(__file__).resolve().parents[1] / "data")
 
     assert isinstance(app, DnDCombatEngineApp)
+    assert app.character_imports is not None
     assert app.campaigns.load("starter_campaign").name == "Starter Campaign"
     assert app.characters.load("bran").name == "Bran"
     assert app.characters.load("vale").name == "Vale"

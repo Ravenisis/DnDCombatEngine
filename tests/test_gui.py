@@ -18,6 +18,7 @@ def test_load_qt_raises_helpful_error_when_pyside6_is_missing() -> None:
         assert "pip install" in str(exc)
     else:
         assert modules.QtCore is not None
+        assert modules.QtGui is not None
         assert modules.QtWidgets is not None
 
 

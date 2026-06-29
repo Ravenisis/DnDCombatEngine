@@ -8,6 +8,7 @@ from pathlib import Path
 from dnd_combat_engine.controllers import (
     CampaignController,
     CharacterController,
+    CharacterImportController,
     CombatController,
     CombatLogController,
     CompendiumController,
@@ -29,6 +30,7 @@ from dnd_combat_engine.rules import (
 )
 from dnd_combat_engine.services import (
     CampaignService,
+    CharacterImportService,
     CharacterService,
     CombatLogService,
     CombatService,
@@ -49,6 +51,7 @@ class DnDCombatEngineApp:
 
     campaigns: CampaignController
     characters: CharacterController
+    character_imports: CharacterImportController
     combat: CombatController
     combat_log: CombatLogController
     compendium: CompendiumController
@@ -76,6 +79,11 @@ def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
     return DnDCombatEngineApp(
         campaigns=CampaignController(CampaignService(), persistence_service),
         characters=CharacterController(CharacterService(), persistence_service),
+        character_imports=CharacterImportController(
+            CharacterImportService(),
+            CampaignService(),
+            persistence_service,
+        ),
         combat=CombatController(CombatService(dice_service, feature_engine)),
         combat_log=CombatLogController(CombatLogService()),
         compendium=CompendiumController(MonsterService(), SpellService(), persistence_service),
