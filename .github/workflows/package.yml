@@ -42,6 +42,13 @@ jobs:
         shell: pwsh
         run: .\scripts\build_installer.ps1 -SkipExecutableBuild
 
+      - name: Install WiX Toolset
+        run: winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-source-agreements
+
+      - name: Build Windows MSI installer
+        shell: pwsh
+        run: .\scripts\build_msi.ps1 -SkipExecutableBuild
+
       - name: Upload Python distributions
         uses: actions/upload-artifact@v4
         with:
@@ -59,3 +66,9 @@ jobs:
         with:
           name: DnDCombatEngine-installer
           path: dist/installer/*.exe
+
+      - name: Upload Windows MSI installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: DnDCombatEngine-msi
+          path: dist/msi/*.msi

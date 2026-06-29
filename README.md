@@ -61,6 +61,12 @@ Build a Windows installer after the executable:
 .\scripts\build_installer.ps1
 ```
 
+Build a Windows MSI installer after the executable:
+
+```powershell
+.\scripts\build_msi.ps1
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich
@@ -96,8 +102,9 @@ python -m pytest
 
 ## Windows Installer
 
-The Windows packaging path uses PyInstaller for the desktop executable and Inno
-Setup for the installer.
+The Windows packaging path uses PyInstaller for the desktop executable. Inno Setup
+builds a guided `.exe` installer, and WiX Toolset builds a Windows Installer
+`.msi` package.
 
 ```powershell
 python -m pip install -e ".[dev,gui,installer]"
@@ -105,17 +112,26 @@ python -m ruff check .
 python -m pytest
 .\scripts\build_windows.ps1 -SkipInstall
 .\scripts\build_installer.ps1 -SkipExecutableBuild
+.\scripts\build_msi.ps1 -SkipExecutableBuild
 ```
 
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi`
+
+The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
+
+```powershell
+winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-source-agreements
+```
 
 Latest verified local build:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe` - 1,913,221 bytes
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 38,764,544 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
 
 Latest verified local install smoke test:
@@ -141,6 +157,7 @@ dnd-combat-engine init-user-data
 - Build Python distributions with `python -m build`.
 - Build the Windows executable with `.\scripts\build_windows.ps1 -SkipInstall`.
 - Build the Windows installer with `.\scripts\build_installer.ps1 -SkipExecutableBuild`.
+- Build the Windows MSI with `.\scripts\build_msi.ps1 -SkipExecutableBuild`.
 - Confirm the installer launches `DnDCombatEngine.exe` and creates uninstall entries.
 - Upload the wheel, source distribution, executable folder artifact, and installer
   artifact from the `Package` GitHub Actions workflow.
@@ -249,3 +266,13 @@ dnd-combat-engine init-user-data
   startup.
 - Verified first-run user data initialization under the local application data
   directory.
+
+### Add MSI installer packaging
+
+- Added WiX Toolset MSI authoring for installing the complete PyInstaller
+  application folder under Program Files.
+- Added an MSI build script that harvests the full packaged runtime, Qt support
+  files, bundled seed data, and executable into `DnDCombatEngine-0.1.0-x64.msi`.
+- Added GitHub Actions packaging support for building and uploading the MSI
+  artifact.
+- Documented the local MSI build workflow and expanded packaging tests.

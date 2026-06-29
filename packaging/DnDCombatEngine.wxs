@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="DnDCombatEngine"
+    Version="0.1.0"
+    Manufacturer="Ravenisis"
+    UpgradeCode="{F57DAFB7-43CF-4D4D-88B7-5D2D14356744}"
+    Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of DnDCombatEngine is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="MainFeature" Title="DnDCombatEngine" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="StartMenuShortcutComponent" />
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="DnDCombatEngine" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="DnDCombatEngine">
+        <Component Id="StartMenuShortcutComponent" Guid="{2D646FB7-291E-4425-B071-2F2149B48F17}">
+          <Shortcut
+            Id="StartMenuShortcut"
+            Name="DnDCombatEngine"
+            Target="[INSTALLFOLDER]DnDCombatEngine.exe"
+            WorkingDirectory="INSTALLFOLDER" />
+          <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
+          <RegistryValue
+            Root="HKLM"
+            Key="Software\Ravenisis\DnDCombatEngine"
+            Name="installed"
+            Type="integer"
+            Value="1"
+            KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+  </Package>
+</Wix>
