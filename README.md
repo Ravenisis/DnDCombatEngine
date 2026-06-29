@@ -55,6 +55,12 @@ Build a Windows desktop executable:
 .\scripts\build_windows.ps1
 ```
 
+Build a Windows installer after the executable:
+
+```powershell
+.\scripts\build_installer.ps1
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich
@@ -87,6 +93,42 @@ Milestone code should pass:
 python -m ruff check .
 python -m pytest
 ```
+
+## Windows Installer
+
+The Windows packaging path uses PyInstaller for the desktop executable and Inno
+Setup for the installer.
+
+```powershell
+python -m pip install -e ".[dev,gui,installer]"
+python -m ruff check .
+python -m pytest
+.\scripts\build_windows.ps1 -SkipInstall
+.\scripts\build_installer.ps1 -SkipExecutableBuild
+```
+
+Expected outputs:
+
+- `dist/DnDCombatEngine/DnDCombatEngine.exe`
+- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`
+
+The installed application initializes writable user data automatically from the
+bundled seed JSON. The same initialization can be run manually with:
+
+```bash
+dnd-combat-engine init-user-data
+```
+
+## Release Checklist
+
+- Run `python -m ruff check .`.
+- Run `python -m pytest`.
+- Build Python distributions with `python -m build`.
+- Build the Windows executable with `.\scripts\build_windows.ps1 -SkipInstall`.
+- Build the Windows installer with `.\scripts\build_installer.ps1 -SkipExecutableBuild`.
+- Confirm the installer launches `DnDCombatEngine.exe` and creates uninstall entries.
+- Upload the wheel, source distribution, executable folder artifact, and installer
+  artifact from the `Package` GitHub Actions workflow.
 
 ## Patch Notes
 
@@ -151,3 +193,15 @@ python -m pytest
   wheels and executable builds.
 - Added a PyInstaller spec and Windows build script for producing
   `dist/DnDCombatEngine/DnDCombatEngine.exe`.
+
+### Complete milestone 5 installer and release automation
+
+- Added an Inno Setup installer script that installs the executable, registers
+  uninstall support, and can create Start Menu and desktop shortcuts.
+- Added a Windows installer build script that compiles
+  `DnDCombatEngine-0.1.0-Setup.exe` from the PyInstaller output.
+- Added a GitHub Actions packaging workflow for linting, testing, building Python
+  distributions, producing the Windows executable, and uploading installer
+  artifacts.
+- Added release checklist documentation for local verification and GitHub Actions
+  artifact publishing.
