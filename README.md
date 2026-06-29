@@ -60,6 +60,8 @@ an attack, spell, or condition update.
 - Application wiring through `dnd_combat_engine.app.create_app`.
 - Combat log models, service, and controller for UI display.
 - PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
+- Campaign workspace support with campaign persistence, controller workflows, seed
+  campaign data, CLI inspection, and a GUI campaign dock.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
@@ -73,3 +75,22 @@ Milestone code should pass:
 python -m ruff check .
 python -m pytest
 ```
+
+## Patch Notes
+
+### Begin milestone 4 campaign management
+
+- Added campaign domain models, status lifecycle, and JSON serialization.
+- Added campaign persistence, service operations, controller workflows, app wiring,
+  and summary view models.
+- Added starter campaign seed data and tests across models, services, controllers,
+  persistence, app wiring, and seed loading.
+
+### Expand milestone 4 campaign workspace
+
+- Added campaign GUI panel rows, a dockable campaign widget, and campaign menu
+  actions.
+- Added GUI campaign commands for loading and activating the starter campaign.
+- Added CLI campaign commands for listing, showing, and activating campaigns.
+- Added a second seed character and encounter, then linked both into the starter
+  campaign.

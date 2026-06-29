@@ -1,10 +1,12 @@
 {
   "campaign_id": "starter_campaign",
   "character_ids": [
-    "vale"
+    "vale",
+    "bran"
   ],
   "encounter_ids": [
-    "roadside_ambush"
+    "roadside_ambush",
+    "crypt_entry"
   ],
   "name": "Starter Campaign",
   "notes": "Milestone 4 seed campaign that ties the starter character to the starter encounter.",

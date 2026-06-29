@@ -19,6 +19,43 @@ def test_cli_lists_seed_spell_ids(capsys) -> None:
     assert "bless" in output
 
 
+def test_cli_lists_seed_campaign_ids(capsys) -> None:
+    exit_code = main(["--data-root", "data", "list-campaigns"])
+
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert "starter_campaign" in output
+
+
+def test_cli_shows_campaign_details(capsys) -> None:
+    exit_code = main(["--data-root", "data", "campaign", "show", "starter_campaign"])
+
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert "Starter Campaign [active]" in output
+    assert "vale" in output
+    assert "crypt_entry" in output
+
+
+def test_cli_activates_campaign(tmp_path, capsys) -> None:
+    from dnd_combat_engine.models import Campaign
+    from dnd_combat_engine.persistence import JsonFileStore
+
+    store = JsonFileStore(tmp_path)
+    campaign = Campaign("starter_campaign", "Starter Campaign")
+    store.save("campaigns", campaign.campaign_id, campaign.to_dict())
+
+    exit_code = main(["--data-root", str(tmp_path), "campaign", "activate", "starter_campaign"])
+
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert "Starter Campaign [active]" in output
+    assert Campaign.from_dict(store.load("campaigns", "starter_campaign")).status == "active"
+
+
 def test_cli_quick_attack_outputs_combat_log(capsys) -> None:
     exit_code = main(["--data-root", "data", "quick-attack"])
 

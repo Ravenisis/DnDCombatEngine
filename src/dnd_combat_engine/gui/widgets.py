@@ -5,6 +5,7 @@ from __future__ import annotations
 from dnd_combat_engine.app import DnDCombatEngineApp
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
+    campaign_rows,
     character_sheet_rows,
     encounter_rows,
     initiative_rows,
@@ -57,6 +58,22 @@ class CharacterSheetWidget:
         """Create a compact character sheet widget."""
         character = app.characters.load(character_id)
         rows = character_sheet_rows(character)
+        table = qt.QtWidgets.QTableWidget(len(rows), 2)
+        table.setHorizontalHeaderLabels(["Field", "Value"])
+        for row, (field, value) in enumerate(rows):
+            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
+            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
+        return table
+
+
+class CampaignWidget:
+    """Factory for the campaign workspace widget."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, campaign_id: str = "starter_campaign"):
+        """Create a compact campaign workspace widget."""
+        campaign = app.campaigns.load(campaign_id)
+        rows = campaign_rows(campaign)
         table = qt.QtWidgets.QTableWidget(len(rows), 2)
         table.setHorizontalHeaderLabels(["Field", "Value"])
         for row, (field, value) in enumerate(rows):

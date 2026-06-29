@@ -1,14 +1,29 @@
 from fractions import Fraction
 
-from dnd_combat_engine.gui.tables import monster_table_rows, spell_table_rows
+from dnd_combat_engine.gui.tables import (
+    campaign_table_rows,
+    monster_table_rows,
+    spell_table_rows,
+)
 from dnd_combat_engine.models import (
     AbilityScores,
+    Campaign,
     CreatureType,
     HitPoints,
     Monster,
     Spell,
     SpellSchool,
 )
+
+
+def test_campaign_table_rows_sort_by_name() -> None:
+    starter = Campaign("starter", "Starter", encounter_ids=("roadside_ambush",))
+    crypts = Campaign("crypts", "Crypts", encounter_ids=("crypt_entry", "vault"))
+
+    assert campaign_table_rows((starter, crypts)) == [
+        ("crypts", "Crypts", "planned", "2"),
+        ("starter", "Starter", "planned", "1"),
+    ]
 
 
 def test_spell_table_rows_sort_by_level_then_name() -> None:

@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from dnd_combat_engine.controllers import AttackSummary, EncounterSummary, InitiativeSummary
+from dnd_combat_engine.controllers import (
+    AttackSummary,
+    CampaignSummary,
+    EncounterSummary,
+    InitiativeSummary,
+)
 from dnd_combat_engine.engine.attacks import AttackResult
 from dnd_combat_engine.engine.initiative import InitiativeTracker
+from dnd_combat_engine.models.campaigns import Campaign
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.encounters import Encounter
 
@@ -17,6 +23,18 @@ def character_sheet_rows(character: Character) -> list[tuple[str, str]]:
         ("Temporary HP", str(character.hit_points.temporary)),
         ("Level", str(character.level)),
         ("Features", ", ".join(character.features)),
+    ]
+
+
+def campaign_rows(campaign: Campaign) -> list[tuple[str, str]]:
+    """Return display rows for campaign details."""
+    summary = CampaignSummary.from_campaign(campaign)
+    return [
+        ("Name", summary.name),
+        ("Status", summary.status),
+        ("Characters", str(summary.character_count)),
+        ("Encounters", str(summary.encounter_count)),
+        ("Notes", campaign.notes),
     ]
 
 
@@ -47,4 +65,3 @@ def initiative_rows(tracker: InitiativeTracker) -> list[tuple[str, str]]:
     rows = [("Round", str(summary.round_number)), ("Active", summary.active_combatant or "")]
     rows.extend((str(index), name) for index, name in enumerate(summary.order, start=1))
     return rows
-

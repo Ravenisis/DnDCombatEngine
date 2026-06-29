@@ -1,11 +1,13 @@
 from dnd_combat_engine.engine import AttackRequest
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
+    campaign_rows,
     character_sheet_rows,
     encounter_rows,
     initiative_rows,
 )
 from dnd_combat_engine.models import (
+    Campaign,
     Character,
     DamageComponent,
     DamageProfile,
@@ -34,6 +36,23 @@ def test_character_sheet_rows_include_core_state() -> None:
 
     assert ("Name", "Vale") in rows
     assert ("Temporary HP", "2") in rows
+
+
+def test_campaign_rows_include_workspace_counts() -> None:
+    rows = campaign_rows(
+        Campaign(
+            "starter",
+            "Starter",
+            character_ids=("vale", "bran"),
+            encounter_ids=("roadside_ambush",),
+            notes="Opening arc.",
+        )
+    )
+
+    assert ("Name", "Starter") in rows
+    assert ("Characters", "2") in rows
+    assert ("Encounters", "1") in rows
+    assert ("Notes", "Opening arc.") in rows
 
 
 def test_attack_summary_text_describes_result() -> None:
@@ -65,4 +84,3 @@ def test_encounter_and_initiative_panel_rows() -> None:
 
     assert ("Participants", "2") in encounter_rows(encounter)
     assert ("Active", "Vale") in initiative_rows(tracker)
-

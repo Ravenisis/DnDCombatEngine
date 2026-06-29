@@ -21,8 +21,15 @@ def build_parser() -> argparse.ArgumentParser:
     roll.add_argument("--seed", type=int)
 
     subparsers.add_parser("quick-attack", help="Run the seeded quick attack")
+    subparsers.add_parser("list-campaigns", help="List known campaign ids")
     subparsers.add_parser("list-spells", help="List known spell ids")
     subparsers.add_parser("list-monsters", help="List known monster ids")
+    campaign = subparsers.add_parser("campaign", help="Inspect or update a campaign")
+    campaign_subparsers = campaign.add_subparsers(dest="campaign_command", required=True)
+    campaign_show = campaign_subparsers.add_parser("show", help="Show campaign details")
+    campaign_show.add_argument("campaign_id")
+    campaign_activate = campaign_subparsers.add_parser("activate", help="Activate a campaign")
+    campaign_activate.add_argument("campaign_id")
     subparsers.add_parser("gui", help="Launch the PySide6 GUI")
     return parser
 
@@ -44,6 +51,12 @@ def main(argv: list[str] | None = None) -> int:
         for monster_id in app.compendium.persistence_service.list_monster_ids():
             print(monster_id)
         return 0
+    if args.command == "list-campaigns":
+        for campaign_id in app.campaigns.list_ids():
+            print(campaign_id)
+        return 0
+    if args.command == "campaign":
+        return _campaign(app, args.campaign_command, args.campaign_id)
     if args.command == "quick-attack":
         return _quick_attack(app)
     if args.command == "gui":
@@ -51,6 +64,23 @@ def main(argv: list[str] | None = None) -> int:
 
         return run_gui(Path(args.data_root))
     raise ValueError(f"unsupported command: {args.command}")
+
+
+def _campaign(app, command: str, campaign_id: str) -> int:
+    campaign = app.campaigns.load(campaign_id)
+    if command == "show":
+        print(f"{campaign.name} [{campaign.status.value}]")
+        print(f"Characters: {', '.join(campaign.character_ids) or 'none'}")
+        print(f"Encounters: {', '.join(campaign.encounter_ids) or 'none'}")
+        if campaign.notes:
+            print(f"Notes: {campaign.notes}")
+        return 0
+    if command == "activate":
+        campaign = app.campaigns.activate(campaign)
+        app.campaigns.save(campaign)
+        print(f"{campaign.name} [{campaign.status.value}]")
+        return 0
+    raise ValueError(f"unsupported campaign command: {command}")
 
 
 def _quick_attack(app) -> int:

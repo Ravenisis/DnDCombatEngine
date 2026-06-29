@@ -2,7 +2,20 @@
 
 from __future__ import annotations
 
-from dnd_combat_engine.models import Monster, Spell
+from dnd_combat_engine.models import Campaign, Monster, Spell
+
+
+def campaign_table_rows(campaigns: tuple[Campaign, ...]) -> list[tuple[str, str, str, str]]:
+    """Return sorted campaign rows for table widgets."""
+    return [
+        (
+            campaign.campaign_id,
+            campaign.name,
+            campaign.status.value,
+            str(len(campaign.encounter_ids)),
+        )
+        for campaign in sorted(campaigns, key=lambda campaign: campaign.name.lower())
+    ]
 
 
 def spell_table_rows(spells: tuple[Spell, ...]) -> list[tuple[str, str, str, str]]:

@@ -22,6 +22,8 @@ class GuiCommandDispatcher:
     def dispatch(self, command_id: str) -> ControllerResult[str]:
         """Run a GUI command and return a UI-friendly result."""
         commands = {
+            "campaign.activate_starter": self._activate_starter_campaign,
+            "campaign.load_starter": self._load_starter_campaign,
             "combat.quick_attack": self._quick_attack,
             "dice.roll_d20": self._roll_d20,
             "view.reset_layout": lambda: "Layout reset.",
@@ -36,6 +38,18 @@ class GuiCommandDispatcher:
     def _roll_d20(self) -> str:
         result = self.app.dice.roll("1d20")
         return f"{result.notation}: {result.total}"
+
+    def _load_starter_campaign(self) -> str:
+        campaign = self.app.campaigns.load("starter_campaign")
+        return (
+            f"{campaign.name}: {campaign.status.value}, "
+            f"{len(campaign.character_ids)} characters, {len(campaign.encounter_ids)} encounters"
+        )
+
+    def _activate_starter_campaign(self) -> str:
+        campaign = self.app.campaigns.activate(self.app.campaigns.load("starter_campaign"))
+        self.app.campaigns.save(campaign)
+        return f"{campaign.name}: {campaign.status.value}"
 
     def _quick_attack(self) -> str:
         attacker = self.app.characters.load("vale")
