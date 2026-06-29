@@ -118,6 +118,15 @@ Latest verified local build:
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
 
+Latest verified local install smoke test:
+
+- Ran `DnDCombatEngine-0.1.0-Setup.exe` silently into a controlled test install
+  directory.
+- Launched the installed `DnDCombatEngine.exe` from that install directory.
+- Confirmed the app stayed running past startup and initialized user data under
+  `%LOCALAPPDATA%\DnDCombatEngine\data`.
+- Closed the launched app process after verification.
+
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:
 
@@ -231,3 +240,12 @@ dnd-combat-engine init-user-data
 - Updated the installer build script to detect Inno Setup installed under the
   current user's local programs directory.
 - Re-ran the test and lint gates after the build script update.
+
+### Verify installed app launch
+
+- Ran the generated Inno installer end-to-end into a controlled test install
+  directory.
+- Launched the installed executable and confirmed it remained running after
+  startup.
+- Verified first-run user data initialization under the local application data
+  directory.
