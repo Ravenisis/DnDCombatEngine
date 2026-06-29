@@ -112,6 +112,12 @@ Expected outputs:
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`
 
+Latest verified local build:
+
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 1,913,221 bytes
+- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
+- Verified with `python -m pytest` and `python -m ruff check .`
+
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:
 
@@ -215,3 +221,13 @@ dnd-combat-engine init-user-data
 - Added campaign reference and encounter participant panel rows for richer desktop
   display.
 - Expanded tests across GUI editor helpers, panel rows, and controller edit methods.
+
+### Verify Windows executable and installer build
+
+- Ran the full PyInstaller build and produced
+  `dist/DnDCombatEngine/DnDCombatEngine.exe`.
+- Installed Inno Setup locally with `winget` and compiled
+  `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`.
+- Updated the installer build script to detect Inno Setup installed under the
+  current user's local programs directory.
+- Re-ran the test and lint gates after the build script update.
