@@ -31,6 +31,10 @@ class CharacterImportController:
         """Parse a PDF into a reviewable character draft."""
         return self.import_service.import_pdf(pdf_path)
 
+    def preview_url(self, url: str) -> CharacterImportDraft:
+        """Parse a public URL into a reviewable character draft."""
+        return self.import_service.import_url(url)
+
     def import_pdf_to_campaign(
         self,
         pdf_path: Path | str,
@@ -39,6 +43,22 @@ class CharacterImportController:
     ) -> CharacterImportResult:
         """Import a PDF sheet, save the character, and link it to a campaign."""
         draft = self.preview_pdf(pdf_path)
+        campaign = self.persistence_service.load_campaign(campaign_id)
+        resolved_id = character_id or self._next_character_id(draft.name)
+        character = draft.to_character(resolved_id)
+        self.persistence_service.save_character(character)
+        updated_campaign = self.campaign_service.add_character(campaign, character.character_id)
+        self.persistence_service.save_campaign(updated_campaign)
+        return CharacterImportResult(draft, character, updated_campaign)
+
+    def import_url_to_campaign(
+        self,
+        url: str,
+        campaign_id: str,
+        character_id: str | None = None,
+    ) -> CharacterImportResult:
+        """Import a public URL sheet, save the character, and link it to a campaign."""
+        draft = self.preview_url(url)
         campaign = self.persistence_service.load_campaign(campaign_id)
         resolved_id = character_id or self._next_character_id(draft.name)
         character = draft.to_character(resolved_id)
@@ -62,4 +82,3 @@ def _slug(value: str) -> str:
     import re
 
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
-

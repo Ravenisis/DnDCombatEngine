@@ -104,6 +104,10 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
             self.widget = widget
 
     class FakeMenu:
+        def addMenu(self, name):
+            self.submenu_name = name
+            return FakeMenu()
+
         def addAction(self, action) -> None:
             self.action = action
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -50,6 +51,34 @@ def test_character_import_service_parses_text_sheet() -> None:
     assert draft.armor.armor_class == 15
 
 
+def test_character_import_service_parses_public_html_url(monkeypatch) -> None:
+    service = CharacterImportService()
+
+    monkeypatch.setattr(
+        service,
+        "_fetch_url",
+        lambda url: SimpleNamespace(
+            content=b"""
+            <html><body>
+            <h1>Character Name: Lyra Thorn</h1>
+            <p>Level: 3</p>
+            <p>Hit Points: 19</p>
+            <p>DEX 16</p>
+            </body></html>
+            """,
+            content_type="text/html; charset=utf-8",
+            final_url=url,
+        ),
+    )
+
+    draft = service.import_url("https://example.test/characters/lyra")
+
+    assert draft.name == "Lyra Thorn"
+    assert draft.level == 3
+    assert draft.hit_points.maximum == 19
+    assert draft.abilities.dexterity == 16
+
+
 def test_character_import_controller_saves_character_and_campaign_reference(tmp_path) -> None:
     class StubImportService(CharacterImportService):
         def import_pdf(self, pdf_path: Path | str) -> CharacterImportDraft:
@@ -69,6 +98,31 @@ def test_character_import_controller_saves_character_and_campaign_reference(tmp_
     )
 
     result = controller.import_pdf_to_campaign("lyra.pdf", "starter")
+
+    assert result.character.character_id == "lyra_thorn"
+    assert persistence.load_character("lyra_thorn").name == "Lyra Thorn"
+    assert persistence.load_campaign("starter").character_ids == ("lyra_thorn",)
+
+
+def test_character_import_controller_saves_url_import(tmp_path) -> None:
+    class StubImportService(CharacterImportService):
+        def import_url(self, url: str) -> CharacterImportDraft:
+            return CharacterImportDraft(
+                name="Lyra Thorn",
+                level=3,
+                hit_points=HitPoints(19, 24),
+                source=url,
+            )
+
+    persistence = PersistenceService(JsonFileStore(tmp_path))
+    persistence.save_campaign(Campaign("starter", "Starter"))
+    controller = CharacterImportController(
+        StubImportService(),
+        CampaignService(),
+        persistence,
+    )
+
+    result = controller.import_url_to_campaign("https://example.test/lyra", "starter")
 
     assert result.character.character_id == "lyra_thorn"
     assert persistence.load_character("lyra_thorn").name == "Lyra Thorn"
@@ -101,3 +155,7 @@ def test_character_import_service_rejects_non_pdf(tmp_path) -> None:
     with pytest.raises(CharacterImportError, match="requires a PDF"):
         CharacterImportService().import_pdf(path)
 
+
+def test_character_import_service_rejects_non_http_urls() -> None:
+    with pytest.raises(CharacterImportError, match="http or https"):
+        CharacterImportService().import_url("file:///tmp/sheet.pdf")

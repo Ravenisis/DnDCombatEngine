@@ -15,10 +15,15 @@ def test_default_action_specs_include_core_commands() -> None:
         "view.reset_layout",
         "campaign.load_starter",
         "campaign.activate_starter",
+        "campaign.import_pdf",
+        "campaign.import_url",
         "combat.quick_attack",
         "dice.roll_d20",
     }
     assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut == "Ctrl+R"
+    assert next(spec for spec in specs if spec.action_id == "campaign.import_pdf").submenu == (
+        "Upload Character Sheet"
+    )
 
 
 def test_action_specs_group_by_menu_preserves_order() -> None:
@@ -26,6 +31,7 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
 
     assert tuple(grouped) == ("File", "View", "Campaign", "Combat", "Dice")
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
+    assert grouped["Campaign"][2].action_id == "campaign.import_pdf"
     assert grouped["Combat"][0].action_id == "combat.quick_attack"
 
 

@@ -14,6 +14,7 @@ class GuiActionSpec:
     text: str
     status_tip: str
     shortcut: str | None = None
+    submenu: str | None = None
 
     def __post_init__(self) -> None:
         """Validate action metadata."""
@@ -43,6 +44,20 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Campaign",
             "Activate Starter Campaign",
             "Activate and save the starter campaign",
+        ),
+        GuiActionSpec(
+            "campaign.import_pdf",
+            "Campaign",
+            "PDF",
+            "Import a character sheet from a PDF file",
+            submenu="Upload Character Sheet",
+        ),
+        GuiActionSpec(
+            "campaign.import_url",
+            "Campaign",
+            "URL",
+            "Import a character sheet from a public URL",
+            submenu="Upload Character Sheet",
         ),
         GuiActionSpec("combat.quick_attack", "Combat", "Quick Attack", "Run a sample attack"),
         GuiActionSpec("dice.roll_d20", "Dice", "Roll d20", "Roll a d20", "Ctrl+R"),

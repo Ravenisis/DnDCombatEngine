@@ -72,13 +72,20 @@ def _configure_menus(window, qt) -> None:
         action_class = qt.QtWidgets.QAction
     for menu_name, specs in action_specs_by_menu(default_action_specs()).items():
         menu = menu_bar.addMenu(menu_name)
+        submenus = {}
         for spec in specs:
             action = action_class(spec.text, window)
             if spec.shortcut and hasattr(action, "setShortcut"):
                 action.setShortcut(spec.shortcut)
             if hasattr(action, "setStatusTip"):
                 action.setStatusTip(spec.status_tip)
-            menu.addAction(action)
+            target_menu = menu
+            if spec.submenu:
+                target_menu = submenus.get(spec.submenu)
+                if target_menu is None:
+                    target_menu = menu.addMenu(spec.submenu)
+                    submenus[spec.submenu] = target_menu
+            target_menu.addAction(action)
 
 
 def _set_status(window, message: str) -> None:

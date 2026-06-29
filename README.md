@@ -88,6 +88,8 @@ an attack, spell, or condition update.
   campaign data, CLI inspection, GUI campaign editing, and encounter editing docks.
 - PDF character sheet import support for creating a character draft, saving it as
   JSON, and linking the imported character to a campaign.
+- URL character sheet import support for public PDF, HTML, and text sheet links,
+  using the same save-and-link campaign workflow.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
@@ -131,9 +133,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,493,497 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,537,324 bytes
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,841,216 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,865,792 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
 
 Latest verified local install smoke test:
@@ -288,3 +290,13 @@ dnd-combat-engine init-user-data
 - Added a GUI campaign editor action for importing a character PDF into the
   active campaign.
 - Added parser, controller, app wiring, and GUI helper tests for the import flow.
+
+### Add URL character sheet import
+
+- Added public URL import for PDF, HTML, and text character sheets through the
+  character import service.
+- Added controller and GUI helper workflows that save URL-imported characters and
+  link them to a campaign.
+- Added Campaign menu entries under `Upload Character Sheet` with `PDF` and
+  `URL` submenu options.
+- Added URL parser, controller, GUI helper, and menu tests.

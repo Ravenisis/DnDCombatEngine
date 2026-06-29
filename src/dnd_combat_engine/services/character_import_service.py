@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 import re
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
+from html import unescape
+from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dnd_combat_engine.models import (
     AbilityScores,
@@ -23,9 +29,17 @@ class CharacterImportError(ValueError):
     """Raised when a character sheet cannot be imported."""
 
 
+@dataclass(frozen=True, slots=True)
+class _UrlPayload:
+    content: bytes
+    content_type: str
+    final_url: str
+
+
 class CharacterImportService:
     """Parse uploaded character sheet files into reviewable drafts."""
 
+    max_url_bytes = 5_000_000
     _ability_names = (
         "strength",
         "dexterity",
@@ -44,6 +58,15 @@ class CharacterImportService:
             raise CharacterImportError("character import requires a PDF file")
         text = self._extract_pdf_text(path)
         return self.parse_text(text, source=str(path))
+
+    def import_url(self, url: str) -> CharacterImportDraft:
+        """Extract a character draft from a public PDF, HTML, or text URL."""
+        payload = self._fetch_url(url)
+        if _looks_like_pdf(payload):
+            text = self._extract_pdf_bytes(payload.content)
+        else:
+            text = _extract_url_text(payload)
+        return self.parse_text(text, source=payload.final_url)
 
     def parse_text(self, text: str, source: str = "pdf") -> CharacterImportDraft:
         """Parse extracted character sheet text into a draft."""
@@ -78,6 +101,19 @@ class CharacterImportService:
             ) from exc
 
         reader = PdfReader(str(path))
+        return self._extract_reader_text(reader)
+
+    def _extract_pdf_bytes(self, content: bytes) -> str:
+        try:
+            from pypdf import PdfReader
+        except ImportError as exc:
+            raise CharacterImportError(
+                'PDF import requires pypdf. Install it with: pip install ".[pdf]"'
+            ) from exc
+
+        return self._extract_reader_text(PdfReader(BytesIO(content)))
+
+    def _extract_reader_text(self, reader) -> str:
         text_parts = [page.extract_text() or "" for page in reader.pages]
         fields = reader.get_fields() or {}
         for name, field in fields.items():
@@ -88,6 +124,30 @@ class CharacterImportService:
         if not text.strip():
             raise CharacterImportError("no readable text or form fields found in PDF")
         return text
+
+    def _fetch_url(self, url: str) -> _UrlPayload:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise CharacterImportError("character URL must be an http or https URL")
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "DnDCombatEngine/0.1 character-import",
+                "Accept": "application/pdf,text/html,text/plain;q=0.9,*/*;q=0.1",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                content = response.read(self.max_url_bytes + 1)
+                content_type = response.headers.get("Content-Type", "")
+                final_url = response.geturl()
+        except urllib.error.URLError as exc:
+            raise CharacterImportError(f"could not read character URL: {exc}") from exc
+        if len(content) > self.max_url_bytes:
+            raise CharacterImportError("character URL response is too large")
+        if not content:
+            raise CharacterImportError("character URL returned no content")
+        return _UrlPayload(content=content, content_type=content_type, final_url=final_url)
 
 
 def _normalize_text(text: str) -> str:
@@ -100,6 +160,39 @@ def _field_value(field: object) -> str:
         return "" if value is None else str(value)
     value = getattr(field, "value", None)
     return "" if value is None else str(value)
+
+
+def _looks_like_pdf(payload: _UrlPayload) -> bool:
+    return (
+        "application/pdf" in payload.content_type.lower()
+        or urlparse(payload.final_url).path.lower().endswith(".pdf")
+        or payload.content.startswith(b"%PDF")
+    )
+
+
+def _extract_url_text(payload: _UrlPayload) -> str:
+    content_type = payload.content_type.lower()
+    if "html" not in content_type and "text" not in content_type and content_type:
+        raise CharacterImportError("character URL must point to a PDF, HTML, or text page")
+    text = payload.content.decode(_charset_from_content_type(content_type), errors="replace")
+    if "html" in content_type or "<html" in text[:500].lower():
+        text = _html_to_text(text)
+    if not text.strip():
+        raise CharacterImportError("character URL contained no readable text")
+    return text
+
+
+def _charset_from_content_type(content_type: str) -> str:
+    match = re.search(r"charset=([\w\-]+)", content_type)
+    return match.group(1) if match else "utf-8"
+
+
+def _html_to_text(value: str) -> str:
+    value = re.sub(r"<script\b.*?</script>", " ", value, flags=re.I | re.S)
+    value = re.sub(r"<style\b.*?</style>", " ", value, flags=re.I | re.S)
+    value = re.sub(r"</(?:p|div|li|tr|h[1-6])>", "\n", value, flags=re.I)
+    value = re.sub(r"<[^>]+>", " ", value)
+    return unescape(re.sub(r"[ \t]+", " ", value))
 
 
 def _extract_name(text: str) -> str:
@@ -202,4 +295,3 @@ def _split_list(value: str) -> list[str]:
 def _slug(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return slug[:80]
-

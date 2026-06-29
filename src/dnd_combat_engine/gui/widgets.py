@@ -11,6 +11,7 @@ from dnd_combat_engine.gui.editors import (
     advance_encounter_round,
     complete_encounter,
     import_character_pdf_to_campaign,
+    import_character_url_to_campaign,
     remove_character_from_campaign,
     remove_encounter_from_campaign,
     remove_participant_from_encounter,
@@ -108,6 +109,7 @@ class CampaignEditorWidget:
         character_input = qt.QtWidgets.QLineEdit("vale")
         encounter_input = qt.QtWidgets.QLineEdit("roadside_ambush")
         import_path_input = qt.QtWidgets.QLineEdit("")
+        import_url_input = qt.QtWidgets.QLineEdit("")
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
 
@@ -144,6 +146,16 @@ class CampaignEditorWidget:
                 )
             )
         )
+        import_url = qt.QtWidgets.QPushButton("Import Character URL")
+        import_url.clicked.connect(
+            lambda: run(
+                lambda: import_character_url_to_campaign(
+                    app,
+                    campaign_id,
+                    import_url_input.text(),
+                )
+            )
+        )
         add_encounter = qt.QtWidgets.QPushButton("Add Encounter")
         add_encounter.clicked.connect(
             lambda: run(lambda: add_encounter_to_campaign(app, campaign_id, encounter_input.text()))
@@ -160,6 +172,8 @@ class CampaignEditorWidget:
         layout.addWidget(remove_character)
         layout.addWidget(import_path_input)
         layout.addWidget(import_character)
+        layout.addWidget(import_url_input)
+        layout.addWidget(import_url)
         layout.addWidget(encounter_input)
         layout.addWidget(add_encounter)
         layout.addWidget(remove_encounter)

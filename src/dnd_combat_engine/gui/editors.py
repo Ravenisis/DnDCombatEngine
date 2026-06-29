@@ -31,6 +31,19 @@ def import_character_pdf_to_campaign(
     )
 
 
+def import_character_url_to_campaign(
+    app: DnDCombatEngineApp,
+    campaign_id: str,
+    url: str,
+) -> str:
+    """Import a character URL and add the character to a campaign."""
+    result = app.character_imports.import_url_to_campaign(url, campaign_id)
+    return (
+        f"Imported {result.character.name} as {result.character.character_id} "
+        f"and added them to {result.campaign.name}."
+    )
+
+
 def remove_character_from_campaign(
     app: DnDCombatEngineApp,
     campaign_id: str,
