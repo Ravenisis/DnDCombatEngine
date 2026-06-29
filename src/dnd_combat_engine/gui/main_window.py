@@ -1,4 +1,4 @@
-"""Main GUI window."""
+﻿"""Main GUI window."""
 
 from __future__ import annotations
 
@@ -67,10 +67,13 @@ def _add_dock(window, qt, title: str, widget) -> None:
 
 def _configure_menus(window, qt) -> None:
     menu_bar = window.menuBar()
+    action_class = getattr(getattr(qt, "QtGui", None), "QAction", None)
+    if action_class is None:
+        action_class = qt.QtWidgets.QAction
     for menu_name, specs in action_specs_by_menu(default_action_specs()).items():
         menu = menu_bar.addMenu(menu_name)
         for spec in specs:
-            action = qt.QtWidgets.QAction(spec.text, window)
+            action = action_class(spec.text, window)
             if spec.shortcut and hasattr(action, "setShortcut"):
                 action.setShortcut(spec.shortcut)
             if hasattr(action, "setStatusTip"):
@@ -80,3 +83,4 @@ def _configure_menus(window, qt) -> None:
 
 def _set_status(window, message: str) -> None:
     window.statusBar().showMessage(message)
+

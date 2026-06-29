@@ -1,4 +1,4 @@
-
+﻿
 from dnd_combat_engine.gui import GuiDependencyError, dark_theme_stylesheet
 from dnd_combat_engine.gui.qt import load_qt
 
@@ -36,6 +36,9 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     class FakeQtCore:
         Qt = FakeQt
+
+    class FakeQtGui:
+        pass
 
     class FakeWidget:
         def __init__(self, *args) -> None:
@@ -114,7 +117,6 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     class FakeQtWidgets:
         QMainWindow = FakeMainWindow
-        QAction = FakeWidget
         QLabel = FakeWidget
         QDockWidget = FakeDockWidget
         QWidget = FakeWidget
@@ -125,8 +127,11 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
         QTableWidget = FakeWidget
         QTableWidgetItem = FakeWidget
 
+    FakeQtGui.QAction = FakeWidget
+
     class FakeModules:
         QtCore = FakeQtCore
+        QtGui = FakeQtGui
         QtWidgets = FakeQtWidgets
 
     monkeypatch.setattr(main_window, "load_qt", lambda: FakeModules)
@@ -135,3 +140,4 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     assert window.title == "DnDCombatEngine"
     assert window.size == (1200, 800)
+
