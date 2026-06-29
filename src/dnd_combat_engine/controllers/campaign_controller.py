@@ -32,9 +32,17 @@ class CampaignController:
         """Return a campaign with a character reference added."""
         return self.campaign_service.add_character(campaign, character_id)
 
+    def remove_character(self, campaign: Campaign, character_id: str) -> Campaign:
+        """Return a campaign with a character reference removed."""
+        return self.campaign_service.remove_character(campaign, character_id)
+
     def add_encounter(self, campaign: Campaign, encounter_id: str) -> Campaign:
         """Return a campaign with an encounter reference added."""
         return self.campaign_service.add_encounter(campaign, encounter_id)
+
+    def remove_encounter(self, campaign: Campaign, encounter_id: str) -> Campaign:
+        """Return a campaign with an encounter reference removed."""
+        return self.campaign_service.remove_encounter(campaign, encounter_id)
 
     def activate(self, campaign: Campaign) -> Campaign:
         """Return an active campaign."""

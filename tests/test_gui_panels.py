@@ -1,8 +1,10 @@
 from dnd_combat_engine.engine import AttackRequest
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
+    campaign_reference_rows,
     campaign_rows,
     character_sheet_rows,
+    encounter_participant_rows,
     encounter_rows,
     initiative_rows,
 )
@@ -39,20 +41,21 @@ def test_character_sheet_rows_include_core_state() -> None:
 
 
 def test_campaign_rows_include_workspace_counts() -> None:
-    rows = campaign_rows(
-        Campaign(
-            "starter",
-            "Starter",
-            character_ids=("vale", "bran"),
-            encounter_ids=("roadside_ambush",),
-            notes="Opening arc.",
-        )
+    campaign = Campaign(
+        "starter",
+        "Starter",
+        character_ids=("vale", "bran"),
+        encounter_ids=("roadside_ambush",),
+        notes="Opening arc.",
     )
+    rows = campaign_rows(campaign)
 
     assert ("Name", "Starter") in rows
     assert ("Characters", "2") in rows
     assert ("Encounters", "1") in rows
     assert ("Notes", "Opening arc.") in rows
+    assert ("Character", "vale") in campaign_reference_rows(campaign)
+    assert ("Encounter", "roadside_ambush") in campaign_reference_rows(campaign)
 
 
 def test_attack_summary_text_describes_result() -> None:
@@ -83,4 +86,5 @@ def test_encounter_and_initiative_panel_rows() -> None:
     )
 
     assert ("Participants", "2") in encounter_rows(encounter)
+    assert encounter_participant_rows(encounter) == [("goblin", "Goblin", "monster", "2")]
     assert ("Active", "Vale") in initiative_rows(tracker)

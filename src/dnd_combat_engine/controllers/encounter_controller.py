@@ -44,6 +44,18 @@ class EncounterController:
             EncounterParticipant.from_monster(monster, quantity=quantity),
         )
 
+    def remove_participant(self, encounter: Encounter, participant_id: str) -> Encounter:
+        """Return an encounter without a participant."""
+        return self.encounter_service.remove_participant(encounter, participant_id)
+
+    def advance_round(self, encounter: Encounter) -> Encounter:
+        """Return an encounter advanced by one round."""
+        return self.encounter_service.advance_round(encounter)
+
+    def complete(self, encounter: Encounter) -> Encounter:
+        """Return a completed encounter."""
+        return self.encounter_service.complete(encounter)
+
     def start_and_roll_initiative(
         self,
         encounter: Encounter,
@@ -54,4 +66,3 @@ class EncounterController:
         active = self.encounter_service.start(encounter)
         tracker = self.initiative_service.roll_initiative(combatants, rng=rng)
         return active, tracker
-

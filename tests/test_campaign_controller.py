@@ -22,3 +22,8 @@ def test_campaign_controller_persists_and_updates_campaigns(tmp_path) -> None:
     assert controller.list_ids() == ["starter"]
     assert controller.load("starter").status is CampaignStatus.ACTIVE
     assert controller.load("starter").character_ids == ("vale",)
+    assert controller.remove_character(controller.load("starter"), "vale").character_ids == ()
+    assert (
+        controller.remove_encounter(controller.load("starter"), "roadside_ambush").encounter_ids
+        == ()
+    )

@@ -60,6 +60,10 @@ def test_encounter_controller_adds_participants_and_persists(tmp_path) -> None:
         ParticipantKind.MONSTER,
     ]
     assert restored.participants[1].quantity == 2
+    assert (
+        controller.remove_participant(restored, "goblin").participants[0].participant_id
+        == "rogue"
+    )
 
 
 def test_encounter_controller_starts_and_rolls_initiative(tmp_path) -> None:
@@ -81,4 +85,5 @@ def test_encounter_controller_starts_and_rolls_initiative(tmp_path) -> None:
     assert active.status is EncounterStatus.ACTIVE
     assert tracker.current.combatant is character
     assert tracker.current.total == 15
-
+    assert controller.advance_round(active).round_number == 2
+    assert controller.complete(active).status is EncounterStatus.COMPLETED

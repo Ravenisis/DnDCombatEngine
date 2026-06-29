@@ -38,6 +38,14 @@ def campaign_rows(campaign: Campaign) -> list[tuple[str, str]]:
     ]
 
 
+def campaign_reference_rows(campaign: Campaign) -> list[tuple[str, str]]:
+    """Return display rows for campaign references."""
+    rows = [("Campaign", campaign.name)]
+    rows.extend(("Character", character_id) for character_id in campaign.character_ids)
+    rows.extend(("Encounter", encounter_id) for encounter_id in campaign.encounter_ids)
+    return rows
+
+
 def attack_summary_text(result: AttackResult) -> str:
     """Return a one-line attack summary."""
     summary = AttackSummary.from_result(result)
@@ -56,6 +64,19 @@ def encounter_rows(encounter: Encounter) -> list[tuple[str, str]]:
         ("Status", summary.status),
         ("Participants", str(summary.participant_count)),
         ("Round", str(summary.round_number)),
+    ]
+
+
+def encounter_participant_rows(encounter: Encounter) -> list[tuple[str, str, str, str]]:
+    """Return display rows for encounter participants."""
+    return [
+        (
+            participant.participant_id,
+            participant.name,
+            participant.kind.value,
+            str(participant.quantity),
+        )
+        for participant in encounter.participants
     ]
 
 

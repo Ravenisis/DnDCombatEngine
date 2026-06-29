@@ -11,10 +11,12 @@ from dnd_combat_engine.gui.session import GuiSession
 from dnd_combat_engine.gui.theme import dark_theme_stylesheet
 from dnd_combat_engine.gui.widgets import (
     AttackPanelWidget,
+    CampaignEditorWidget,
     CampaignWidget,
     CharacterSheetWidget,
     CombatLogWidget,
     DiceTrayWidget,
+    EncounterEditorWidget,
     EncounterTrackerWidget,
     InitiativeWidget,
 )
@@ -35,10 +37,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window.setCentralWidget(central)
 
     _add_dock(window, qt, "Campaign", CampaignWidget.create(application, qt))
+    _add_dock(window, qt, "Campaign Editor", CampaignEditorWidget.create(application, qt))
     _add_dock(window, qt, "Character Sheet", CharacterSheetWidget.create(application, qt))
     _add_dock(window, qt, "Combat Log", CombatLogWidget.create(qt))
     _add_dock(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
     _add_dock(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
+    _add_dock(window, qt, "Encounter Editor", EncounterEditorWidget.create(application, qt))
     _add_dock(window, qt, "Initiative", InitiativeWidget.create(application, qt))
     _add_dock(window, qt, "Attack", AttackPanelWidget.create(application, qt))
     _configure_menus(window, qt)

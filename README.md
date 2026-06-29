@@ -79,7 +79,7 @@ an attack, spell, or condition update.
 - Combat log models, service, and controller for UI display.
 - PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
 - Campaign workspace support with campaign persistence, controller workflows, seed
-  campaign data, CLI inspection, and a GUI campaign dock.
+  campaign data, CLI inspection, GUI campaign editing, and encounter editing docks.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
 - Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
@@ -205,3 +205,13 @@ dnd-combat-engine init-user-data
   artifacts.
 - Added release checklist documentation for local verification and GitHub Actions
   artifact publishing.
+
+### Begin milestone 6 richer campaign and encounter editing
+
+- Added controller-backed GUI editor helpers for campaign references and encounter
+  participants.
+- Added campaign and encounter editor docks with inputs, action buttons, and log
+  output.
+- Added campaign reference and encounter participant panel rows for richer desktop
+  display.
+- Expanded tests across GUI editor helpers, panel rows, and controller edit methods.
