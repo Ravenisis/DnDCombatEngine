@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import argparse
 import random
+import sys
 from pathlib import Path
 
 from dnd_combat_engine.app import create_app
 from dnd_combat_engine.models import CombatLog
+from dnd_combat_engine.utils.paths import default_data_root, initialize_user_data
 
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser."""
     parser = argparse.ArgumentParser(prog="dnd-combat-engine")
-    parser.add_argument("--data-root", default="data", help="Path to JSON data root")
+    parser.add_argument("--data-root", default=None, help="Path to JSON data root")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     roll = subparsers.add_parser("roll", help="Roll dice notation")
@@ -24,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("list-campaigns", help="List known campaign ids")
     subparsers.add_parser("list-spells", help="List known spell ids")
     subparsers.add_parser("list-monsters", help="List known monster ids")
+    subparsers.add_parser("init-user-data", help="Initialize writable user data")
     campaign = subparsers.add_parser("campaign", help="Inspect or update a campaign")
     campaign_subparsers = campaign.add_subparsers(dest="campaign_command", required=True)
     campaign_show = campaign_subparsers.add_parser("show", help="Show campaign details")
@@ -37,7 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI."""
     args = build_parser().parse_args(argv)
-    app = create_app(Path(args.data_root))
+    data_root = Path(args.data_root) if args.data_root else default_data_root()
+    if args.command == "init-user-data":
+        print(initialize_user_data(data_root))
+        return 0
+    app = create_app(data_root)
     if args.command == "roll":
         rng = random.Random(args.seed) if args.seed is not None else None
         result = app.dice.roll(args.notation, rng=rng)
@@ -60,9 +67,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "quick-attack":
         return _quick_attack(app)
     if args.command == "gui":
-        from dnd_combat_engine.gui import run_gui
+        from dnd_combat_engine.gui import GuiDependencyError, run_gui
 
-        return run_gui(Path(args.data_root))
+        try:
+            return run_gui(data_root)
+        except GuiDependencyError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
     raise ValueError(f"unsupported command: {args.command}")
 
 

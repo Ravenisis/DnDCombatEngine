@@ -1,0 +1,25 @@
+{
+  "encounter_id": "roadside_ambush",
+  "name": "Roadside Ambush",
+  "notes": "Starter encounter for persistence and encounter tests.",
+  "participants": [
+    {
+      "initiative_bonus": 3,
+      "kind": "character",
+      "name": "Vale",
+      "participant_id": "vale",
+      "quantity": 1,
+      "source_id": "vale"
+    },
+    {
+      "initiative_bonus": 2,
+      "kind": "monster",
+      "name": "Goblin",
+      "participant_id": "goblin",
+      "quantity": 3,
+      "source_id": "goblin"
+    }
+  ],
+  "round_number": 1,
+  "status": "draft"
+}

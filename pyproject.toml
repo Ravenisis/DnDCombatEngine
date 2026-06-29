@@ -24,9 +24,15 @@ dev = [
 gui = [
   "PySide6>=6.7",
 ]
+installer = [
+  "PyInstaller>=6.10",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+dnd_combat_engine = ["data/**/*.json"]
 
 [tool.pytest.ini_options]
 addopts = "-q --cov=dnd_combat_engine --cov-report=term-missing --cov-fail-under=90"

@@ -1,0 +1,52 @@
+{
+  "abilities": {
+    "charisma": 11,
+    "constitution": 14,
+    "dexterity": 12,
+    "intelligence": 10,
+    "strength": 16,
+    "wisdom": 10
+  },
+  "armor": null,
+  "character_id": "bran",
+  "conditions": [],
+  "features": [
+    "Great Weapon Master"
+  ],
+  "hit_points": {
+    "current": 28,
+    "maximum": 28,
+    "temporary": 0
+  },
+  "inventory": [],
+  "level": 5,
+  "name": "Bran",
+  "resources": {
+    "hit_dice": {
+      "current": 5,
+      "maximum": 5,
+      "name": "hit_dice"
+    }
+  },
+  "skills": [
+    "athletics",
+    "intimidation"
+  ],
+  "weapons": [
+    {
+      "damage": [
+        {
+          "damage_type": "slashing",
+          "dice": "2d6"
+        }
+      ],
+      "name": "Greatsword",
+      "properties": [
+        "heavy",
+        "two-handed"
+      ],
+      "range_long": null,
+      "range_normal": null
+    }
+  ]
+}

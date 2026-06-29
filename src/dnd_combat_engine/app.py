@@ -40,6 +40,7 @@ from dnd_combat_engine.services import (
     PersistenceService,
     SpellService,
 )
+from dnd_combat_engine.utils.paths import default_data_root
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,10 +57,10 @@ class DnDCombatEngineApp:
     inventory: InventoryController
 
 
-def create_app(data_root: Path | str = "data") -> DnDCombatEngineApp:
+def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
     """Create a fully wired application controller container."""
     dice_service = DiceService()
-    persistence_service = PersistenceService(JsonFileStore(data_root))
+    persistence_service = PersistenceService(JsonFileStore(data_root or default_data_root()))
     feature_engine = FeatureEngine(
         [
             BlessFeature(),

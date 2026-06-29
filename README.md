@@ -43,6 +43,18 @@ python -m pip install -e ".[gui]"
 dnd-combat-engine gui
 ```
 
+Initialize writable user data for an installed app profile:
+
+```bash
+dnd-combat-engine init-user-data
+```
+
+Build a Windows desktop executable:
+
+```powershell
+.\scripts\build_windows.ps1
+```
+
 ## Architecture
 
 The project keeps combat behavior event-driven. Characters and weapons are data-rich
@@ -128,3 +140,14 @@ python -m pytest
 - Added CLI campaign commands for listing, showing, and activating campaigns.
 - Added a second seed character and encounter, then linked both into the starter
   campaign.
+
+### Begin milestone 5 packaging and installer foundation
+
+- Added install-safe runtime data path helpers with bundled seed data and writable
+  user data initialization.
+- Added `python -m dnd_combat_engine`, a GUI executable entry point, and CLI polish
+  for data initialization and missing GUI dependencies.
+- Added package-data configuration so JSON seed data is included in installed
+  wheels and executable builds.
+- Added a PyInstaller spec and Windows build script for producing
+  `dist/DnDCombatEngine/DnDCombatEngine.exe`.

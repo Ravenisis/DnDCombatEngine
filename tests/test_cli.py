@@ -28,6 +28,29 @@ def test_cli_lists_seed_campaign_ids(capsys) -> None:
     assert "starter_campaign" in output
 
 
+def test_cli_initializes_user_data(tmp_path, capsys) -> None:
+    exit_code = main(["--data-root", str(tmp_path / "user-data"), "init-user-data"])
+
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert "user-data" in output
+    assert (tmp_path / "user-data" / "characters" / "vale.json").exists()
+
+
+def test_cli_gui_command_handles_missing_pyside6(monkeypatch, capsys) -> None:
+    import dnd_combat_engine.gui
+    from dnd_combat_engine.gui import GuiDependencyError
+
+    def fake_run_gui(data_root):
+        raise GuiDependencyError("Install GUI dependencies")
+
+    monkeypatch.setattr(dnd_combat_engine.gui, "run_gui", fake_run_gui)
+
+    assert main(["--data-root", "data", "gui"]) == 1
+    assert "Install GUI dependencies" in capsys.readouterr().err
+
+
 def test_cli_shows_campaign_details(capsys) -> None:
     exit_code = main(["--data-root", "data", "campaign", "show", "starter_campaign"])
 
