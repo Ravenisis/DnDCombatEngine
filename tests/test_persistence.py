@@ -2,6 +2,7 @@ from fractions import Fraction
 
 from dnd_combat_engine.models import (
     AbilityScores,
+    Campaign,
     Character,
     Encounter,
     EncounterParticipant,
@@ -27,6 +28,21 @@ def test_persistence_service_saves_and_loads_character(tmp_path) -> None:
 
     assert service.list_character_ids() == ["fighter-1"]
     assert service.load_character("fighter-1") == character
+
+
+def test_persistence_service_saves_and_loads_campaign(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+    campaign = Campaign(
+        campaign_id="starter",
+        name="Starter",
+        character_ids=("vale",),
+        encounter_ids=("roadside_ambush",),
+    )
+
+    service.save_campaign(campaign)
+
+    assert service.list_campaign_ids() == ["starter"]
+    assert service.load_campaign("starter") == campaign
 
 
 def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:

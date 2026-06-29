@@ -1,6 +1,7 @@
 """Domain models for characters, equipment, and combat state."""
 
 from dnd_combat_engine.models.abilities import AbilityScores
+from dnd_combat_engine.models.campaigns import Campaign, CampaignStatus
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
 from dnd_combat_engine.models.conditions import Condition, ConditionName
@@ -21,6 +22,8 @@ from dnd_combat_engine.models.spells import Spell, SpellSchool
 __all__ = [
     "AbilityScores",
     "Armor",
+    "Campaign",
+    "CampaignStatus",
     "Character",
     "CombatLog",
     "CombatLogEntry",

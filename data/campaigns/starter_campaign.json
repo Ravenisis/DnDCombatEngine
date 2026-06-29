@@ -1,0 +1,12 @@
+{
+  "campaign_id": "starter_campaign",
+  "character_ids": [
+    "vale"
+  ],
+  "encounter_ids": [
+    "roadside_ambush"
+  ],
+  "name": "Starter Campaign",
+  "notes": "Milestone 4 seed campaign that ties the starter character to the starter encounter.",
+  "status": "active"
+}

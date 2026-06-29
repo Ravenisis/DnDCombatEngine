@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dnd_combat_engine.models.campaigns import Campaign
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.encounters import Encounter
 from dnd_combat_engine.models.monsters import Monster
@@ -27,6 +28,18 @@ class PersistenceService:
     def list_character_ids(self) -> list[str]:
         """List saved character ids."""
         return self.store.list_ids("characters")
+
+    def save_campaign(self, campaign: Campaign) -> None:
+        """Save a campaign as a JSON document."""
+        self.store.save("campaigns", campaign.campaign_id, campaign.to_dict())
+
+    def load_campaign(self, campaign_id: str) -> Campaign:
+        """Load a campaign from a JSON document."""
+        return Campaign.from_dict(self.store.load("campaigns", campaign_id))
+
+    def list_campaign_ids(self) -> list[str]:
+        """List saved campaign ids."""
+        return self.store.list_ids("campaigns")
 
     def save_spell(self, spell: Spell) -> None:
         """Save a spell as a JSON document."""

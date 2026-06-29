@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dnd_combat_engine.controllers import (
+    CampaignController,
     CharacterController,
     CombatController,
     CombatLogController,
@@ -27,6 +28,7 @@ from dnd_combat_engine.rules import (
     SneakAttackFeature,
 )
 from dnd_combat_engine.services import (
+    CampaignService,
     CharacterService,
     CombatLogService,
     CombatService,
@@ -44,6 +46,7 @@ from dnd_combat_engine.services import (
 class DnDCombatEngineApp:
     """Container for UI-facing controllers."""
 
+    campaigns: CampaignController
     characters: CharacterController
     combat: CombatController
     combat_log: CombatLogController
@@ -70,6 +73,7 @@ def create_app(data_root: Path | str = "data") -> DnDCombatEngineApp:
         ]
     )
     return DnDCombatEngineApp(
+        campaigns=CampaignController(CampaignService(), persistence_service),
         characters=CharacterController(CharacterService(), persistence_service),
         combat=CombatController(CombatService(dice_service, feature_engine)),
         combat_log=CombatLogController(CombatLogService()),
@@ -82,4 +86,3 @@ def create_app(data_root: Path | str = "data") -> DnDCombatEngineApp:
         ),
         inventory=InventoryController(InventoryService(), persistence_service),
     )
-

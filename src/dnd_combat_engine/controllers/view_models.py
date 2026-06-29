@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from dnd_combat_engine.engine.attacks import AttackResult
 from dnd_combat_engine.engine.initiative import InitiativeTracker
+from dnd_combat_engine.models.campaigns import Campaign
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.encounters import Encounter
 
@@ -31,6 +32,28 @@ class CharacterSummary:
             maximum_hp=character.hit_points.maximum,
             temporary_hp=character.hit_points.temporary,
             armor_class=character.armor.armor_class if character.armor else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CampaignSummary:
+    """Compact campaign state for UI lists."""
+
+    campaign_id: str
+    name: str
+    status: str
+    character_count: int
+    encounter_count: int
+
+    @classmethod
+    def from_campaign(cls, campaign: Campaign) -> CampaignSummary:
+        """Build a campaign summary."""
+        return cls(
+            campaign_id=campaign.campaign_id,
+            name=campaign.name,
+            status=campaign.status.value,
+            character_count=len(campaign.character_ids),
+            encounter_count=len(campaign.encounter_ids),
         )
 
 
@@ -101,4 +124,3 @@ class InitiativeSummary:
             active_combatant=current.combatant.name if current else None,
             order=tuple(entry.combatant.name for entry in tracker.entries),
         )
-

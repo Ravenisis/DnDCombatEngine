@@ -1,11 +1,13 @@
 from dnd_combat_engine.controllers import (
     AttackSummary,
+    CampaignSummary,
     CharacterSummary,
     EncounterSummary,
     InitiativeSummary,
 )
 from dnd_combat_engine.engine import AttackRequest
 from dnd_combat_engine.models import (
+    Campaign,
     Character,
     DamageComponent,
     DamageProfile,
@@ -37,6 +39,22 @@ def test_character_summary_from_character() -> None:
     assert summary.name == "Vale"
     assert summary.current_hp == 7
     assert summary.temporary_hp == 2
+
+
+def test_campaign_summary_from_campaign() -> None:
+    campaign = Campaign(
+        "starter",
+        "Starter",
+        character_ids=("vale",),
+        encounter_ids=("roadside_ambush",),
+    )
+
+    summary = CampaignSummary.from_campaign(campaign)
+
+    assert summary.name == "Starter"
+    assert summary.status == "planned"
+    assert summary.character_count == 1
+    assert summary.encounter_count == 1
 
 
 def test_attack_summary_from_result() -> None:
@@ -76,4 +94,3 @@ def test_encounter_and_initiative_summaries() -> None:
     assert encounter_summary.participant_count == 3
     assert initiative_summary.active_combatant == "Vale"
     assert initiative_summary.order == ("Vale",)
-

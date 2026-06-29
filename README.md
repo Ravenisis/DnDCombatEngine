@@ -51,19 +51,19 @@ an attack, spell, or condition update.
 
 ## Current Foundation
 
-- Domain models for characters, hit points, damage, equipment, inventory, conditions,
-  resources, spells, monsters, and encounters.
-- Services for characters, combat, dice, initiative, inventory, monsters, spells,
-  encounters, and JSON persistence.
-- Controllers for UI-facing character, combat, compendium, dice, encounter, and
-  inventory workflows.
+- Domain models for campaigns, characters, hit points, damage, equipment, inventory,
+  conditions, resources, spells, monsters, and encounters.
+- Services for campaigns, characters, combat, dice, initiative, inventory, monsters,
+  spells, encounters, and JSON persistence.
+- Controllers for UI-facing campaign, character, combat, compendium, dice, encounter,
+  and inventory workflows.
 - Application wiring through `dnd_combat_engine.app.create_app`.
 - Combat log models, service, and controller for UI display.
 - PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
 - Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
   Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
-- Seed JSON under `data/` for starter equipment, a character, a monster, spells, and
-  an encounter.
+- Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
+  spells, and an encounter.
 
 ## Release Gate
 
