@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
@@ -41,6 +41,7 @@ class GuiCampaignState:
 
     active_campaign_id: str | None = "starter_campaign"
     selected_character_id: str | None = "vale"
+    party_initiative: dict[str, int] = field(default_factory=dict)
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
@@ -64,7 +65,7 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window._dnd_docks = {}  # noqa: SLF001
 
     _add_dock(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
-    _add_dock(window, qt, "Party", _party_widget(application, qt, campaign_state))
+    _add_dock(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
     _add_dock(
         window,
         qt,
@@ -256,6 +257,7 @@ def _run_import_result(
         return
     state.active_campaign_id = result.campaign.campaign_id
     state.selected_character_id = result.character.character_id
+    state.party_initiative.pop(result.character.character_id, None)
     _refresh_campaign_docks(window, qt, app, state)
     message = (
         f"Imported {result.character.name} as {result.character.character_id} "
@@ -281,6 +283,7 @@ def _open_campaign(
 def _close_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignState) -> None:
     state.active_campaign_id = None
     state.selected_character_id = None
+    state.party_initiative.clear()
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, "Campaign closed.")
 
@@ -295,6 +298,7 @@ def _begin_new_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignS
     app.campaigns.save(campaign)
     state.active_campaign_id = campaign.campaign_id
     state.selected_character_id = None
+    state.party_initiative.clear()
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Created {campaign.name}.")
 
@@ -309,7 +313,7 @@ def _refresh_campaign_docks(
         window._dnd_central.setText(_central_text(app, state))  # noqa: SLF001
     docks = getattr(window, "_dnd_docks", {})
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
-    _replace_dock_widget(docks, "Party", _party_widget(app, qt, state))
+    _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_dock_widget(docks, "Character Sheet", _character_widget(app, qt, state))
 
@@ -326,10 +330,98 @@ def _campaign_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):
     return CampaignWidget.create(app, qt, state.active_campaign_id)
 
 
-def _party_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):
+def _party_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):
     if state.active_campaign_id is None:
         return _label(qt, "No campaign open")
-    return PartyFramesWidget.create(app, qt, state.active_campaign_id)
+    return PartyFramesWidget.create(
+        app,
+        qt,
+        state.active_campaign_id,
+        initiative_results=state.party_initiative,
+        on_upload_sheet=lambda character_id: _replace_party_member_sheet(
+            window,
+            qt,
+            app,
+            state,
+            character_id,
+        ),
+        on_remove_member=lambda character_id: _remove_party_member(
+            window,
+            qt,
+            app,
+            state,
+            character_id,
+        ),
+        on_set_initiative=lambda character_id, value: _set_party_initiative(
+            window,
+            qt,
+            app,
+            state,
+            character_id,
+            value,
+        ),
+    )
+
+
+def _replace_party_member_sheet(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+) -> None:
+    path = choose_character_pdf(qt, window)
+    if not path:
+        _set_status(window, "Character PDF import canceled.")
+        return
+    try:
+        draft = app.character_imports.preview_pdf(path)
+        app.characters.save(draft.to_character(character_id))
+    except ValueError as exc:
+        _show_message(window, qt, "Import Failed", str(exc), error=True)
+        return
+    except KeyError as exc:
+        _show_message(window, qt, "Import Failed", str(exc), error=True)
+        return
+    state.selected_character_id = character_id
+    _refresh_campaign_docks(window, qt, app, state)
+    _show_message(window, qt, "Character Sheet Updated", f"Updated {draft.name}.")
+
+
+def _remove_party_member(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+) -> None:
+    if state.active_campaign_id is None:
+        _show_message(window, qt, "Remove Failed", "Open or create a campaign first.", error=True)
+        return
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id).without_character(character_id)
+        app.campaigns.save(campaign)
+    except KeyError as exc:
+        _show_message(window, qt, "Remove Failed", str(exc), error=True)
+        return
+    state.party_initiative.pop(character_id, None)
+    if state.selected_character_id == character_id:
+        state.selected_character_id = campaign.character_ids[0] if campaign.character_ids else None
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, f"Removed {character_id} from party.")
+
+
+def _set_party_initiative(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    value: int,
+) -> None:
+    state.party_initiative[character_id] = value
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, f"Set {character_id} initiative to {value}.")
 
 
 def _campaign_editor_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):

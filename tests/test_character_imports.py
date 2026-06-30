@@ -51,6 +51,26 @@ def test_character_import_service_parses_text_sheet() -> None:
     assert draft.armor.armor_class == 15
 
 
+def test_character_import_service_reads_dnd_beyond_label_below_name() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Ravenisis
+        CHARACTER NAME
+        Cleric 6
+        CLASS & LEVEL
+        wazic
+        PLAYER NAME
+        Hill Dwarf
+        SPECIES
+        Folk Hero
+        BACKGROUND
+        """,
+        source="test",
+    )
+
+    assert draft.name == "Ravenisis"
+
+
 def test_character_import_service_parses_public_html_url(monkeypatch) -> None:
     service = CharacterImportService()
 

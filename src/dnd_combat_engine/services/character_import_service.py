@@ -196,8 +196,11 @@ def _html_to_text(value: str) -> str:
 
 
 def _extract_name(text: str) -> str:
+    label_below = _extract_value_before_label(text, "character name")
+    if label_below:
+        return _clean_name(label_below)
     patterns = (
-        r"(?:character\s*name|name)\s*:?\s*([A-Za-z][A-Za-z '\-]{1,60})",
+        r"^(?:character\s*name|name)\s*:?[ \t]*([A-Za-z][A-Za-z '\-]{1,60})$",
         r"^([A-Za-z][A-Za-z '\-]{1,60})$",
     )
     for pattern in patterns:
@@ -208,7 +211,39 @@ def _extract_name(text: str) -> str:
 
 
 def _clean_name(value: str) -> str:
-    return re.split(r"\s{2,}|\s+class\b|\s+level\b", value.strip(), maxsplit=1, flags=re.I)[0]
+    value = re.split(r"\s{2,}|\s+class\b|\s+level\b", value.strip(), maxsplit=1, flags=re.I)[0]
+    return re.sub(
+        r"\b(?:character\s*name|experience points|background)\b.*$",
+        "",
+        value,
+        flags=re.I,
+    ).strip()
+
+
+def _extract_value_before_label(text: str, label: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    label_pattern = re.compile(rf"^{label}$", flags=re.IGNORECASE)
+    for index, line in enumerate(lines):
+        if label_pattern.match(line) and index > 0:
+            value = lines[index - 1].strip()
+            if _looks_like_character_name(value):
+                return value
+    return None
+
+
+def _looks_like_character_name(value: str) -> bool:
+    if not re.fullmatch(r"[A-Za-z][A-Za-z '\-]{1,60}", value):
+        return False
+    labels = {
+        "background",
+        "character name",
+        "class",
+        "class & level",
+        "experience points",
+        "player name",
+        "species",
+    }
+    return value.lower() not in labels
 
 
 def _extract_level(text: str) -> int:

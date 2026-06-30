@@ -201,3 +201,158 @@ def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
     assert _is_shift_right_click(FakeQt, FakeEvent(2, 0)) is False
     assert _is_shift_right_click(FakeQt, FakeEvent(1, 1)) is False
 
+
+def test_party_initiative_helpers_parse_and_prompt() -> None:
+    from dnd_combat_engine.gui.widgets import (
+        _ask_initiative_roll,
+        _initiative_text,
+        _parse_initiative_value,
+    )
+
+    class FakeInputDialog:
+        response = (17, True)
+
+        @classmethod
+        def getInt(cls, *args):
+            return cls.response
+
+    class FakeQtWidgets:
+        QInputDialog = FakeInputDialog
+
+    class FakeQt:
+        QtWidgets = FakeQtWidgets
+
+    assert _initiative_text(None) == "Initiative: -"
+    assert _initiative_text(17) == "Initiative: 17"
+    assert _parse_initiative_value(" 22 ") == 22
+    assert _parse_initiative_value("twenty") is None
+    assert _ask_initiative_roll(FakeQt, object(), None) == 17
+
+    FakeInputDialog.response = (0, False)
+    assert _ask_initiative_roll(FakeQt, object(), 4) is None
+
+
+def test_party_context_menu_wires_actions(monkeypatch) -> None:
+    from dnd_combat_engine.gui import widgets
+
+    calls = []
+
+    class FakeSignal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+    class FakeAction:
+        def __init__(self, label: str) -> None:
+            self.label = label
+            self.triggered = FakeSignal()
+
+    class FakeMenu:
+        last = None
+
+        def __init__(self, parent) -> None:
+            self.parent = parent
+            self.actions = []
+            self.position = None
+            FakeMenu.last = self
+
+        def addAction(self, label: str):
+            action = FakeAction(label)
+            self.actions.append(action)
+            return action
+
+        def exec(self, position) -> None:
+            self.position = position
+
+    class FakeQtWidgets:
+        QMenu = FakeMenu
+
+    class FakeQt:
+        QtWidgets = FakeQtWidgets
+
+    class FakeFrame:
+        def mapToGlobal(self, position):
+            return f"global:{position}"
+
+    monkeypatch.setattr(widgets, "_ask_initiative_roll", lambda qt, parent, current: 19)
+
+    widgets._show_party_context_menu(
+        FakeQt,
+        FakeFrame(),
+        "point",
+        "vale",
+        12,
+        lambda character_id: calls.append(("upload", character_id)),
+        lambda character_id: calls.append(("remove", character_id)),
+        lambda character_id, value: calls.append(("initiative", character_id, value)),
+    )
+
+    assert FakeMenu.last.position == "global:point"
+    for action in FakeMenu.last.actions:
+        action.triggered.callback()
+    assert calls == [("upload", "vale"), ("remove", "vale"), ("initiative", "vale", 19)]
+
+
+def test_party_context_policy_and_frame_style(monkeypatch) -> None:
+    from dnd_combat_engine.gui import widgets
+
+    captured = {}
+
+    class FakeSignal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+    class FakeContextMenuPolicy:
+        CustomContextMenu = 4
+
+    class FakeQtNamespace:
+        ContextMenuPolicy = FakeContextMenuPolicy
+
+    class FakeQtCore:
+        Qt = FakeQtNamespace
+
+    class FakeQt:
+        QtCore = FakeQtCore
+
+    class FakeFrame:
+        def __init__(self) -> None:
+            self.customContextMenuRequested = FakeSignal()
+
+        def setContextMenuPolicy(self, policy) -> None:
+            self.policy = policy
+
+    def fake_show(*args) -> None:
+        captured["args"] = args
+
+    monkeypatch.setattr(widgets, "_show_party_context_menu", fake_show)
+    frame = FakeFrame()
+
+    widgets._install_party_context_menu(
+        FakeQt,
+        frame,
+        "vale",
+        18,
+        lambda character_id: None,
+        None,
+        None,
+    )
+
+    frame.customContextMenuRequested.callback("point")
+    assert frame.policy == 4
+    assert captured["args"][3:5] == ("vale", 18)
+
+    class FakeFrameClass:
+        StyledPanel = 1
+        Raised = 2
+
+    class StyledFrame:
+        def setFrameShape(self, shape) -> None:
+            self.shape = shape
+
+        def setFrameShadow(self, shadow) -> None:
+            self.shadow = shadow
+
+    styled = StyledFrame()
+    widgets._set_frame_style(FakeFrameClass, styled)
+    assert styled.shape == 1
+    assert styled.shadow == 2
+

@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from dnd_combat_engine.gui import main_window
 from dnd_combat_engine.models import Campaign, Character, HitPoints
+from dnd_combat_engine.models.imports import CharacterImportDraft
 
 
 class FakeStatusBar:
@@ -117,3 +118,64 @@ def test_begin_new_campaign_creates_and_opens_campaign(monkeypatch) -> None:
     assert state.active_campaign_id == "storm_coast"
     assert state.selected_character_id is None
     assert window.status.message == "Created Storm Coast."
+
+
+def test_replace_party_member_sheet_saves_over_existing_character(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter", selected_character_id="vale")
+    saved_characters = []
+    app = SimpleNamespace(
+        character_imports=SimpleNamespace(
+            preview_pdf=lambda path: CharacterImportDraft("Ravenisis", hit_points=HitPoints(8, 8))
+        ),
+        characters=SimpleNamespace(save=saved_characters.append),
+    )
+    FakeMessageBox.information_calls = []
+    monkeypatch.setattr(main_window, "choose_character_pdf", lambda qt, parent: "ravenisis.pdf")
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._replace_party_member_sheet(window, FakeQt, app, state, "vale")
+
+    assert saved_characters[-1].character_id == "vale"
+    assert saved_characters[-1].name == "Ravenisis"
+    assert state.selected_character_id == "vale"
+    assert FakeMessageBox.information_calls[-1][1] == "Character Sheet Updated"
+
+
+def test_remove_party_member_updates_campaign_and_selection(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(
+        active_campaign_id="starter",
+        selected_character_id="vale",
+        party_initiative={"vale": 18, "bran": 11},
+    )
+    saved_campaigns = []
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(
+                campaign_id,
+                "Starter",
+                character_ids=("vale", "bran"),
+            ),
+            save=saved_campaigns.append,
+        )
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._remove_party_member(window, FakeQt, app, state, "vale")
+
+    assert saved_campaigns[-1].character_ids == ("bran",)
+    assert state.selected_character_id == "bran"
+    assert state.party_initiative == {"bran": 11}
+    assert window.status.message == "Removed vale from party."
+
+
+def test_set_party_initiative_refreshes_state(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter", selected_character_id="vale")
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._set_party_initiative(window, FakeQt, object(), state, "vale", 22)
+
+    assert state.party_initiative == {"vale": 22}
+    assert window.status.message == "Set vale initiative to 22."

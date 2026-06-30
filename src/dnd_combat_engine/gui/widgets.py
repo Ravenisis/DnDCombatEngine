@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from dnd_combat_engine.app import DnDCombatEngineApp
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.editors import (
@@ -104,7 +106,15 @@ class PartyFramesWidget:
     """Factory for framed party member summaries."""
 
     @staticmethod
-    def create(app: DnDCombatEngineApp, qt, campaign_id: str = "starter_campaign"):
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        campaign_id: str = "starter_campaign",
+        initiative_results: dict[str, int] | None = None,
+        on_upload_sheet=None,
+        on_remove_member=None,
+        on_set_initiative=None,
+    ):
         """Create party frames for every character in a campaign."""
         campaign = app.campaigns.load(campaign_id)
         widget = qt.QtWidgets.QWidget()
@@ -113,7 +123,17 @@ class PartyFramesWidget:
             layout.addWidget(qt.QtWidgets.QLabel("No party members"))
             return widget
         for character_id in campaign.character_ids:
-            layout.addWidget(_party_member_frame(app, qt, character_id))
+            layout.addWidget(
+                _party_member_frame(
+                    app,
+                    qt,
+                    character_id,
+                    initiative_results or {},
+                    on_upload_sheet,
+                    on_remove_member,
+                    on_set_initiative,
+                )
+            )
         if hasattr(layout, "addStretch"):
             layout.addStretch(1)
         return widget
@@ -443,7 +463,15 @@ def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
 
 
-def _party_member_frame(app: DnDCombatEngineApp, qt, character_id: str):
+def _party_member_frame(
+    app: DnDCombatEngineApp,
+    qt,
+    character_id: str,
+    initiative_results: dict[str, int] | None = None,
+    on_upload_sheet=None,
+    on_remove_member=None,
+    on_set_initiative=None,
+):
     frame_class = getattr(qt.QtWidgets, "QFrame", qt.QtWidgets.QWidget)
     frame = frame_class()
     if hasattr(frame, "setObjectName"):
@@ -472,9 +500,162 @@ def _party_member_frame(app: DnDCombatEngineApp, qt, character_id: str):
         if hasattr(progress, "setFormat"):
             progress.setFormat(hp_text)
         layout.addWidget(progress)
+    initiative_value = (initiative_results or {}).get(character_id)
+    layout.addWidget(qt.QtWidgets.QLabel(_initiative_text(initiative_value)))
+    if on_set_initiative is not None:
+        _add_initiative_entry(qt, layout, character_id, on_set_initiative)
     features = ", ".join(character.features) if character.features else "No features"
     layout.addWidget(qt.QtWidgets.QLabel(features))
+    _install_party_context_menu(
+        qt,
+        frame,
+        character_id,
+        initiative_value,
+        on_upload_sheet,
+        on_remove_member,
+        on_set_initiative,
+    )
     return frame
+
+
+def _initiative_text(value: int | None) -> str:
+    return "Initiative: -" if value is None else f"Initiative: {value}"
+
+
+def _add_initiative_entry(qt, layout, character_id: str, on_set_initiative) -> None:
+    row = qt.QtWidgets.QWidget()
+    row_layout = qt.QtWidgets.QHBoxLayout(row)
+    input_box = qt.QtWidgets.QLineEdit("")
+    if hasattr(input_box, "setPlaceholderText"):
+        input_box.setPlaceholderText("Initiative roll")
+    set_button = qt.QtWidgets.QPushButton("Set")
+
+    def submit() -> None:
+        value = _parse_initiative_value(input_box.text())
+        if value is not None:
+            on_set_initiative(character_id, value)
+
+    set_button.clicked.connect(submit)
+    row_layout.addWidget(input_box)
+    row_layout.addWidget(set_button)
+    layout.addWidget(row)
+
+
+def _parse_initiative_value(value: str) -> int | None:
+    value = value.strip()
+    if not re.fullmatch(r"-?\d{1,3}", value):
+        return None
+    return int(value)
+
+
+def _install_party_context_menu(
+    qt,
+    frame,
+    character_id: str,
+    initiative_value: int | None,
+    on_upload_sheet,
+    on_remove_member,
+    on_set_initiative,
+) -> None:
+    if not any((on_upload_sheet, on_remove_member, on_set_initiative)):
+        return
+    if not hasattr(frame, "setContextMenuPolicy") or not hasattr(
+        frame,
+        "customContextMenuRequested",
+    ):
+        return
+    policy = getattr(getattr(qt.QtCore.Qt, "ContextMenuPolicy", None), "CustomContextMenu", None)
+    if policy is None:
+        policy = getattr(qt.QtCore.Qt, "CustomContextMenu", None)
+    if policy is None:
+        return
+    frame.setContextMenuPolicy(policy)
+    frame.customContextMenuRequested.connect(
+        lambda position: _show_party_context_menu(
+            qt,
+            frame,
+            position,
+            character_id,
+            initiative_value,
+            on_upload_sheet,
+            on_remove_member,
+            on_set_initiative,
+        )
+    )
+
+
+def _show_party_context_menu(
+    qt,
+    frame,
+    position,
+    character_id: str,
+    initiative_value: int | None,
+    on_upload_sheet,
+    on_remove_member,
+    on_set_initiative,
+) -> None:
+    menu_class = getattr(qt.QtWidgets, "QMenu", None)
+    if menu_class is None:
+        return
+    menu = menu_class(frame)
+    _add_menu_action(menu, "Upload New Character Sheet", on_upload_sheet, character_id)
+    _add_menu_action(menu, "Remove Player from Party", on_remove_member, character_id)
+    if on_set_initiative is not None:
+        action = menu.addAction("Enter Initiative Roll")
+        if hasattr(action, "triggered"):
+            action.triggered.connect(
+                lambda checked=False: _prompt_and_set_initiative(
+                    qt,
+                    frame,
+                    character_id,
+                    initiative_value,
+                    on_set_initiative,
+                )
+            )
+    global_position = frame.mapToGlobal(position) if hasattr(frame, "mapToGlobal") else position
+    if hasattr(menu, "exec"):
+        menu.exec(global_position)
+    elif hasattr(menu, "exec_"):
+        menu.exec_(global_position)
+
+
+def _add_menu_action(menu, label: str, callback, character_id: str) -> None:
+    if callback is None:
+        return
+    action = menu.addAction(label)
+    if hasattr(action, "triggered"):
+        action.triggered.connect(lambda checked=False: callback(character_id))
+
+
+def _prompt_and_set_initiative(
+    qt,
+    parent,
+    character_id: str,
+    current_value: int | None,
+    on_set_initiative,
+) -> None:
+    value = _ask_initiative_roll(qt, parent, current_value)
+    if value is not None:
+        on_set_initiative(character_id, value)
+
+
+def _ask_initiative_roll(qt, parent, current_value: int | None) -> int | None:
+    dialog = getattr(qt.QtWidgets, "QInputDialog", None)
+    if dialog is None:
+        return None
+    selected = dialog.getInt(
+        parent,
+        "Initiative Roll",
+        "Initiative roll result:",
+        current_value or 0,
+        -99,
+        999,
+        1,
+    )
+    if isinstance(selected, tuple):
+        value, accepted = selected
+        return int(value) if accepted else None
+    return int(selected) if selected is not None else None
 
 
 def _set_frame_style(frame_class, frame) -> None:
