@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dnd_combat_engine.app import DnDCombatEngineApp
+from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.editors import (
     add_character_to_campaign,
     add_character_to_encounter,
@@ -10,14 +11,11 @@ from dnd_combat_engine.gui.editors import (
     add_monster_to_encounter,
     advance_encounter_round,
     complete_encounter,
-    import_character_pdf_to_campaign,
-    import_character_url_to_campaign,
     remove_character_from_campaign,
     remove_encounter_from_campaign,
     remove_participant_from_encounter,
     start_encounter,
 )
-from dnd_combat_engine.gui.import_dialogs import ask_character_url, choose_character_pdf
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
     campaign_reference_rows,
@@ -28,6 +26,9 @@ from dnd_combat_engine.gui.panels import (
     initiative_rows,
 )
 from dnd_combat_engine.models import CombatLog
+from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
+
+ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
 
 
 class DiceTrayWidget:
@@ -109,8 +110,6 @@ class CampaignEditorWidget:
         layout = qt.QtWidgets.QVBoxLayout(widget)
         character_input = qt.QtWidgets.QLineEdit("vale")
         encounter_input = qt.QtWidgets.QLineEdit("roadside_ambush")
-        import_path_input = qt.QtWidgets.QLineEdit("")
-        import_url_input = qt.QtWidgets.QLineEdit("")
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
 
@@ -137,18 +136,6 @@ class CampaignEditorWidget:
                 lambda: remove_character_from_campaign(app, campaign_id, character_input.text())
             )
         )
-        import_character = qt.QtWidgets.QPushButton("Import Character PDF")
-        import_character.clicked.connect(
-            lambda: run(
-                lambda: _import_pdf_from_widget(app, qt, widget, campaign_id, import_path_input)
-            )
-        )
-        import_url = qt.QtWidgets.QPushButton("Import Character URL")
-        import_url.clicked.connect(
-            lambda: run(
-                lambda: _import_url_from_widget(app, qt, widget, campaign_id, import_url_input)
-            )
-        )
         add_encounter = qt.QtWidgets.QPushButton("Add Encounter")
         add_encounter.clicked.connect(
             lambda: run(lambda: add_encounter_to_campaign(app, campaign_id, encounter_input.text()))
@@ -163,13 +150,114 @@ class CampaignEditorWidget:
         layout.addWidget(character_input)
         layout.addWidget(add_character)
         layout.addWidget(remove_character)
-        layout.addWidget(import_path_input)
-        layout.addWidget(import_character)
-        layout.addWidget(import_url_input)
-        layout.addWidget(import_url)
         layout.addWidget(encounter_input)
         layout.addWidget(add_encounter)
         layout.addWidget(remove_encounter)
+        layout.addWidget(output)
+        return widget
+
+
+class ActionBarWidget:
+    """Factory for the bottom quick action bar."""
+
+    @staticmethod
+    def create(qt, session: ActionBarSession):
+        """Create a centered action bar widget."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QHBoxLayout(widget)
+        if hasattr(layout, "setAlignment"):
+            layout.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
+        buttons = []
+        for slot in range(1, 13):
+            button = qt.QtWidgets.QPushButton("")
+            if hasattr(button, "setFixedSize"):
+                button.setFixedSize(86, 58)
+            hotkey = ACTION_BAR_HOTKEYS[slot - 1]
+            if hasattr(button, "setShortcut"):
+                button.setShortcut(hotkey)
+            button.clicked.connect(
+                lambda checked=False, item_slot=slot: session.activate(item_slot)
+            )
+            buttons.append(button)
+            layout.addWidget(button)
+
+        def refresh(bar: ActionBar) -> None:
+            for slot, button in enumerate(buttons, start=1):
+                action = bar.button_at(slot)
+                text = action.label if action else f"{ACTION_BAR_HOTKEYS[slot - 1]}\nEmpty"
+                if hasattr(button, "setText"):
+                    button.setText(text)
+                if hasattr(button, "setEnabled"):
+                    button.setEnabled(action is not None)
+                if hasattr(button, "setToolTip"):
+                    tooltip = "Empty action slot." if action is None else bar.activate(slot)
+                    button.setToolTip(tooltip)
+
+        session.subscribe(refresh)
+        return widget
+
+
+class SpellbookWidget:
+    """Factory for the spellbook source window."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, session: ActionBarSession):
+        """Create a spellbook widget that can place spells on the action bar."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        output = qt.QtWidgets.QTextEdit()
+        output.setReadOnly(True)
+        for spell_id in app.compendium.persistence_service.list_spell_ids():
+            spell = app.compendium.load_spell(spell_id)
+            button = qt.QtWidgets.QPushButton(f"{spell.name} (Rank {max(1, spell.level)})")
+            button.clicked.connect(
+                lambda checked=False, item=spell: output.append(
+                    session.place_next(
+                        ActionBarButton(
+                            slot=1,
+                            kind=ActionBarActionKind.SPELL,
+                            action_id=item.spell_id,
+                            name=item.name,
+                            rank=max(1, item.level),
+                            uses_highest_rank=True,
+                        )
+                    )
+                )
+            )
+            layout.addWidget(button)
+        layout.addWidget(output)
+        return widget
+
+
+class AbilitiesWidget:
+    """Factory for the abilities source window."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, session: ActionBarSession, character_id: str = "vale"):
+        """Create an abilities widget that can place character features on the action bar."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        output = qt.QtWidgets.QTextEdit()
+        output.setReadOnly(True)
+        character = app.characters.load(character_id)
+        features = character.features or ("Basic Attack",)
+        for feature in features:
+            button = qt.QtWidgets.QPushButton(feature)
+            button.clicked.connect(
+                lambda checked=False, name=feature: output.append(
+                    session.place_next(
+                        ActionBarButton(
+                            slot=1,
+                            kind=ActionBarActionKind.ABILITY,
+                            action_id=_action_id(name),
+                            name=name,
+                            rank=1,
+                            uses_highest_rank=True,
+                        )
+                    )
+                )
+            )
+            layout.addWidget(button)
         layout.addWidget(output)
         return widget
 
@@ -331,23 +419,5 @@ def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
 
 
-def _import_pdf_from_widget(app, qt, widget, campaign_id: str, input_box) -> str:
-    path = input_box.text().strip()
-    if not path:
-        path = choose_character_pdf(qt, widget) or ""
-        if path and hasattr(input_box, "setText"):
-            input_box.setText(path)
-    if not path:
-        return "Character PDF import canceled."
-    return import_character_pdf_to_campaign(app, campaign_id, path)
-
-
-def _import_url_from_widget(app, qt, widget, campaign_id: str, input_box) -> str:
-    url = input_box.text().strip()
-    if not url:
-        url = ask_character_url(qt, widget) or ""
-        if url and hasattr(input_box, "setText"):
-            input_box.setText(url)
-    if not url:
-        return "Character URL import canceled."
-    return import_character_url_to_campaign(app, campaign_id, url)
+def _action_id(name: str) -> str:
+    return name.lower().replace(" ", "_").replace("'", "")

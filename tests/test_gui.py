@@ -30,6 +30,7 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     class FakeDockWidgetArea:
         LeftDockWidgetArea = 1
+        BottomDockWidgetArea = 2
 
     class FakeQt:
         AlignmentFlag = FakeAlignmentFlag
@@ -63,12 +64,30 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
         def setItem(self, row, column, item) -> None:
             self.item = (row, column, item)
 
+        def setText(self, value) -> None:
+            self.text_value = value
+
+        def setEnabled(self, value) -> None:
+            self.enabled = value
+
+        def setToolTip(self, value) -> None:
+            self.tooltip = value
+
+        def setFixedSize(self, width, height) -> None:
+            self.fixed_size = (width, height)
+
+        def setShortcut(self, value) -> None:
+            self.shortcut = value
+
     class FakeLayout:
         def __init__(self, widget) -> None:
             self.widget = widget
 
         def addWidget(self, widget) -> None:
             self.widget = widget
+
+        def setAlignment(self, value) -> None:
+            self.alignment = value
 
     class FakeSignal:
         def connect(self, callback) -> None:
@@ -126,6 +145,7 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
         QDockWidget = FakeDockWidget
         QWidget = FakeWidget
         QVBoxLayout = FakeLayout
+        QHBoxLayout = FakeLayout
         QLineEdit = FakeWidget
         QPushButton = FakeButton
         QTextEdit = FakeWidget

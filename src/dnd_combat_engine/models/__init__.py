@@ -1,6 +1,7 @@
 """Domain models for characters, equipment, and combat state."""
 
 from dnd_combat_engine.models.abilities import AbilityScores
+from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
 from dnd_combat_engine.models.campaigns import Campaign, CampaignStatus
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
@@ -22,6 +23,9 @@ from dnd_combat_engine.models.spells import Spell, SpellSchool
 
 __all__ = [
     "AbilityScores",
+    "ActionBar",
+    "ActionBarActionKind",
+    "ActionBarButton",
     "Armor",
     "Campaign",
     "CampaignStatus",

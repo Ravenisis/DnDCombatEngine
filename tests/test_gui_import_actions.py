@@ -1,4 +1,4 @@
-from dnd_combat_engine.gui import main_window, widgets
+from dnd_combat_engine.gui import main_window
 
 
 class FakeStatusBar:
@@ -42,19 +42,6 @@ class FakeQt:
     QtWidgets = FakeQtWidgets
 
 
-class FakeInput:
-    def __init__(self, text: str = "") -> None:
-        self._text = text
-        self.set_value = ""
-
-    def text(self) -> str:
-        return self._text
-
-    def setText(self, value) -> None:
-        self.set_value = value
-        self._text = value
-
-
 def test_pdf_menu_action_runs_import_and_reports_status(monkeypatch) -> None:
     window = FakeWindow()
     FakeMessageBox.information_calls = []
@@ -85,34 +72,4 @@ def test_url_menu_action_runs_import_and_reports_errors(monkeypatch) -> None:
 
     assert window.status.message == "could not import"
     assert FakeMessageBox.warning_calls[-1][1] == "Import Failed"
-
-
-def test_widget_pdf_import_prompts_when_field_is_blank(monkeypatch) -> None:
-    input_box = FakeInput()
-    monkeypatch.setattr(widgets, "choose_character_pdf", lambda qt, parent: "sheet.pdf")
-    monkeypatch.setattr(
-        widgets,
-        "import_character_pdf_to_campaign",
-        lambda app, campaign_id, path: f"Imported {path}",
-    )
-
-    message = widgets._import_pdf_from_widget(object(), FakeQt, object(), "starter", input_box)
-
-    assert message == "Imported sheet.pdf"
-    assert input_box.set_value == "sheet.pdf"
-
-
-def test_widget_url_import_prompts_when_field_is_blank(monkeypatch) -> None:
-    input_box = FakeInput()
-    monkeypatch.setattr(widgets, "ask_character_url", lambda qt, parent: "https://example.test")
-    monkeypatch.setattr(
-        widgets,
-        "import_character_url_to_campaign",
-        lambda app, campaign_id, url: f"Imported {url}",
-    )
-
-    message = widgets._import_url_from_widget(object(), FakeQt, object(), "starter", input_box)
-
-    assert message == "Imported https://example.test"
-    assert input_box.set_value == "https://example.test"
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
+from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.actions import action_specs_by_menu, default_action_specs
 from dnd_combat_engine.gui.editors import (
     import_character_pdf_to_campaign,
@@ -15,6 +16,8 @@ from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
 from dnd_combat_engine.gui.theme import dark_theme_stylesheet
 from dnd_combat_engine.gui.widgets import (
+    AbilitiesWidget,
+    ActionBarWidget,
     AttackPanelWidget,
     CampaignEditorWidget,
     CampaignWidget,
@@ -24,6 +27,7 @@ from dnd_combat_engine.gui.widgets import (
     EncounterEditorWidget,
     EncounterTrackerWidget,
     InitiativeWidget,
+    SpellbookWidget,
 )
 
 
@@ -33,6 +37,7 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     application = app or create_app(Path("data"))
     session = GuiSession()
     window = qt.QtWidgets.QMainWindow()
+    action_bar_session = ActionBarSession()
     window.setWindowTitle("DnDCombatEngine")
     window.resize(session.window_width, session.window_height)
     window.setStyleSheet(dark_theme_stylesheet())
@@ -50,6 +55,9 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     _add_dock(window, qt, "Encounter Editor", EncounterEditorWidget.create(application, qt))
     _add_dock(window, qt, "Initiative", InitiativeWidget.create(application, qt))
     _add_dock(window, qt, "Attack", AttackPanelWidget.create(application, qt))
+    _add_dock(window, qt, "Spellbook", SpellbookWidget.create(application, qt, action_bar_session))
+    _add_dock(window, qt, "Abilities", AbilitiesWidget.create(application, qt, action_bar_session))
+    _add_bottom_dock(window, qt, "Action Bar", ActionBarWidget.create(qt, action_bar_session))
     _configure_menus(window, qt, application)
     _set_status(window, "Ready")
     return window
@@ -68,6 +76,12 @@ def _add_dock(window, qt, title: str, widget) -> None:
     dock = qt.QtWidgets.QDockWidget(title, window)
     dock.setWidget(widget)
     window.addDockWidget(qt.QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, dock)
+
+
+def _add_bottom_dock(window, qt, title: str, widget) -> None:
+    dock = qt.QtWidgets.QDockWidget(title, window)
+    dock.setWidget(widget)
+    window.addDockWidget(qt.QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock)
 
 
 def _configure_menus(window, qt, app: DnDCombatEngineApp) -> None:

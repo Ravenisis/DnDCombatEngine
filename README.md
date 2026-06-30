@@ -133,9 +133,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,540,359 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,548,159 bytes
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,865,792 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,886,272 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
 
 Latest verified local install smoke test:
@@ -308,3 +308,14 @@ dnd-combat-engine init-user-data
   matching input field is blank.
 - Added regression tests for menu-triggered imports and dock import button
   prompt behavior.
+
+### Add action bar UI foundation
+
+- Removed character sheet upload controls from the Campaign Editor dock so import
+  remains available from the Campaign menu only.
+- Added Spellbook and Abilities dock windows for placing spells and abilities on
+  a shared quick action bar.
+- Added a centered bottom action bar with mouse-click activation and keyboard
+  hotkeys for slots 1-0, -, and =.
+- Added action bar rank update behavior so highest-rank buttons update when a new
+  rank is learned while downranked or inactive-spec buttons stay unchanged.
