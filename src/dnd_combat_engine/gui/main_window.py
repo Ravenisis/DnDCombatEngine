@@ -28,11 +28,11 @@ from dnd_combat_engine.gui.widgets import (
     DiceTrayWidget,
     EncounterEditorWidget,
     EncounterTrackerWidget,
-    InitiativeWidget,
     PartyFramesWidget,
     SpellbookWidget,
 )
-from dnd_combat_engine.models import Campaign
+from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton, Campaign, Character
+from dnd_combat_engine.models.damage import DamageProfile
 
 
 @dataclass(slots=True)
@@ -58,8 +58,9 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     if hasattr(window, "setDockNestingEnabled"):
         window.setDockNestingEnabled(True)
 
-    central = qt.QtWidgets.QLabel("Combat Workspace")
-    central.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
+    central = qt.QtWidgets.QTextEdit()
+    central.setReadOnly(True)
+    central.append("Combat Workspace")
     window.setCentralWidget(central)
     window._dnd_central = central  # noqa: SLF001
     window._dnd_docks = {}  # noqa: SLF001
@@ -77,11 +78,27 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     _add_dock(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
     _add_dock(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
     _add_dock(window, qt, "Encounter Editor", EncounterEditorWidget.create(application, qt))
-    _add_dock(window, qt, "Initiative", InitiativeWidget.create(application, qt))
     _add_dock(window, qt, "Attack", AttackPanelWidget.create(application, qt))
     _add_dock(window, qt, "Spellbook", SpellbookWidget.create(application, qt, action_bar_session))
     _add_dock(window, qt, "Abilities", AbilitiesWidget.create(application, qt, action_bar_session))
-    _add_bottom_dock(window, qt, "Action Bar", ActionBarWidget.create(qt, action_bar_session))
+    _add_bottom_dock(
+        window,
+        qt,
+        "Action Bar",
+        ActionBarWidget.create(
+            qt,
+            action_bar_session,
+            on_activate=lambda slot, shift_pressed: _activate_action_bar_slot(
+                window,
+                qt,
+                application,
+                campaign_state,
+                action_bar_session,
+                slot,
+                shift_pressed,
+            ),
+        ),
+    )
     _configure_menus(window, qt, application, campaign_state)
     _set_status(window, "Ready")
     return window
@@ -309,13 +326,120 @@ def _refresh_campaign_docks(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
 ) -> None:
-    if hasattr(window, "_dnd_central"):
-        window._dnd_central.setText(_central_text(app, state))  # noqa: SLF001
     docks = getattr(window, "_dnd_docks", {})
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
     _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_dock_widget(docks, "Character Sheet", _character_widget(app, qt, state))
+
+
+def _activate_action_bar_slot(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    session: ActionBarSession,
+    slot: int,
+    shift_pressed: bool,
+) -> str:
+    if shift_pressed:
+        result = app.dice.roll("1d20")
+        message = f"Slot {slot} d20: {result.total} rolls={result.rolls}"
+    else:
+        button = session.bar.button_at(slot)
+        message = _activate_action_button(app, state, button)
+        _refresh_campaign_docks(window, qt, app, state)
+    _append_workspace(window, message)
+    _set_status(window, message)
+    return message
+
+
+def _activate_action_button(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    button: ActionBarButton | None,
+) -> str:
+    if button is None:
+        return "Action slot is empty."
+    if state.selected_character_id is None:
+        return f"Select a character before using {button.name}."
+    try:
+        character = app.characters.load(state.selected_character_id)
+    except KeyError:
+        return f"Selected character {state.selected_character_id} could not be loaded."
+    if button.kind == ActionBarActionKind.SPELL:
+        return _activate_spell_button(app, character, button)
+    return _activate_ability_button(app, character, button)
+
+
+def _activate_spell_button(
+    app: DnDCombatEngineApp,
+    character: Character,
+    button: ActionBarButton,
+) -> str:
+    try:
+        spell = app.compendium.load_spell(button.action_id)
+    except KeyError:
+        return f"{button.name} is not in the spell compendium."
+    slot_message = "No spell slot used."
+    if spell.level > 0:
+        slot_level = max(spell.level, button.rank)
+        resource = character.resources.get(f"spell_slot_{slot_level}")
+        if resource is None:
+            return f"{character.name} cannot cast {spell.name}: no level {slot_level} slots."
+        if not resource.expend(1):
+            return (
+                f"{character.name} cannot cast {spell.name}: "
+                f"no level {slot_level} slots remaining."
+            )
+        app.characters.save(character)
+        slot_message = (
+            f"Used level {slot_level} spell slot; "
+            f"{resource.current}/{resource.maximum} remain."
+        )
+    damage_message = _roll_damage_profile(app, spell.damage)
+    return f"{character.name} casts {spell.name}. {damage_message} {slot_message}"
+
+
+def _activate_ability_button(
+    app: DnDCombatEngineApp,
+    character: Character,
+    button: ActionBarButton,
+) -> str:
+    weapon = character.weapons[0] if character.weapons else None
+    if weapon is None:
+        return f"{character.name} uses {button.name}. No attack damage dice configured."
+    damage_message = _roll_damage_profile(app, weapon.damage)
+    return (
+        f"{character.name} uses {button.name} with {weapon.name} "
+        f"rank {button.rank}. {damage_message}"
+    )
+
+
+def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> str:
+    if damage is None:
+        return "No damage dice configured."
+    parts = []
+    total = 0
+    for component in damage.components:
+        result = app.dice.roll(component.dice)
+        total += result.total
+        parts.append(
+            f"{result.notation} {component.damage_type.value}: "
+            f"{result.total} rolls={result.rolls}"
+        )
+    return f"Damage {total} ({'; '.join(parts)})."
+
+
+def _append_workspace(window, message: str) -> None:
+    workspace = getattr(window, "_dnd_central", None)
+    if workspace is None:
+        return
+    if hasattr(workspace, "append"):
+        workspace.append(message)
+        return
+    if hasattr(workspace, "setText"):
+        workspace.setText(message)
 
 
 def _replace_dock_widget(docks: dict[str, object], title: str, widget) -> None:

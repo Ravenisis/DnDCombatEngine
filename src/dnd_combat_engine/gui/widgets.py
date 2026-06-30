@@ -200,14 +200,14 @@ class ActionBarWidget:
     """Factory for the bottom quick action bar."""
 
     @staticmethod
-    def create(qt, session: ActionBarSession):
+    def create(qt, session: ActionBarSession, on_activate=None):
         """Create a centered action bar widget."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QHBoxLayout(widget)
         if hasattr(layout, "setAlignment"):
             layout.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
         buttons = []
-        button_class = _action_bar_button_class(qt, session)
+        button_class = _action_bar_button_class(qt, session, on_activate)
         for slot in range(1, 13):
             button = button_class("", slot)
             if hasattr(button, "setFixedSize"):
@@ -216,7 +216,12 @@ class ActionBarWidget:
             if hasattr(button, "setShortcut"):
                 button.setShortcut(hotkey)
             button.clicked.connect(
-                lambda checked=False, item_slot=slot: session.activate(item_slot)
+                lambda checked=False, item_slot=slot: _activate_action_button(
+                    session,
+                    on_activate,
+                    item_slot,
+                    False,
+                )
             )
             buttons.append(button)
             layout.addWidget(button)
@@ -500,8 +505,9 @@ def _party_member_frame(
         if hasattr(progress, "setFormat"):
             progress.setFormat(hp_text)
         layout.addWidget(progress)
-    initiative_value = (initiative_results or {}).get(character_id)
-    layout.addWidget(qt.QtWidgets.QLabel(_initiative_text(initiative_value)))
+    initiative_results = initiative_results or {}
+    initiative_value = initiative_results.get(character_id)
+    layout.addWidget(qt.QtWidgets.QLabel(_initiative_text(character_id, initiative_results)))
     if on_set_initiative is not None:
         _add_initiative_entry(qt, layout, character_id, on_set_initiative)
     features = ", ".join(character.features) if character.features else "No features"
@@ -518,8 +524,31 @@ def _party_member_frame(
     return frame
 
 
-def _initiative_text(value: int | None) -> str:
-    return "Initiative: -" if value is None else f"Initiative: {value}"
+def _initiative_text(
+    character_id: str | int | None,
+    initiative_results: dict[str, int] | None = None,
+) -> str:
+    """Return initiative roll and party-order text for a party frame."""
+    if isinstance(character_id, int) and initiative_results is None:
+        return f"Initiative: {character_id} | Position: 1"
+    if character_id is None and initiative_results is None:
+        return "Initiative: - | Position: -"
+    results = initiative_results or {}
+    character_key = str(character_id)
+    value = results.get(character_key)
+    if value is None:
+        return "Initiative: - | Position: -"
+    ordered = sorted(results.items(), key=lambda item: (-item[1], item[0]))
+    position = next(
+        (
+            index
+            for index, (result_id, _) in enumerate(ordered, start=1)
+            if result_id == character_key
+        ),
+        None,
+    )
+    position_text = str(position) if position is not None else "-"
+    return f"Initiative: {value} | Position: {position_text}"
 
 
 def _add_initiative_entry(qt, layout, character_id: str, on_set_initiative) -> None:
@@ -671,7 +700,18 @@ def _set_frame_style(frame_class, frame) -> None:
         frame.setFrameShadow(shadow)
 
 
-def _action_bar_button_class(qt, session: ActionBarSession):
+def _activate_action_button(
+    session: ActionBarSession,
+    on_activate,
+    slot: int,
+    shift_pressed: bool,
+) -> str:
+    if on_activate is not None:
+        return str(on_activate(slot, shift_pressed))
+    return session.activate(slot)
+
+
+def _action_bar_button_class(qt, session: ActionBarSession, on_activate=None):
     base_class = qt.QtWidgets.QPushButton
 
     class ShiftRemovableActionButton(base_class):
@@ -685,9 +725,32 @@ def _action_bar_button_class(qt, session: ActionBarSession):
                 if hasattr(event, "accept"):
                     event.accept()
                 return
+            if _is_shift_left_click(qt, event):
+                _activate_action_button(session, on_activate, self._dnd_slot, True)
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
             super().mousePressEvent(event)
 
     return ShiftRemovableActionButton
+
+
+def _is_shift_left_click(qt, event) -> bool:
+    button = event.button() if hasattr(event, "button") else None
+    modifiers = event.modifiers() if hasattr(event, "modifiers") else None
+    mouse_button = getattr(getattr(qt.QtCore.Qt, "MouseButton", None), "LeftButton", None)
+    keyboard_modifier = getattr(
+        getattr(qt.QtCore.Qt, "KeyboardModifier", None),
+        "ShiftModifier",
+        None,
+    )
+    if mouse_button is None:
+        mouse_button = getattr(qt.QtCore.Qt, "LeftButton", None)
+    if keyboard_modifier is None:
+        keyboard_modifier = getattr(qt.QtCore.Qt, "ShiftModifier", None)
+    if mouse_button is None or keyboard_modifier is None or modifiers is None:
+        return False
+    return button == mouse_button and bool(modifiers & keyboard_modifier)
 
 
 def _is_shift_right_click(qt, event) -> bool:

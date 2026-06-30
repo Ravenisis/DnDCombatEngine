@@ -168,9 +168,10 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
 
 def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
-    from dnd_combat_engine.gui.widgets import _is_shift_right_click
+    from dnd_combat_engine.gui.widgets import _is_shift_left_click, _is_shift_right_click
 
     class FakeMouseButton:
+        LeftButton = 1
         RightButton = 2
 
     class FakeKeyboardModifier:
@@ -200,6 +201,9 @@ def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
     assert _is_shift_right_click(FakeQt, FakeEvent(2, 1)) is True
     assert _is_shift_right_click(FakeQt, FakeEvent(2, 0)) is False
     assert _is_shift_right_click(FakeQt, FakeEvent(1, 1)) is False
+    assert _is_shift_left_click(FakeQt, FakeEvent(1, 1)) is True
+    assert _is_shift_left_click(FakeQt, FakeEvent(1, 0)) is False
+    assert _is_shift_left_click(FakeQt, FakeEvent(2, 1)) is False
 
 
 def test_party_initiative_helpers_parse_and_prompt() -> None:
@@ -222,8 +226,14 @@ def test_party_initiative_helpers_parse_and_prompt() -> None:
     class FakeQt:
         QtWidgets = FakeQtWidgets
 
-    assert _initiative_text(None) == "Initiative: -"
-    assert _initiative_text(17) == "Initiative: 17"
+    assert _initiative_text(None) == "Initiative: - | Position: -"
+    assert _initiative_text(17) == "Initiative: 17 | Position: 1"
+    assert _initiative_text("vale", {"bran": 11, "vale": 18}) == (
+        "Initiative: 18 | Position: 1"
+    )
+    assert _initiative_text("bran", {"bran": 11, "vale": 18}) == (
+        "Initiative: 11 | Position: 2"
+    )
     assert _parse_initiative_value(" 22 ") == 22
     assert _parse_initiative_value("twenty") is None
     assert _ask_initiative_roll(FakeQt, object(), None) == 17

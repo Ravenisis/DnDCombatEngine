@@ -133,9 +133,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,555,545 bytes
-- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 35,144,710 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,902,656 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,564,142 bytes
+- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 35,145,030 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,906,752 bytes
 - Verified with `python -m pytest`, `python -m ruff check .`, and a packaged
   executable startup smoke test.
 
@@ -328,3 +328,13 @@ dnd-combat-engine init-user-data
   refreshed GUI text.
 - Verified linting, tests, and packaged executable startup after the installer
   refresh.
+
+### Add action bar combat workspace activation
+
+- Changed the central GUI workspace into a read-only combat log for action bar
+  roll output.
+- Added Shift+click action bar d20 rolls into the combat workspace.
+- Added normal-click action bar spell and ability activation, including spell
+  damage dice rolls, slot spending, and remaining slot reporting.
+- Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
+  refreshed action bar behavior.
