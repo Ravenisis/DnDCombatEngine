@@ -133,10 +133,11 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,548,159 bytes
-- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,886,272 bytes
-- Verified with `python -m pytest` and `python -m ruff check .`
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,555,545 bytes
+- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 35,144,710 bytes
+- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,902,656 bytes
+- Verified with `python -m pytest`, `python -m ruff check .`, and a packaged
+  executable startup smoke test.
 
 Latest verified local install smoke test:
 
@@ -319,3 +320,11 @@ dnd-combat-engine init-user-data
   hotkeys for slots 1-0, -, and =.
 - Added action bar rank update behavior so highest-rank buttons update when a new
   rank is learned while downranked or inactive-spec buttons stay unchanged.
+
+### Refresh combat workspace installer build
+
+- Updated the central GUI workspace label to display `Combat Workspace`.
+- Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
+  refreshed GUI text.
+- Verified linting, tests, and packaged executable startup after the installer
+  refresh.

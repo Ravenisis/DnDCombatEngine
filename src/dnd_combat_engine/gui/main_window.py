@@ -57,7 +57,7 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     if hasattr(window, "setDockNestingEnabled"):
         window.setDockNestingEnabled(True)
 
-    central = qt.QtWidgets.QLabel("Starter Campaign")
+    central = qt.QtWidgets.QLabel("Combat Workspace")
     central.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
     window.setCentralWidget(central)
     window._dnd_central = central  # noqa: SLF001
@@ -353,7 +353,7 @@ def _label(qt, text: str):
 def _central_text(app: DnDCombatEngineApp, state: GuiCampaignState) -> str:
     if state.active_campaign_id is None:
         return "No campaign open"
-    return app.campaigns.load(state.active_campaign_id).name
+    return "Combat Workspace"
 
 
 def _unique_campaign_id(app: DnDCombatEngineApp, name: str) -> str:
