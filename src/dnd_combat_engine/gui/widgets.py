@@ -17,6 +17,7 @@ from dnd_combat_engine.gui.editors import (
     remove_participant_from_encounter,
     start_encounter,
 )
+from dnd_combat_engine.gui.import_dialogs import ask_character_url, choose_character_pdf
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
     campaign_reference_rows,
@@ -139,21 +140,13 @@ class CampaignEditorWidget:
         import_character = qt.QtWidgets.QPushButton("Import Character PDF")
         import_character.clicked.connect(
             lambda: run(
-                lambda: import_character_pdf_to_campaign(
-                    app,
-                    campaign_id,
-                    import_path_input.text(),
-                )
+                lambda: _import_pdf_from_widget(app, qt, widget, campaign_id, import_path_input)
             )
         )
         import_url = qt.QtWidgets.QPushButton("Import Character URL")
         import_url.clicked.connect(
             lambda: run(
-                lambda: import_character_url_to_campaign(
-                    app,
-                    campaign_id,
-                    import_url_input.text(),
-                )
+                lambda: _import_url_from_widget(app, qt, widget, campaign_id, import_url_input)
             )
         )
         add_encounter = qt.QtWidgets.QPushButton("Add Encounter")
@@ -336,3 +329,25 @@ def _add_rows(output, rows: list[tuple[str, str]]) -> None:
 def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
     for participant_id, name, kind, quantity in rows:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
+
+
+def _import_pdf_from_widget(app, qt, widget, campaign_id: str, input_box) -> str:
+    path = input_box.text().strip()
+    if not path:
+        path = choose_character_pdf(qt, widget) or ""
+        if path and hasattr(input_box, "setText"):
+            input_box.setText(path)
+    if not path:
+        return "Character PDF import canceled."
+    return import_character_pdf_to_campaign(app, campaign_id, path)
+
+
+def _import_url_from_widget(app, qt, widget, campaign_id: str, input_box) -> str:
+    url = input_box.text().strip()
+    if not url:
+        url = ask_character_url(qt, widget) or ""
+        if url and hasattr(input_box, "setText"):
+            input_box.setText(url)
+    if not url:
+        return "Character URL import canceled."
+    return import_character_url_to_campaign(app, campaign_id, url)

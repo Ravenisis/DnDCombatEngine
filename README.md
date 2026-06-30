@@ -133,7 +133,7 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,537,324 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,540,359 bytes
 - `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 33,166,876 bytes
 - `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,865,792 bytes
 - Verified with `python -m pytest` and `python -m ruff check .`
@@ -300,3 +300,11 @@ dnd-combat-engine init-user-data
 - Added Campaign menu entries under `Upload Character Sheet` with `PDF` and
   `URL` submenu options.
 - Added URL parser, controller, GUI helper, and menu tests.
+
+### Fix character sheet import actions
+
+- Connected Campaign menu import actions to working PDF file and URL prompts.
+- Updated campaign editor import buttons to prompt for a PDF or URL when the
+  matching input field is blank.
+- Added regression tests for menu-triggered imports and dock import button
+  prompt behavior.
