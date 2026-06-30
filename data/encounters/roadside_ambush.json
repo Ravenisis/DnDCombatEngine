@@ -6,10 +6,10 @@
     {
       "initiative_bonus": 3,
       "kind": "character",
-      "name": "Vale",
-      "participant_id": "vale",
+      "name": "Ravenisis",
+      "participant_id": "ravenisis",
       "quantity": 1,
-      "source_id": "vale"
+      "source_id": "ravenisis"
     },
     {
       "initiative_bonus": 2,
@@ -23,4 +23,3 @@
   "round_number": 1,
   "status": "draft"
 }
-

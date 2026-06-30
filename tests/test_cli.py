@@ -58,7 +58,7 @@ def test_cli_shows_campaign_details(capsys) -> None:
 
     assert exit_code == 0
     assert "Starter Campaign [active]" in output
-    assert "vale" in output
+    assert "ravenisis" in output
     assert "crypt_entry" in output
 
 

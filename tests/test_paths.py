@@ -9,6 +9,7 @@ def test_bundled_data_root_contains_seed_data() -> None:
     store = JsonFileStore(bundled_data_root())
 
     assert Character.from_dict(store.load("characters", "vale")).name == "Vale"
+    assert Character.from_dict(store.load("characters", "ravenisis")).name == "Ravenisis"
     assert Campaign.from_dict(store.load("campaigns", "starter_campaign")).character_ids
 
 
@@ -17,7 +18,7 @@ def test_initialize_user_data_copies_seed_collections(tmp_path) -> None:
     store = JsonFileStore(target)
 
     assert target == tmp_path / "app-data"
-    assert store.list_ids("characters") == ["bran", "vale"]
+    assert store.list_ids("characters") == ["bran", "ravenisis", "vale"]
     assert store.load("campaigns", "starter_campaign")["name"] == "Starter Campaign"
 
 
