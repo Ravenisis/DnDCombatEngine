@@ -166,3 +166,38 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
     assert window.title == "DnDCombatEngine"
     assert window.size == (1200, 800)
 
+
+def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
+    from dnd_combat_engine.gui.widgets import _is_shift_right_click
+
+    class FakeMouseButton:
+        RightButton = 2
+
+    class FakeKeyboardModifier:
+        ShiftModifier = 1
+
+    class FakeQtNamespace:
+        MouseButton = FakeMouseButton
+        KeyboardModifier = FakeKeyboardModifier
+
+    class FakeQtCore:
+        Qt = FakeQtNamespace
+
+    class FakeQt:
+        QtCore = FakeQtCore
+
+    class FakeEvent:
+        def __init__(self, button: int, modifiers: int) -> None:
+            self._button = button
+            self._modifiers = modifiers
+
+        def button(self) -> int:
+            return self._button
+
+        def modifiers(self) -> int:
+            return self._modifiers
+
+    assert _is_shift_right_click(FakeQt, FakeEvent(2, 1)) is True
+    assert _is_shift_right_click(FakeQt, FakeEvent(2, 0)) is False
+    assert _is_shift_right_click(FakeQt, FakeEvent(1, 1)) is False
+

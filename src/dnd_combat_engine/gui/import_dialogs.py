@@ -32,3 +32,19 @@ def ask_character_url(qt, parent) -> str | None:
         text, accepted = selected
         return str(text).strip() if accepted and str(text).strip() else None
     return str(selected).strip() if selected else None
+
+
+def ask_campaign_name(qt, parent) -> str | None:
+    """Prompt for a new campaign name."""
+    dialog = getattr(qt.QtWidgets, "QInputDialog", None)
+    if dialog is None:
+        return None
+    selected = dialog.getText(
+        parent,
+        "Begin New Campaign",
+        "Campaign name:",
+    )
+    if isinstance(selected, tuple):
+        text, accepted = selected
+        return str(text).strip() if accepted and str(text).strip() else None
+    return str(selected).strip() if selected else None

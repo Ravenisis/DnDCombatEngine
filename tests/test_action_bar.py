@@ -63,6 +63,15 @@ def test_action_bar_rejects_duplicate_slots() -> None:
         )
 
 
+def test_action_bar_removes_buttons_from_slots() -> None:
+    bar = ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.SPELL, "hex", "Hex"),))
+
+    cleared = bar.remove(1)
+
+    assert cleared.button_at(1) is None
+    assert bar.button_at(1) is not None
+
+
 def test_action_bar_session_places_next_and_notifies() -> None:
     session = ActionBarSession(ActionBar(slot_count=2))
     seen = []
@@ -81,3 +90,16 @@ def test_action_bar_session_places_next_and_notifies() -> None:
     assert len(seen) == 3
     assert session.bar.button_at(1).rank == 2  # type: ignore[union-attr]
 
+
+def test_action_bar_session_removes_and_notifies() -> None:
+    session = ActionBarSession(
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "dash", "Dash"),))
+    )
+    seen = []
+    session.subscribe(seen.append)
+
+    assert session.remove(1) == "Removed Dash from slot 1."
+    assert session.remove(1) == "Slot 1 is already empty."
+
+    assert session.bar.button_at(1) is None
+    assert len(seen) == 2

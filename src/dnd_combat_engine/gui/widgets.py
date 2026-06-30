@@ -100,6 +100,25 @@ class CampaignWidget:
         return table
 
 
+class PartyFramesWidget:
+    """Factory for framed party member summaries."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, campaign_id: str = "starter_campaign"):
+        """Create party frames for every character in a campaign."""
+        campaign = app.campaigns.load(campaign_id)
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        if not campaign.character_ids:
+            layout.addWidget(qt.QtWidgets.QLabel("No party members"))
+            return widget
+        for character_id in campaign.character_ids:
+            layout.addWidget(_party_member_frame(app, qt, character_id))
+        if hasattr(layout, "addStretch"):
+            layout.addStretch(1)
+        return widget
+
+
 class CampaignEditorWidget:
     """Factory for campaign editing controls."""
 
@@ -168,8 +187,9 @@ class ActionBarWidget:
         if hasattr(layout, "setAlignment"):
             layout.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
         buttons = []
+        button_class = _action_bar_button_class(qt, session)
         for slot in range(1, 13):
-            button = qt.QtWidgets.QPushButton("")
+            button = button_class("", slot)
             if hasattr(button, "setFixedSize"):
                 button.setFixedSize(86, 58)
             hotkey = ACTION_BAR_HOTKEYS[slot - 1]
@@ -190,7 +210,11 @@ class ActionBarWidget:
                 if hasattr(button, "setEnabled"):
                     button.setEnabled(action is not None)
                 if hasattr(button, "setToolTip"):
-                    tooltip = "Empty action slot." if action is None else bar.activate(slot)
+                    tooltip = (
+                        "Empty action slot."
+                        if action is None
+                        else f"{bar.activate(slot)} Shift+right-click to remove."
+                    )
                     button.setToolTip(tooltip)
 
         session.subscribe(refresh)
@@ -417,6 +441,90 @@ def _add_rows(output, rows: list[tuple[str, str]]) -> None:
 def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
     for participant_id, name, kind, quantity in rows:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
+
+
+def _party_member_frame(app: DnDCombatEngineApp, qt, character_id: str):
+    frame_class = getattr(qt.QtWidgets, "QFrame", qt.QtWidgets.QWidget)
+    frame = frame_class()
+    if hasattr(frame, "setObjectName"):
+        frame.setObjectName("PartyMemberFrame")
+    _set_frame_style(frame_class, frame)
+    layout = qt.QtWidgets.QVBoxLayout(frame)
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        layout.addWidget(qt.QtWidgets.QLabel(f"{character_id}\nMissing character data"))
+        return frame
+
+    layout.addWidget(qt.QtWidgets.QLabel(f"{character.name}"))
+    hp_text = (
+        f"HP {character.hit_points.current}/{character.hit_points.maximum}"
+        f"  THP {character.hit_points.temporary}"
+    )
+    layout.addWidget(qt.QtWidgets.QLabel(hp_text))
+    progress_class = getattr(qt.QtWidgets, "QProgressBar", None)
+    if progress_class is not None:
+        progress = progress_class()
+        if hasattr(progress, "setRange"):
+            progress.setRange(0, character.hit_points.maximum)
+        if hasattr(progress, "setValue"):
+            progress.setValue(character.hit_points.current)
+        if hasattr(progress, "setFormat"):
+            progress.setFormat(hp_text)
+        layout.addWidget(progress)
+    features = ", ".join(character.features) if character.features else "No features"
+    layout.addWidget(qt.QtWidgets.QLabel(features))
+    return frame
+
+
+def _set_frame_style(frame_class, frame) -> None:
+    shape = getattr(getattr(frame_class, "Shape", None), "StyledPanel", None)
+    shadow = getattr(getattr(frame_class, "Shadow", None), "Raised", None)
+    if shape is None:
+        shape = getattr(frame_class, "StyledPanel", None)
+    if shadow is None:
+        shadow = getattr(frame_class, "Raised", None)
+    if shape is not None and hasattr(frame, "setFrameShape"):
+        frame.setFrameShape(shape)
+    if shadow is not None and hasattr(frame, "setFrameShadow"):
+        frame.setFrameShadow(shadow)
+
+
+def _action_bar_button_class(qt, session: ActionBarSession):
+    base_class = qt.QtWidgets.QPushButton
+
+    class ShiftRemovableActionButton(base_class):
+        def __init__(self, text: str, slot: int) -> None:
+            super().__init__(text)
+            self._dnd_slot = slot
+
+        def mousePressEvent(self, event) -> None:  # noqa: N802
+            if _is_shift_right_click(qt, event):
+                session.remove(self._dnd_slot)
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            super().mousePressEvent(event)
+
+    return ShiftRemovableActionButton
+
+
+def _is_shift_right_click(qt, event) -> bool:
+    button = event.button() if hasattr(event, "button") else None
+    modifiers = event.modifiers() if hasattr(event, "modifiers") else None
+    mouse_button = getattr(getattr(qt.QtCore.Qt, "MouseButton", None), "RightButton", None)
+    keyboard_modifier = getattr(
+        getattr(qt.QtCore.Qt, "KeyboardModifier", None),
+        "ShiftModifier",
+        None,
+    )
+    if mouse_button is None:
+        mouse_button = getattr(qt.QtCore.Qt, "RightButton", None)
+    if keyboard_modifier is None:
+        keyboard_modifier = getattr(qt.QtCore.Qt, "ShiftModifier", None)
+    if mouse_button is None or keyboard_modifier is None or modifiers is None:
+        return False
+    return button == mouse_button and bool(modifiers & keyboard_modifier)
 
 
 def _action_id(name: str) -> str:

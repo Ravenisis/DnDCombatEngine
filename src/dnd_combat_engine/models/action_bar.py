@@ -86,6 +86,14 @@ class ActionBar:
         buttons = tuple(item for item in self.buttons if item.slot != button.slot)
         return replace(self, buttons=tuple(sorted((*buttons, button), key=lambda item: item.slot)))
 
+    def remove(self, slot: int) -> Self:
+        """Return an action bar with a slot cleared."""
+        if slot < 1:
+            raise ValueError("slot must be at least 1")
+        if slot > self.slot_count:
+            raise ValueError("button slot cannot exceed slot_count")
+        return replace(self, buttons=tuple(item for item in self.buttons if item.slot != slot))
+
     def activate(self, slot: int) -> str:
         """Return a user-facing activation message for a slot."""
         button = self.button_at(slot)

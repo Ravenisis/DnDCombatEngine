@@ -48,6 +48,15 @@ class ActionBarSession:
         """Activate a slot and return a user-facing message."""
         return self.bar.activate(slot)
 
+    def remove(self, slot: int) -> str:
+        """Remove a button from a slot and notify listeners when changed."""
+        button = self.bar.button_at(slot)
+        if button is None:
+            return f"Slot {slot} is already empty."
+        self.bar = self.bar.remove(slot)
+        self._notify()
+        return f"Removed {button.name} from slot {slot}."
+
     def learn_rank(self, action_id: str, highest_rank: int) -> str:
         """Update highest-rank buttons for a newly learned spell or ability rank."""
         self.bar = self.bar.with_learned_rank(action_id, highest_rank)

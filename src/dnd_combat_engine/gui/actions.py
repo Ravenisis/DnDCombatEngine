@@ -46,6 +46,18 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Activate and save the starter campaign",
         ),
         GuiActionSpec(
+            "campaign.new",
+            "Campaign",
+            "Begin New Campaign",
+            "Create and open a new campaign",
+        ),
+        GuiActionSpec(
+            "campaign.close",
+            "Campaign",
+            "Close Current Campaign",
+            "Close the active campaign workspace",
+        ),
+        GuiActionSpec(
             "campaign.import_pdf",
             "Campaign",
             "PDF",
