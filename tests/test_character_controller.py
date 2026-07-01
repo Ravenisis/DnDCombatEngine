@@ -16,6 +16,8 @@ def test_character_controller_applies_damage_and_autosaves(tmp_path) -> None:
     character = Character("cleric", "Mira", HitPoints(10, 10))
     controller.save(character)
 
+    assert controller.list_ids() == ["cleric"]
+
     applied = controller.apply_damage(character, 4, autosave=True)
     restored = controller.load("cleric")
 
@@ -34,4 +36,3 @@ def test_character_controller_manages_conditions_and_resources(tmp_path) -> None
     assert character.resources["ki"].current == 2
     assert controller.remove_condition(character, ConditionName.PRONE) is True
     assert controller.heal(character, 10) == 0
-

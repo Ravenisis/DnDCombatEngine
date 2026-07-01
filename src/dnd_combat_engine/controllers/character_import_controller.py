@@ -43,6 +43,15 @@ class CharacterImportController:
     ) -> CharacterImportResult:
         """Import a PDF sheet, save the character, and link it to a campaign."""
         draft = self.preview_pdf(pdf_path)
+        return self.import_draft_to_campaign(draft, campaign_id, character_id)
+
+    def import_draft_to_campaign(
+        self,
+        draft: CharacterImportDraft,
+        campaign_id: str,
+        character_id: str | None = None,
+    ) -> CharacterImportResult:
+        """Save a reviewed draft and link the character to a campaign."""
         campaign = self.persistence_service.load_campaign(campaign_id)
         resolved_id = character_id or self._next_character_id(draft.name)
         character = draft.to_character(resolved_id)

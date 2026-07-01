@@ -58,6 +58,18 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Close the active campaign workspace",
         ),
         GuiActionSpec(
+            "campaign.add_party_member",
+            "Campaign",
+            "Add Party Member",
+            "Add an existing character to the active campaign",
+        ),
+        GuiActionSpec(
+            "campaign.set_party_leader",
+            "Campaign",
+            "Set Party Leader",
+            "Set which party member owns the active spellbook",
+        ),
+        GuiActionSpec(
             "campaign.import_pdf",
             "Campaign",
             "PDF",

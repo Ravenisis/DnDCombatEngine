@@ -22,6 +22,10 @@ class CharacterController:
         """Load a character by id."""
         return self.persistence_service.load_character(character_id)
 
+    def list_ids(self) -> list[str]:
+        """List saved character ids."""
+        return self.persistence_service.list_character_ids()
+
     def save(self, character: Character) -> None:
         """Save a character."""
         self.persistence_service.save_character(character)
@@ -73,4 +77,3 @@ class CharacterController:
         self.character_service.set_resource(character, resource)
         if autosave:
             self.save(character)
-

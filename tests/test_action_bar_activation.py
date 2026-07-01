@@ -210,14 +210,47 @@ def test_action_activation_handles_empty_selection_and_missing_data() -> None:
     )
     assert main_window._activate_action_button(
         app,
-        main_window.GuiCampaignState(selected_character_id=None),
+        main_window.GuiCampaignState(
+            selected_character_id=None,
+            party_leader_character_id=None,
+        ),
         button,
-    ) == "Select a character before using Attack."
+    ) == "Select a party leader or character before using Attack."
     assert main_window._activate_action_button(
         SimpleNamespace(characters=SimpleNamespace(load=_raise_key_error)),
-        main_window.GuiCampaignState(selected_character_id="missing"),
+        main_window.GuiCampaignState(
+            selected_character_id="missing",
+            party_leader_character_id=None,
+        ),
         button,
     ) == "Selected character missing could not be loaded."
+
+
+def test_action_activation_uses_party_leader_before_selected_character() -> None:
+    leader = Character(
+        "leader",
+        "Leader",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Mace",
+                DamageProfile((DamageComponent("1d6", DamageType.BLUDGEONING),)),
+            ),
+        ),
+    )
+    app = _app(leader, total=4)
+    button = ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack")
+
+    message = main_window._activate_action_button(
+        app,
+        main_window.GuiCampaignState(
+            selected_character_id="selected",
+            party_leader_character_id="leader",
+        ),
+        button,
+    )
+
+    assert "Leader uses Attack with Mace" in message
 
 
 def test_spell_action_reports_missing_compendium_entry() -> None:
@@ -281,7 +314,10 @@ def test_normal_action_bar_activation_logs_result_and_refreshes(monkeypatch) -> 
         ),
     )
     app = _app(character, total=5)
-    state = main_window.GuiCampaignState(selected_character_id="fighter")
+    state = main_window.GuiCampaignState(
+        selected_character_id="fighter",
+        party_leader_character_id="fighter",
+    )
     session = ActionBarSession(
         ActionBar(
             buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),)

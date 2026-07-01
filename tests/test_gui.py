@@ -366,3 +366,46 @@ def test_party_context_policy_and_frame_style(monkeypatch) -> None:
     assert styled.shape == 1
     assert styled.shadow == 2
 
+
+def test_spellbook_spell_ids_filter_to_character_features() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import Character, HitPoints, Spell, SpellSchool
+
+    spells = {
+        "bless": Spell(
+            "bless",
+            "Bless",
+            1,
+            SpellSchool.ENCHANTMENT,
+            "1 action",
+            "30 feet",
+            "1 minute",
+        ),
+        "hex": Spell(
+            "hex",
+            "Hex",
+            1,
+            SpellSchool.ENCHANTMENT,
+            "1 bonus action",
+            "90 feet",
+            "1 hour",
+        ),
+    }
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(10, 10),
+        features=("Domain Spells: Bless",),
+    )
+    app = SimpleNamespace(
+        characters=SimpleNamespace(load=lambda character_id: character),
+        compendium=SimpleNamespace(
+            persistence_service=SimpleNamespace(list_spell_ids=lambda: ["bless", "hex"]),
+            load_spell=lambda spell_id: spells[spell_id],
+        ),
+    )
+
+    assert widgets._spell_ids_for_character(app, "cleric") == ("bless",)
+

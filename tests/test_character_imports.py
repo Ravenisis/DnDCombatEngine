@@ -124,6 +124,25 @@ def test_character_import_controller_saves_character_and_campaign_reference(tmp_
     assert persistence.load_campaign("starter").character_ids == ("lyra_thorn",)
 
 
+def test_character_import_controller_saves_reviewed_draft(tmp_path) -> None:
+    persistence = PersistenceService(JsonFileStore(tmp_path))
+    persistence.save_campaign(Campaign("starter", "Starter"))
+    controller = CharacterImportController(
+        CharacterImportService(),
+        CampaignService(),
+        persistence,
+    )
+
+    result = controller.import_draft_to_campaign(
+        CharacterImportDraft("Edited Name", hit_points=HitPoints(9, 9)),
+        "starter",
+    )
+
+    assert result.character.character_id == "edited_name"
+    assert persistence.load_character("edited_name").name == "Edited Name"
+    assert persistence.load_campaign("starter").character_ids == ("edited_name",)
+
+
 def test_character_import_controller_saves_url_import(tmp_path) -> None:
     class StubImportService(CharacterImportService):
         def import_url(self, url: str) -> CharacterImportDraft:

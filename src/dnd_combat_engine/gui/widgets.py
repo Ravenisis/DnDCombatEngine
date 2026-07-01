@@ -250,13 +250,19 @@ class SpellbookWidget:
     """Factory for the spellbook source window."""
 
     @staticmethod
-    def create(app: DnDCombatEngineApp, qt, session: ActionBarSession):
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        session: ActionBarSession,
+        character_id: str | None = None,
+    ):
         """Create a spellbook widget that can place spells on the action bar."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
-        for spell_id in app.compendium.persistence_service.list_spell_ids():
+        layout.addWidget(qt.QtWidgets.QLabel(_spellbook_title(app, character_id)))
+        for spell_id in _spell_ids_for_character(app, character_id):
             spell = app.compendium.load_spell(spell_id)
             button = qt.QtWidgets.QPushButton(f"{spell.name} (Rank {max(1, spell.level)})")
             button.clicked.connect(
@@ -466,6 +472,36 @@ def _add_rows(output, rows: list[tuple[str, str]]) -> None:
 def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
     for participant_id, name, kind, quantity in rows:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
+
+
+def _spellbook_title(app: DnDCombatEngineApp, character_id: str | None) -> str:
+    if character_id is None:
+        return "Spellbook"
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        return "Spellbook"
+    return f"Spellbook: {character.name}"
+
+
+def _spell_ids_for_character(
+    app: DnDCombatEngineApp,
+    character_id: str | None,
+) -> tuple[str, ...]:
+    spell_ids = tuple(app.compendium.persistence_service.list_spell_ids())
+    if character_id is None:
+        return spell_ids
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        return spell_ids
+    feature_text = " ".join(character.features).lower()
+    matching_ids = []
+    for spell_id in spell_ids:
+        spell = app.compendium.load_spell(spell_id)
+        if spell.name.lower() in feature_text:
+            matching_ids.append(spell_id)
+    return tuple(matching_ids) or spell_ids
 
 
 def _party_member_frame(

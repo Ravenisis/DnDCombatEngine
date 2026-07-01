@@ -17,6 +17,8 @@ def test_default_action_specs_include_core_commands() -> None:
         "campaign.activate_starter",
         "campaign.new",
         "campaign.close",
+        "campaign.add_party_member",
+        "campaign.set_party_leader",
         "campaign.import_pdf",
         "campaign.import_url",
         "combat.quick_attack",
@@ -33,7 +35,8 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
 
     assert tuple(grouped) == ("File", "View", "Campaign", "Combat", "Dice")
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
-    assert grouped["Campaign"][4].action_id == "campaign.import_pdf"
+    assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
+    assert grouped["Campaign"][6].action_id == "campaign.import_pdf"
     assert grouped["Combat"][0].action_id == "combat.quick_attack"
 
 
