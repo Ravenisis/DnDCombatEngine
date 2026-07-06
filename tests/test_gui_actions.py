@@ -14,6 +14,9 @@ def test_default_action_specs_include_core_commands() -> None:
         "file.exit",
         "view.reset_layout",
         "character.spellbook",
+        "character.abilities",
+        "character.inventory",
+        "character.break_concentration",
         "campaign.load_starter",
         "campaign.activate_starter",
         "campaign.new",
@@ -39,6 +42,9 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
 
     assert tuple(grouped) == ("File", "View", "Character", "Campaign", "Combat", "Dice")
     assert grouped["Character"][0].action_id == "character.spellbook"
+    assert grouped["Character"][1].action_id == "character.abilities"
+    assert grouped["Character"][2].action_id == "character.inventory"
+    assert grouped["Character"][3].action_id == "character.break_concentration"
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
     assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
     assert grouped["Campaign"][6].action_id == "campaign.long_rest"

@@ -13,6 +13,7 @@ from dnd_combat_engine.services import (
     CharacterImportService,
     PersistenceService,
 )
+from dnd_combat_engine.services.character_import_service import _extract_pdf_literal_text
 
 SHEET_TEXT = """
 Character Name: Lyra Thorn
@@ -69,6 +70,37 @@ def test_character_import_service_reads_dnd_beyond_label_below_name() -> None:
     )
 
     assert draft.name == "Ravenisis"
+
+
+def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
+    literal_pdf = b"".join(
+        [
+            b"/V(Ravenisis)",
+            b"/V(Cleric 6)",
+            b"/V(wazic)",
+            b"/V(Hill Dwarf)",
+            b"/V(Folk Hero)",
+            b"/V((Milestone))",
+            b"/V(12)/V(+1)/V(13)/V(+1)/V(18)/V(+4)",
+            b"/V(10)/V(+0)/V(15)/V(+2)/V(9)/V(-1)",
+            b"/V(Darkvision 60 ft.)/V(20)/V(+3)/V(25 ft.)/V(63)/V(--)/V(6d8)",
+            b"/V(Bag of Holding)/V(1)/V(5 lb.)/V(Potion of Healing (Greater))/V(1)/V(0.5 lb.)",
+        ]
+    )
+
+    text = _extract_pdf_literal_text(literal_pdf)
+    draft = CharacterImportService().parse_text(text, source="literal")
+
+    assert draft.name == "Ravenisis"
+    assert draft.level == 6
+    assert draft.abilities.constitution == 18
+    assert draft.hit_points.maximum == 63
+    assert draft.armor is not None
+    assert draft.armor.armor_class == 20
+    assert [item.name for item in draft.inventory] == [
+        "Bag of Holding",
+        "Potion of Healing (Greater",
+    ]
 
 
 def test_character_import_service_parses_public_html_url(monkeypatch) -> None:

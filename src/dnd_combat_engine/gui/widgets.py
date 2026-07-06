@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import textwrap
+from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp
 from dnd_combat_engine.gui.action_bar import ActionBarSession
@@ -30,6 +31,7 @@ from dnd_combat_engine.gui.panels import (
 )
 from dnd_combat_engine.models import CombatLog
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
+from dnd_combat_engine.models.inventory import InventoryItem
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
 PARTY_FRAME_FEATURES = (
@@ -42,6 +44,7 @@ PARTY_FRAME_FEATURES = (
     "Sharpshooter",
     "Sneak Attack",
 )
+CONTAINER_ITEM_IDS = {"bag_of_holding", "backpack", "pouch"}
 
 
 class DiceTrayWidget:
@@ -122,6 +125,8 @@ class PartyFramesWidget:
         qt,
         campaign_id: str = "starter_campaign",
         initiative_results: dict[str, int] | None = None,
+        beacon_of_hope_targets: tuple[str, ...] = (),
+        bless_targets: tuple[str, ...] = (),
         on_upload_sheet=None,
         on_remove_member=None,
         on_set_initiative=None,
@@ -140,6 +145,8 @@ class PartyFramesWidget:
                     qt,
                     character_id,
                     initiative_results or {},
+                    beacon_of_hope_targets,
+                    bless_targets,
                     on_upload_sheet,
                     on_remove_member,
                     on_set_initiative,
@@ -304,22 +311,30 @@ class SpellbookWidget:
         layout.addWidget(qt.QtWidgets.QLabel(_spellbook_title(app, character_id)))
         for spell_id in _spell_ids_for_character(app, character_id):
             spell = app.compendium.load_spell(spell_id)
-            button = qt.QtWidgets.QPushButton(f"{spell.name} (Rank {max(1, spell.level)})")
-            button.clicked.connect(
-                lambda checked=False, item=spell: output.append(
-                    session.place_next(
-                        ActionBarButton(
-                            slot=1,
-                            kind=ActionBarActionKind.SPELL,
-                            action_id=item.spell_id,
-                            name=item.name,
-                            rank=max(1, item.level),
-                            uses_highest_rank=True,
+            rank_options = _spell_rank_options(app, character_id, spell)
+            highest_rank = max(rank_options)
+            for rank in rank_options:
+                button = qt.QtWidgets.QPushButton(
+                    _spell_rank_button_text(spell.name, rank, spell.level)
+                )
+                button.clicked.connect(
+                    lambda checked=False,
+                    item=spell,
+                    item_rank=rank,
+                    item_highest=highest_rank: output.append(
+                        session.place_next(
+                            ActionBarButton(
+                                slot=1,
+                                kind=ActionBarActionKind.SPELL,
+                                action_id=item.spell_id,
+                                name=item.name,
+                                rank=item_rank,
+                                uses_highest_rank=item_rank == item_highest,
+                            )
                         )
                     )
                 )
-            )
-            layout.addWidget(button)
+                layout.addWidget(button)
         layout.addWidget(output)
         return widget
 
@@ -355,6 +370,145 @@ class AbilitiesWidget:
             layout.addWidget(button)
         layout.addWidget(output)
         return widget
+
+
+class InventoryWidget:
+    """Factory for an RPG-style inventory window."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, character_id: str, on_consume=None):
+        """Create an icon inventory grouped by carried containers."""
+        character = app.characters.load(character_id)
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character.name}"))
+        sections = _inventory_sections(character.inventory)
+        for section_name, items in sections:
+            section = _inventory_section(qt, section_name, items, on_consume)
+            layout.addWidget(section)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch(1)
+        return widget
+
+
+def _inventory_section(qt, section_name: str, items: tuple[InventoryItem, ...], on_consume):
+    group_class = getattr(qt.QtWidgets, "QGroupBox", qt.QtWidgets.QWidget)
+    try:
+        group = group_class(section_name)
+    except TypeError:
+        group = group_class()
+    if hasattr(group, "setStyleSheet"):
+        group.setStyleSheet("QGroupBox { margin-top: 8px; padding-top: 8px; }")
+    grid_class = getattr(qt.QtWidgets, "QGridLayout", qt.QtWidgets.QVBoxLayout)
+    layout = grid_class(group)
+    for index, item in enumerate(items):
+        button = _inventory_item_button(qt, item, on_consume)
+        row, column = divmod(index, 6)
+        if hasattr(layout, "addWidget"):
+            try:
+                layout.addWidget(button, row, column)
+            except TypeError:
+                layout.addWidget(button)
+    if not items:
+        layout.addWidget(qt.QtWidgets.QLabel("Empty"))
+    return group
+
+
+def _inventory_item_button(qt, item: InventoryItem, on_consume):
+    button_class = _inventory_button_class(qt, item, on_consume)
+    button = button_class(_inventory_quantity_text(item))
+    if hasattr(button, "setToolTip"):
+        button.setToolTip(item.name)
+    if hasattr(button, "setFixedSize"):
+        button.setFixedSize(72, 72)
+    if hasattr(button, "setStyleSheet"):
+        button.setStyleSheet(
+            "text-align: left bottom; padding: 3px; background:#151922; border:1px solid #303747;"
+        )
+    icon_path = _inventory_icon_path(item)
+    if icon_path is not None:
+        icon = qt.QtGui.QIcon(str(icon_path))
+        if hasattr(button, "setIcon"):
+            button.setIcon(icon)
+        if hasattr(button, "setIconSize") and hasattr(qt.QtCore, "QSize"):
+            button.setIconSize(qt.QtCore.QSize(48, 48))
+    return button
+
+
+def _inventory_button_class(qt, item: InventoryItem, on_consume):
+    base_class = qt.QtWidgets.QPushButton
+
+    class ConsumableInventoryButton(base_class):
+        def mousePressEvent(self, event) -> None:  # noqa: N802
+            if _is_right_click(qt, event) and on_consume is not None:
+                on_consume(item.item_id)
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            super().mousePressEvent(event)
+
+    return ConsumableInventoryButton
+
+
+def _inventory_quantity_text(item: InventoryItem) -> str:
+    return str(item.quantity) if item.quantity > 1 else ""
+
+
+def _inventory_sections(
+    inventory: tuple[InventoryItem, ...],
+) -> tuple[tuple[str, tuple[InventoryItem, ...]], ...]:
+    sections: list[tuple[str, list[InventoryItem]]] = [("Carried", [])]
+    for item in inventory:
+        if _is_container_item(item):
+            sections.append((item.name, []))
+            continue
+        sections[-1][1].append(item)
+    return tuple((name, tuple(items)) for name, items in sections)
+
+
+def _is_container_item(item: InventoryItem) -> bool:
+    normalized = _action_id(item.name)
+    return item.item_id in CONTAINER_ITEM_IDS or normalized in CONTAINER_ITEM_IDS
+
+
+def _inventory_icon_path(item: InventoryItem) -> Path | None:
+    icon_root = Path(__file__).resolve().parents[1] / "data" / "item_icons"
+    candidates = _inventory_icon_candidates(item)
+    for candidate in candidates:
+        path = icon_root / f"{candidate}.svg"
+        if path.exists():
+            return path
+    fallback = icon_root / f"{item.category.value}.svg"
+    return fallback if fallback.exists() else None
+
+
+def _inventory_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
+    names = [item.item_id, _action_id(item.name)]
+    aliases = {
+        "bag_of_holding": "bag_of_holding",
+        "bullseye_lantern": "bullseye_lantern",
+        "clothes_common": "common_clothes",
+        "healers_kit": "healers_kit",
+        "holy_symbol": "holy_symbol",
+        "masons_tools": "mason_tools",
+        "piton": "pitons",
+        "plate": "plate_armour",
+        "potion_of_healing_greater": "potion_of_greater_healing",
+        "rope": "hempen_rope",
+        "rations_1_day": "rations_1_day",
+        "shield": "shield_round",
+    }
+    if item.item_id in aliases:
+        names.insert(0, aliases[item.item_id])
+    return tuple(dict.fromkeys(names))
+
+
+def _is_right_click(qt, event) -> bool:
+    button = event.button() if hasattr(event, "button") else None
+    mouse_button = getattr(getattr(qt.QtCore.Qt, "MouseButton", None), "RightButton", None)
+    if mouse_button is None:
+        mouse_button = getattr(qt.QtCore.Qt, "RightButton", None)
+    return mouse_button is not None and button == mouse_button
 
 
 class EncounterTrackerWidget:
@@ -582,6 +736,8 @@ def _party_member_frame(
     qt,
     character_id: str,
     initiative_results: dict[str, int] | None = None,
+    beacon_of_hope_targets: tuple[str, ...] = (),
+    bless_targets: tuple[str, ...] = (),
     on_upload_sheet=None,
     on_remove_member=None,
     on_set_initiative=None,
@@ -598,7 +754,9 @@ def _party_member_frame(
         layout.addWidget(qt.QtWidgets.QLabel(f"{character_id}\nMissing character data"))
         return frame
 
-    layout.addWidget(qt.QtWidgets.QLabel(f"{character.name}"))
+    layout.addWidget(
+        _party_frame_header(qt, character.name, character_id, beacon_of_hope_targets, bless_targets)
+    )
     hp_text = (
         f"HP {character.hit_points.current}/{character.hit_points.maximum}"
         f"  THP {character.hit_points.temporary}"
@@ -637,6 +795,65 @@ def _party_member_frame(
     return frame
 
 
+def _party_frame_header(
+    qt,
+    character_name: str,
+    character_id: str,
+    beacon_of_hope_targets: tuple[str, ...] = (),
+    bless_targets: tuple[str, ...] = (),
+):
+    header = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QHBoxLayout(header)
+    layout.addWidget(qt.QtWidgets.QLabel(character_name))
+    if hasattr(layout, "addStretch"):
+        layout.addStretch(1)
+    if character_id in beacon_of_hope_targets:
+        layout.addWidget(
+            _party_buff_icon(
+                qt,
+                "HV",
+                "BeaconOfHopeBuff",
+                "Beacon of Hope: Hope and Vitality. "
+                "Wisdom and death saves are bolstered; healing is maximized.",
+                "#2f6fed",
+                "#8eb3ff",
+            )
+        )
+    if character_id in bless_targets:
+        layout.addWidget(
+            _party_buff_icon(
+                qt,
+                "B",
+                "BlessBuff",
+                "Bless: add 1d4 to attack rolls and saving throws while concentration holds.",
+                "#8f6a22",
+                "#ffd27a",
+            )
+        )
+    return header
+
+
+def _party_buff_icon(
+    qt,
+    text: str,
+    object_name: str,
+    tooltip: str,
+    background: str,
+    border: str,
+):
+    buff_label = qt.QtWidgets.QLabel(text)
+    if hasattr(buff_label, "setObjectName"):
+        buff_label.setObjectName(object_name)
+    if hasattr(buff_label, "setToolTip"):
+        buff_label.setToolTip(tooltip)
+    if hasattr(buff_label, "setStyleSheet"):
+        buff_label.setStyleSheet(
+            f"background:{background};color:white;border:1px solid {border};"
+            "border-radius:3px;padding:1px 4px;font-weight:bold;"
+        )
+    return buff_label
+
+
 def _party_frame_feature_text(features: tuple[str, ...]) -> str:
     """Return a compact combat feature summary for party frames."""
     feature_blob = " ".join(features).lower()
@@ -644,6 +861,35 @@ def _party_frame_feature_text(features: tuple[str, ...]) -> str:
         feature for feature in PARTY_FRAME_FEATURES if feature.lower() in feature_blob
     ]
     return ", ".join(visible_features[:3])
+
+
+def _spell_rank_options(
+    app: DnDCombatEngineApp,
+    character_id: str | None,
+    spell,
+) -> tuple[int, ...]:
+    if spell.level == 0:
+        return (1,)
+    slot_levels = []
+    if character_id is not None:
+        try:
+            character = app.characters.load(character_id)
+        except KeyError:
+            character = None
+        if character is not None:
+            for resource_name, resource in character.resources.items():
+                match = re.fullmatch(r"spell_slot_(\d+)", resource_name)
+                if match and resource.maximum > 0:
+                    slot_level = int(match.group(1))
+                    if slot_level >= spell.level:
+                        slot_levels.append(slot_level)
+    return tuple(sorted(set(slot_levels))) or (spell.level,)
+
+
+def _spell_rank_button_text(spell_name: str, rank: int, spell_level: int | None = None) -> str:
+    if spell_level == 0 or rank <= 0:
+        return f"{spell_name} (Cantrip)"
+    return f"{spell_name} (Level {rank})"
 
 
 def _initiative_text(

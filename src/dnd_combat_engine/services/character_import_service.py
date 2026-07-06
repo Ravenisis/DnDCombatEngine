@@ -101,7 +101,9 @@ class CharacterImportService:
             ) from exc
 
         reader = PdfReader(str(path))
-        return self._extract_reader_text(reader)
+        text = self._extract_reader_text(reader)
+        literal_text = _extract_pdf_literal_text(path.read_bytes())
+        return "\n".join(part for part in (text, literal_text) if part.strip())
 
     def _extract_pdf_bytes(self, content: bytes) -> str:
         try:
@@ -111,7 +113,9 @@ class CharacterImportService:
                 'PDF import requires pypdf. Install it with: pip install ".[pdf]"'
             ) from exc
 
-        return self._extract_reader_text(PdfReader(BytesIO(content)))
+        text = self._extract_reader_text(PdfReader(BytesIO(content)))
+        literal_text = _extract_pdf_literal_text(content)
+        return "\n".join(part for part in (text, literal_text) if part.strip())
 
     def _extract_reader_text(self, reader) -> str:
         text_parts = [page.extract_text() or "" for page in reader.pages]
@@ -182,6 +186,108 @@ def _extract_url_text(payload: _UrlPayload) -> str:
     return text
 
 
+def _extract_pdf_literal_text(content: bytes) -> str:
+    values: list[str] = []
+    for pattern in (rb"/V\(([^)]{1,160})\)", rb"\(([^)]{1,160})\)\s*Tj"):
+        values.extend(_decode_pdf_literal(match) for match in re.findall(pattern, content))
+    values = [value for value in values if _useful_pdf_literal(value)]
+    labeled = _dndbeyond_labeled_text(values)
+    return "\n".join((*labeled, *dict.fromkeys(values)))
+
+
+def _decode_pdf_literal(value: bytes) -> str:
+    text = value.decode("latin-1", errors="ignore")
+    text = text.replace(r"\(", "(").replace(r"\)", ")").replace(r"\\", "\\")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _useful_pdf_literal(value: str) -> bool:
+    if not value:
+        return False
+    return bool(re.search(r"[A-Za-z0-9]", value))
+
+
+def _dndbeyond_labeled_text(values: list[str]) -> tuple[str, ...]:
+    if len(values) < 18:
+        return ()
+    labeled = [
+        f"Character Name: {values[0]}",
+        f"Class & Level: {values[1]}",
+        f"Player Name: {values[2]}",
+        f"Species: {values[3]}",
+        f"Background: {values[4]}",
+    ]
+    ability_values = _dndbeyond_ability_values(values)
+    if ability_values:
+        names = ("Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma")
+        labeled.extend(
+            f"{name}: {value}" for name, value in zip(names, ability_values, strict=False)
+        )
+    hp = _dndbeyond_hit_points(values)
+    if hp is not None:
+        labeled.extend((f"Max HP: {hp}", f"Current HP: {hp}"))
+    armor_class = _dndbeyond_armor_class(values)
+    if armor_class is not None:
+        labeled.append(f"Armor Class: {armor_class}")
+    inventory = _dndbeyond_inventory_items(values)
+    if inventory:
+        labeled.append(f"Inventory: {'; '.join(inventory)}")
+    return tuple(labeled)
+
+
+def _dndbeyond_ability_values(values: list[str]) -> tuple[int, ...]:
+    for index in range(0, max(0, len(values) - 12)):
+        possible = values[index : index + 12 : 2]
+        modifiers = values[index + 1 : index + 12 : 2]
+        if all(re.fullmatch(r"\d{1,2}", value) for value in possible) and all(
+            re.fullmatch(r"[+-]\d+", modifier) for modifier in modifiers
+        ):
+            return tuple(int(value) for value in possible)
+    return ()
+
+
+def _dndbeyond_hit_points(values: list[str]) -> int | None:
+    for index, value in enumerate(values):
+        if re.fullmatch(r"\d+d\d+", value.lower()) and index >= 1:
+            previous = values[index - 1]
+            if re.fullmatch(r"\d{1,3}", previous):
+                return int(previous)
+    return None
+
+
+def _dndbeyond_armor_class(values: list[str]) -> int | None:
+    for index, value in enumerate(values):
+        if value.lower().startswith("darkvision") and index + 1 < len(values):
+            for candidate in values[index + 1 : index + 7]:
+                if re.fullmatch(r"\d{1,2}", candidate):
+                    armor_class = int(candidate)
+                    if 10 <= armor_class <= 30:
+                        return armor_class
+    return None
+
+
+def _dndbeyond_inventory_items(values: list[str]) -> tuple[str, ...]:
+    start = next((index for index, value in enumerate(values) if value == "Bag of Holding"), None)
+    if start is None:
+        return ()
+    items = []
+    index = start
+    while index < len(values):
+        name = values[index]
+        if index > start and name == values[0]:
+            break
+        if _looks_like_inventory_name(name):
+            items.append(name)
+            index += 3
+            continue
+        index += 1
+    return tuple(items)
+
+
+def _looks_like_inventory_name(value: str) -> bool:
+    return bool(re.search(r"[A-Za-z]", value)) and not re.fullmatch(r"[+-]?\d+(?:\.\d+)?", value)
+
+
 def _charset_from_content_type(content_type: str) -> str:
     match = re.search(r"charset=([\w\-]+)", content_type)
     return match.group(1) if match else "utf-8"
@@ -196,17 +302,19 @@ def _html_to_text(value: str) -> str:
 
 
 def _extract_name(text: str) -> str:
+    match = re.search(
+        r"^(?:character\s*name|name)\s*:[ \t]*([A-Za-z][A-Za-z '\-]{1,60})$",
+        text,
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    if match:
+        return _clean_name(match.group(1))
     label_below = _extract_value_before_label(text, "character name")
     if label_below:
         return _clean_name(label_below)
-    patterns = (
-        r"^(?:character\s*name|name)\s*:?[ \t]*([A-Za-z][A-Za-z '\-]{1,60})$",
-        r"^([A-Za-z][A-Za-z '\-]{1,60})$",
-    )
-    for pattern in patterns:
-        match = re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE)
-        if match:
-            return _clean_name(match.group(1))
+    match = re.search(r"^([A-Za-z][A-Za-z '\-]{1,60})$", text, flags=re.MULTILINE)
+    if match:
+        return _clean_name(match.group(1))
     return "Imported Character"
 
 
@@ -247,6 +355,13 @@ def _looks_like_character_name(value: str) -> bool:
 
 
 def _extract_level(text: str) -> int:
+    match = re.search(
+        r"^class\s*&\s*level\s*:?.*?\b(\d{1,2})\b",
+        text,
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    if match:
+        return max(1, int(match.group(1)))
     match = re.search(r"\blevel\s*:?\s*(\d{1,2})\b", text, flags=re.IGNORECASE)
     if match:
         return max(1, int(match.group(1)))
@@ -256,10 +371,24 @@ def _extract_level(text: str) -> int:
 
 def _extract_int(text: str, labels: tuple[str, ...], default: int | None = None) -> int | None:
     for label in labels:
+        line_match = re.search(
+            rf"^{_plain_label_pattern(label)}\s*:?\s*(\d+)\b",
+            text,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )
+        if line_match:
+            return int(line_match.group(1))
         match = re.search(rf"{label}\s*:?\s*(\d+)", text, flags=re.IGNORECASE)
         if match:
             return int(match.group(1))
     return default
+
+
+def _plain_label_pattern(label: str) -> str:
+    plain = label.replace(r"\b", "")
+    plain = plain.replace("(?:", "").replace(")?", "").replace("?", "")
+    plain = plain.replace("(", "").replace(")", "")
+    return plain
 
 
 def _extract_abilities(text: str) -> AbilityScores:
@@ -284,6 +413,9 @@ def _extract_skills(text: str) -> tuple[str, ...]:
 
 
 def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
+    line_match = re.search(r"^inventory\s*:?\s*(.+)$", text, flags=re.IGNORECASE | re.MULTILINE)
+    if line_match:
+        return _inventory_items_from_names(_split_inventory_line(line_match.group(1)))
     match = re.search(
         r"\b(?:inventory|equipment)\s*:?\s*(.+?)(?:\n(?:features?|attacks?|weapons?)\b|$)",
         text,
@@ -291,12 +423,22 @@ def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
     )
     if not match:
         return ()
+    return _inventory_items_from_names(_split_list(match.group(1)))
+
+
+def _inventory_items_from_names(names: list[str]) -> tuple[InventoryItem, ...]:
     items = []
-    for name in _split_list(match.group(1)):
+    for name in names:
         item_id = _slug(name)
         if item_id:
             items.append(InventoryItem(item_id=item_id, name=name, category=ItemCategory.OTHER))
     return tuple(items)
+
+
+def _split_inventory_line(value: str) -> list[str]:
+    if ";" in value:
+        return [part.strip(" .:-") for part in value.split(";") if part.strip(" .:-")]
+    return _split_list(value)
 
 
 def _extract_weapons(text: str) -> tuple[Weapon, ...]:

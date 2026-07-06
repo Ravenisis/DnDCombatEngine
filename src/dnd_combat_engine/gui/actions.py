@@ -40,6 +40,24 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Open the party leader spellbook",
         ),
         GuiActionSpec(
+            "character.abilities",
+            "Character",
+            "Abilities",
+            "Open the party leader abilities",
+        ),
+        GuiActionSpec(
+            "character.inventory",
+            "Character",
+            "Inventory",
+            "Open the party leader inventory",
+        ),
+        GuiActionSpec(
+            "character.break_concentration",
+            "Character",
+            "Break Concentration",
+            "End the active concentration spell",
+        ),
+        GuiActionSpec(
             "campaign.load_starter",
             "Campaign",
             "Load Starter Campaign",

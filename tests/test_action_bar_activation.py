@@ -7,6 +7,8 @@ from dnd_combat_engine.models import (
     ActionBarActionKind,
     ActionBarButton,
     Character,
+    Condition,
+    ConditionName,
     DamageComponent,
     DamageProfile,
     DamageType,
@@ -74,6 +76,18 @@ class FakeCharacters:
         self.saved.append(character)
 
 
+class FakeCharacterStore:
+    def __init__(self, characters: tuple[Character, ...]) -> None:
+        self.characters = {character.character_id: character for character in characters}
+        self.saved = []
+
+    def load(self, character_id: str) -> Character:
+        return self.characters[character_id]
+
+    def save(self, character: Character) -> None:
+        self.saved.append(character)
+
+
 class FakeCompendium:
     def __init__(self, spell: Spell) -> None:
         self.spell = spell
@@ -97,6 +111,19 @@ def _spell(spell_id: str = "guiding_bolt", level: int = 1, damage=None) -> Spell
         range_text="120 feet",
         duration="Instantaneous",
         damage=damage,
+    )
+
+
+def _beacon_spell() -> Spell:
+    return Spell(
+        spell_id="beacon_of_hope",
+        name="Beacon of Hope",
+        level=3,
+        school=SpellSchool.ABJURATION,
+        casting_time="1 action",
+        range_text="30 feet",
+        duration="Concentration, up to 1 minute",
+        concentration=True,
     )
 
 
@@ -162,6 +189,100 @@ def test_spell_action_reports_depleted_slots_and_non_damage_spells() -> None:
     assert "Used level 1 spell slot; 0/1 remain." in message
 
 
+def test_beacon_of_hope_applies_party_buff_without_damage_message(monkeypatch) -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_3": ResourcePool("spell_slot_3", 1, 1)},
+    )
+    ally = Character("ally", "Ally", HitPoints(10, 10))
+    store = FakeCharacterStore((caster, ally))
+    app = SimpleNamespace(
+        characters=store,
+        compendium=FakeCompendium(_beacon_spell()),
+        dice=FakeDice(),
+    )
+    state = main_window.GuiCampaignState(selected_character_id="cleric")
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.SPELL,
+        "beacon_of_hope",
+        "Beacon of Hope",
+        rank=3,
+    )
+    monkeypatch.setattr(
+        main_window,
+        "_choose_beacon_targets",
+        lambda *args: ("cleric", "ally"),
+    )
+
+    message = main_window._activate_spell_button(app, caster, button, state=state)
+
+    assert "Cleric casts Beacon of Hope on Cleric, Ally." in message
+    assert "Hope and Vitality applied while concentration holds." in message
+    assert "No damage dice configured" not in message
+    assert state.beacon_of_hope_targets == ("cleric", "ally")
+    assert state.concentration_character_id == "cleric"
+    assert state.concentration_spell_id == "beacon_of_hope"
+    assert caster.resources["spell_slot_3"].current == 0
+    assert store.saved == [caster]
+
+
+def test_new_concentration_spell_clears_beacon_of_hope_targets() -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_1": ResourcePool("spell_slot_1", 1, 1)},
+    )
+    spell = Spell(
+        "bless",
+        "Bless",
+        1,
+        SpellSchool.ENCHANTMENT,
+        "1 action",
+        "30 feet",
+        "Concentration, up to 1 minute",
+        concentration=True,
+    )
+    app = _app(caster, spell)
+    state = main_window.GuiCampaignState(
+        selected_character_id="cleric",
+        concentration_character_id="cleric",
+        concentration_spell_id="beacon_of_hope",
+        beacon_of_hope_targets=("cleric",),
+    )
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "bless", "Bless")
+
+    message = main_window._activate_spell_button(app, caster, button, state=state)
+
+    assert "Cleric casts Bless on Cleric." in message
+    assert state.beacon_of_hope_targets == ()
+    assert state.bless_targets == ("cleric",)
+    assert state.concentration_spell_id == "bless"
+
+
+def test_break_concentration_menu_clears_beacon_of_hope_targets(monkeypatch) -> None:
+    character = Character("cleric", "Cleric", HitPoints(20, 20))
+    app = _app(character, _beacon_spell())
+    state = main_window.GuiCampaignState(
+        selected_character_id="cleric",
+        concentration_character_id="cleric",
+        concentration_spell_id="beacon_of_hope",
+        beacon_of_hope_targets=("cleric",),
+    )
+    window = FakeWindow()
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._break_concentration_from_menu(window, None, app, state)
+
+    assert state.beacon_of_hope_targets == ()
+    assert state.concentration_character_id is None
+    assert state.concentration_spell_id is None
+    assert window.status.message == "Concentration broken: Beacon of Hope."
+
+
 def test_cantrip_action_rolls_damage_without_spending_slots() -> None:
     character = Character("cleric", "Cleric", HitPoints(20, 20))
     spell = _spell(
@@ -177,6 +298,119 @@ def test_cantrip_action_rolls_damage_without_spending_slots() -> None:
     assert "Damage 7" in message
     assert "No spell slot used." in message
     assert app.characters.saved == []
+
+
+def test_cure_wounds_heals_selected_target_and_spends_slot(monkeypatch) -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_2": ResourcePool("spell_slot_2", 1, 1)},
+    )
+    target = Character("ally", "Ally", HitPoints(4, 12))
+    store = FakeCharacterStore((caster, target))
+    spell = Spell(
+        "cure_wounds",
+        "Cure Wounds",
+        1,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "Touch",
+        "Instantaneous",
+    )
+    app = SimpleNamespace(characters=store, compendium=FakeCompendium(spell), dice=FakeDice(6))
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "cure_wounds", "Cure Wounds", rank=2)
+    monkeypatch.setattr(main_window, "_choose_single_party_target", lambda *args: "ally")
+
+    message = main_window._activate_spell_button(
+        app,
+        caster,
+        button,
+        state=main_window.GuiCampaignState(),
+    )
+
+    assert "Cleric casts Cure Wounds on Ally." in message
+    assert "Healing 2d8: 6" in message
+    assert target.hit_points.current == 10
+    assert caster.resources["spell_slot_2"].current == 0
+    assert target in store.saved
+
+
+def test_lesser_restoration_removes_selected_condition(monkeypatch) -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_2": ResourcePool("spell_slot_2", 1, 1)},
+    )
+    target = Character(
+        "ally",
+        "Ally",
+        HitPoints(10, 10),
+        conditions=(Condition(ConditionName.POISONED),),
+    )
+    store = FakeCharacterStore((caster, target))
+    spell = Spell(
+        "lesser_restoration",
+        "Lesser Restoration",
+        2,
+        SpellSchool.ABJURATION,
+        "1 action",
+        "Touch",
+        "Instantaneous",
+    )
+    app = SimpleNamespace(characters=store, compendium=FakeCompendium(spell), dice=FakeDice())
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.SPELL,
+        "lesser_restoration",
+        "Lesser Restoration",
+        rank=2,
+    )
+    monkeypatch.setattr(main_window, "_choose_single_party_target", lambda *args: "ally")
+    monkeypatch.setattr(main_window, "_choose_lesser_restoration_effect", lambda *args: "Poisoned")
+
+    message = main_window._activate_spell_button(
+        app,
+        caster,
+        button,
+        state=main_window.GuiCampaignState(),
+    )
+
+    assert "poisoned is ended" in message
+    assert target.conditions == ()
+
+
+def test_thaumaturgy_outputs_selected_effect(monkeypatch) -> None:
+    caster = Character("cleric", "Cleric", HitPoints(20, 20))
+    spell = Spell(
+        "thaumaturgy",
+        "Thaumaturgy",
+        0,
+        SpellSchool.TRANSMUTATION,
+        "1 action",
+        "30 feet",
+        "1 minute",
+    )
+    app = _app(caster, spell)
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "thaumaturgy", "Thaumaturgy")
+    monkeypatch.setattr(
+        main_window,
+        "_choose_thaumaturgy_effect",
+        lambda *args: "A door slams shut.",
+    )
+
+    message = main_window._activate_spell_button(
+        app,
+        caster,
+        button,
+        state=main_window.GuiCampaignState(),
+    )
+
+    assert message == (
+        "Cleric casts Thaumaturgy. A door slams shut. "
+        "The divine sign lingers for up to 1 minute. No spell slot used."
+    )
 
 
 def test_ability_action_rolls_first_weapon_damage() -> None:

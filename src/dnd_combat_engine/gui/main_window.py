@@ -30,11 +30,20 @@ from dnd_combat_engine.gui.widgets import (
     DiceTrayWidget,
     EncounterEditorWidget,
     EncounterTrackerWidget,
+    InventoryWidget,
     PartyFramesWidget,
     SpellbookWidget,
     SpellSlotTrackerWidget,
 )
-from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton, Campaign, Character
+from dnd_combat_engine.models import (
+    ActionBarActionKind,
+    ActionBarButton,
+    Campaign,
+    Character,
+    ConditionName,
+    InventoryItem,
+    ItemCategory,
+)
 from dnd_combat_engine.models.damage import DamageProfile
 
 
@@ -46,6 +55,10 @@ class GuiCampaignState:
     selected_character_id: str | None = "ravenisis"
     party_leader_character_id: str | None = "ravenisis"
     party_initiative: dict[str, int] = field(default_factory=dict)
+    concentration_character_id: str | None = None
+    concentration_spell_id: str | None = None
+    beacon_of_hope_targets: tuple[str, ...] = field(default_factory=tuple)
+    bless_targets: tuple[str, ...] = field(default_factory=tuple)
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
@@ -105,12 +118,6 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
         shift_pressed,
     )
     window._dnd_popups = []  # noqa: SLF001
-    _add_left_panel(
-        window,
-        qt,
-        "Abilities",
-        _abilities_widget(application, qt, campaign_state, action_bar_session),
-    )
     _add_bottom_dock(
         window,
         qt,
@@ -316,6 +323,15 @@ def _run_menu_action(
     if action_id == "character.spellbook":
         _open_spellbook_window(window, qt, app, state)
         return
+    if action_id == "character.abilities":
+        _open_abilities_window(window, qt, app, state)
+        return
+    if action_id == "character.inventory":
+        _open_inventory_window(window, qt, app, state)
+        return
+    if action_id == "character.break_concentration":
+        _break_concentration_from_menu(window, qt, app, state)
+        return
     if action_id == "campaign.load_starter":
         _open_campaign(window, qt, app, state, "starter_campaign")
         return
@@ -388,12 +404,36 @@ def _import_url_from_menu(window, qt, app: DnDCombatEngineApp, state: GuiCampaig
     if not url:
         _set_status(window, "Character URL import canceled.")
         return
+    if not hasattr(app.character_imports, "preview_url"):
+        _run_import_result(
+            window,
+            qt,
+            app,
+            state,
+            lambda: app.character_imports.import_url_to_campaign(
+                url,
+                state.active_campaign_id or "",
+            ),
+        )
+        return
+    try:
+        draft = app.character_imports.preview_url(url)
+    except ValueError as exc:
+        _show_message(window, qt, "Import Failed", str(exc), error=True)
+        return
+    reviewed = review_character_import(qt, window, draft)
+    if reviewed is None:
+        _set_status(window, "Character URL import canceled.")
+        return
     _run_import_result(
         window,
         qt,
         app,
         state,
-        lambda: app.character_imports.import_url_to_campaign(url, state.active_campaign_id or ""),
+        lambda: app.character_imports.import_draft_to_campaign(
+            reviewed,
+            state.active_campaign_id or "",
+        ),
     )
 
 
@@ -445,6 +485,7 @@ def _close_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignState
     state.selected_character_id = None
     state.party_leader_character_id = None
     state.party_initiative.clear()
+    _clear_concentration(state)
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, "Campaign closed.")
 
@@ -461,6 +502,7 @@ def _begin_new_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignS
     state.selected_character_id = None
     state.party_leader_character_id = None
     state.party_initiative.clear()
+    _clear_concentration(state)
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Created {campaign.name}.")
 
@@ -673,6 +715,183 @@ def _open_spellbook_window(
     _set_status(window, f"Opened {character.name} spellbook.")
 
 
+def _open_abilities_window(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    session = getattr(window, "_dnd_action_bar_session", None)
+    if session is None:
+        _show_message(window, qt, "Abilities Failed", "Action bar is not ready.", error=True)
+        return
+    character_id = _active_character_id(state)
+    if character_id is None:
+        _show_message(
+            window,
+            qt,
+            "Abilities Failed",
+            "Set a party leader before opening abilities.",
+            error=True,
+        )
+        return
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        _show_message(
+            window,
+            qt,
+            "Abilities Failed",
+            f"Party leader {character_id} could not be loaded.",
+            error=True,
+        )
+        return
+
+    popup = qt.QtWidgets.QDialog(window)
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle(f"{character.name} Abilities")
+    if hasattr(popup, "resize"):
+        popup.resize(360, 520)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    layout.addWidget(_abilities_widget(app, qt, state, session))
+    popups = getattr(window, "_dnd_popups", [])
+    popups.append(popup)
+    window._dnd_popups = popups  # noqa: SLF001
+    if hasattr(popup, "show"):
+        popup.show()
+    _set_status(window, f"Opened {character.name} abilities.")
+
+
+def _open_inventory_window(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    character_id = _active_character_id(state)
+    if character_id is None:
+        _show_message(
+            window,
+            qt,
+            "Inventory Failed",
+            "Set a party leader before opening inventory.",
+            error=True,
+        )
+        return
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        _show_message(
+            window,
+            qt,
+            "Inventory Failed",
+            f"Party leader {character_id} could not be loaded.",
+            error=True,
+        )
+        return
+
+    popup = qt.QtWidgets.QDialog(window)
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle(f"{character.name} Inventory")
+    if hasattr(popup, "resize"):
+        popup.resize(620, 520)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    layout.addWidget(
+        InventoryWidget.create(
+            app,
+            qt,
+            character_id,
+            on_consume=lambda item_id: _consume_inventory_item(
+                window,
+                qt,
+                app,
+                state,
+                character_id,
+                item_id,
+            ),
+        )
+    )
+    popups = getattr(window, "_dnd_popups", [])
+    popups.append(popup)
+    window._dnd_popups = popups  # noqa: SLF001
+    if hasattr(popup, "show"):
+        popup.show()
+    _set_status(window, f"Opened {character.name} inventory.")
+
+
+def _consume_inventory_item(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    item_id: str,
+) -> str:
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        message = f"Selected character {character_id} could not be loaded."
+        _set_status(window, message)
+        return message
+    item = next((carried for carried in character.inventory if carried.item_id == item_id), None)
+    if item is None:
+        message = f"{character.name} does not have {item_id}."
+    elif item.category != ItemCategory.CONSUMABLE:
+        message = f"{item.name} is not consumable."
+    else:
+        message = _consume_known_item(app, character, item)
+        app.inventory.remove_item(character, item.item_id, 1, autosave=True)
+        _refresh_campaign_docks(window, qt, app, state)
+    _append_workspace(window, message)
+    _set_status(window, message)
+    return message
+
+
+def _consume_known_item(
+    app: DnDCombatEngineApp,
+    character: Character,
+    item: InventoryItem,
+) -> str:
+    healing_notation = _healing_potion_notation(item)
+    if healing_notation is None:
+        return f"{character.name} consumes {item.name}."
+    result = app.dice.roll(healing_notation)
+    healed = character.hit_points.heal(result.total)
+    return (
+        f"{character.name} consumes {item.name}. "
+        f"You regain {result.notation} Hit Points: {result.total} rolls={result.rolls}. "
+        f"Healed {healed}; HP {character.hit_points.current}/{character.hit_points.maximum}."
+    )
+
+
+def _healing_potion_notation(item: InventoryItem) -> str | None:
+    item_name = item.name.lower()
+    if "potion of healing" not in item_name:
+        return None
+    if "supreme" in item_name:
+        return "10d4+20"
+    if "superior" in item_name:
+        return "8d4+8"
+    if "greater" in item_name:
+        return "4d4+4"
+    return "2d4+2"
+
+
+def _break_concentration_from_menu(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    if state.concentration_spell_id is None:
+        _set_status(window, "No concentration spell is active.")
+        return
+    spell_name = _spell_name(app, state.concentration_spell_id)
+    _clear_concentration(state)
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, f"Concentration broken: {spell_name}.")
+
+
 def _activate_action_bar_slot(
     window,
     qt,
@@ -687,7 +906,7 @@ def _activate_action_bar_slot(
         message = f"Slot {slot} d20: {result.total} rolls={result.rolls}"
     else:
         button = session.bar.button_at(slot)
-        message = _activate_action_button(app, state, button)
+        message = _activate_action_button(app, state, button, window=window, qt=qt)
         _refresh_campaign_docks(window, qt, app, state)
     _append_workspace(window, message)
     _set_status(window, message)
@@ -698,6 +917,8 @@ def _activate_action_button(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
     button: ActionBarButton | None,
+    window=None,
+    qt=None,
 ) -> str:
     if button is None:
         return "Action slot is empty."
@@ -709,7 +930,7 @@ def _activate_action_button(
     except KeyError:
         return f"Selected character {character_id} could not be loaded."
     if button.kind == ActionBarActionKind.SPELL:
-        return _activate_spell_button(app, character, button)
+        return _activate_spell_button(app, character, button, state=state, window=window, qt=qt)
     return _activate_ability_button(app, character, button)
 
 
@@ -717,29 +938,399 @@ def _activate_spell_button(
     app: DnDCombatEngineApp,
     character: Character,
     button: ActionBarButton,
+    state: GuiCampaignState | None = None,
+    window=None,
+    qt=None,
 ) -> str:
     try:
         spell = app.compendium.load_spell(button.action_id)
     except KeyError:
         return f"{button.name} is not in the spell compendium."
     slot_message = "No spell slot used."
+    spell_slot_resource = None
+    slot_level = 0
     if spell.level > 0:
         slot_level = max(spell.level, button.rank)
-        resource = character.resources.get(f"spell_slot_{slot_level}")
-        if resource is None:
+        spell_slot_resource = character.resources.get(f"spell_slot_{slot_level}")
+        if spell_slot_resource is None:
             return f"{character.name} cannot cast {spell.name}: no level {slot_level} slots."
-        if not resource.expend(1):
+        if spell_slot_resource.current < 1:
             return (
                 f"{character.name} cannot cast {spell.name}: "
                 f"no level {slot_level} slots remaining."
             )
+    beacon_targets: tuple[str, ...] = ()
+    bless_targets: tuple[str, ...] = ()
+    special_target: str | None = None
+    special_choice: str | None = None
+    if spell.spell_id == "beacon_of_hope":
+        beacon_targets = _choose_beacon_targets(qt, window, app, state, character)
+        if not beacon_targets:
+            return f"{character.name} holds Beacon of Hope; no targets selected."
+    elif spell.spell_id == "bless":
+        bless_targets = _choose_bless_targets(qt, window, app, state, character, slot_level)
+        if not bless_targets:
+            return f"{character.name} holds Bless; no targets selected."
+    elif spell.spell_id in {"cure_wounds", "lesser_restoration", "light", "revivify"}:
+        special_target = _choose_single_party_target(
+            qt,
+            window,
+            app,
+            state,
+            character,
+            f"{spell.name} Target",
+            f"Choose a target for {spell.name}:",
+        )
+        if special_target is None:
+            return f"{character.name} holds {spell.name}; no target selected."
+        if spell.spell_id == "lesser_restoration":
+            special_choice = _choose_lesser_restoration_effect(qt, window)
+            if special_choice is None:
+                return f"{character.name} holds Lesser Restoration; no effect selected."
+    elif spell.spell_id == "thaumaturgy":
+        special_choice = _choose_thaumaturgy_effect(qt, window)
+        if special_choice is None:
+            return f"{character.name} holds Thaumaturgy; no effect selected."
+    if spell_slot_resource is not None:
+        spell_slot_resource.expend(1)
         app.characters.save(character)
         slot_message = (
             f"Used level {slot_level} spell slot; "
-            f"{resource.current}/{resource.maximum} remain."
+            f"{spell_slot_resource.current}/{spell_slot_resource.maximum} remain."
+        )
+    if spell.concentration and state is not None:
+        _set_concentration(state, character.character_id, spell.spell_id)
+    if spell.spell_id == "beacon_of_hope" and state is not None:
+        state.beacon_of_hope_targets = beacon_targets
+        target_text = ", ".join(_character_names(app, beacon_targets))
+        return (
+            f"{character.name} casts Beacon of Hope on {target_text}. "
+            f"Hope and Vitality applied while concentration holds. {slot_message}"
+        )
+    if spell.spell_id == "bless" and state is not None:
+        state.bless_targets = bless_targets
+        target_text = ", ".join(_character_names(app, bless_targets))
+        return (
+            f"{character.name} casts Bless on {target_text}. "
+            f"Targets add 1d4 to attack rolls and saving throws while concentration holds. "
+            f"{slot_message}"
+        )
+    if spell.spell_id == "cure_wounds" and special_target is not None:
+        return _apply_cure_wounds(app, character, special_target, slot_level, slot_message)
+    if spell.spell_id == "lesser_restoration" and special_target is not None:
+        return _apply_lesser_restoration(
+            app,
+            character,
+            special_target,
+            special_choice or "",
+            slot_message,
+        )
+    if spell.spell_id == "light" and special_target is not None:
+        target_name = _character_name(app, special_target)
+        return (
+            f"{character.name} casts Light for {target_name}. "
+            "A touched object sheds bright light in a 20-foot radius and dim light for "
+            f"another 20 feet for 1 hour. {slot_message}"
+        )
+    if spell.spell_id == "revivify" and special_target is not None:
+        return _apply_revivify(app, character, special_target, slot_message)
+    if spell.spell_id == "thaumaturgy" and special_choice is not None:
+        return (
+            f"{character.name} casts Thaumaturgy. {special_choice} "
+            f"The divine sign lingers for up to 1 minute. {slot_message}"
         )
     damage_message = _roll_damage_profile(app, spell.damage)
     return f"{character.name} casts {spell.name}. {damage_message} {slot_message}"
+
+
+def _choose_beacon_targets(
+    qt,
+    parent,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    caster: Character,
+) -> tuple[str, ...]:
+    return _choose_party_targets(
+        qt,
+        parent,
+        app,
+        state,
+        caster,
+        "Beacon of Hope Targets",
+        "Choose party members in range:",
+    )
+
+
+def _choose_bless_targets(
+    qt,
+    parent,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    caster: Character,
+    slot_level: int,
+) -> tuple[str, ...]:
+    max_targets = 3 + max(0, slot_level - 1)
+    return _choose_party_targets(
+        qt,
+        parent,
+        app,
+        state,
+        caster,
+        "Bless Targets",
+        f"Choose up to {max_targets} creatures in range:",
+        max_targets=max_targets,
+    )
+
+
+def _choose_single_party_target(
+    qt,
+    parent,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    caster: Character,
+    title: str,
+    prompt: str,
+) -> str | None:
+    selected = _choose_party_targets(
+        qt,
+        parent,
+        app,
+        state,
+        caster,
+        title,
+        prompt,
+        max_targets=1,
+    )
+    return selected[0] if selected else None
+
+
+def _choose_party_targets(
+    qt,
+    parent,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    caster: Character,
+    title: str,
+    prompt: str,
+    max_targets: int | None = None,
+) -> tuple[str, ...]:
+    target_ids = _beacon_candidate_ids(app, state, caster)
+    if qt is None or parent is None:
+        return target_ids[:max_targets] if max_targets is not None else target_ids
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    checkbox_class = getattr(qt.QtWidgets, "QCheckBox", None)
+    button_box_class = getattr(qt.QtWidgets, "QDialogButtonBox", None)
+    if dialog_class is None or checkbox_class is None or button_box_class is None:
+        return target_ids[:max_targets] if max_targets is not None else target_ids
+    dialog = dialog_class(parent)
+    if hasattr(dialog, "setWindowTitle"):
+        dialog.setWindowTitle(title)
+    layout = qt.QtWidgets.QVBoxLayout(dialog)
+    layout.addWidget(qt.QtWidgets.QLabel(prompt))
+    checkboxes = []
+    for character_id in target_ids:
+        checkbox = checkbox_class(_character_name(app, character_id))
+        if hasattr(checkbox, "setChecked"):
+            checkbox.setChecked(True)
+        layout.addWidget(checkbox)
+        checkboxes.append((character_id, checkbox))
+    buttons = _dialog_buttons(button_box_class)
+    button_box = button_box_class(buttons) if buttons is not None else button_box_class()
+    if hasattr(button_box, "accepted"):
+        button_box.accepted.connect(dialog.accept)
+    if hasattr(button_box, "rejected"):
+        button_box.rejected.connect(dialog.reject)
+    layout.addWidget(button_box)
+    result = dialog.exec() if hasattr(dialog, "exec") else dialog.exec_()
+    accepted = _dialog_accepted(dialog_class, result)
+    if not accepted:
+        return ()
+    return tuple(
+        character_id
+        for character_id, checkbox in checkboxes
+        if not hasattr(checkbox, "isChecked") or checkbox.isChecked()
+    )[:max_targets]
+
+
+def _choose_lesser_restoration_effect(qt, parent) -> str | None:
+    return _choose_string(
+        qt,
+        parent,
+        "Lesser Restoration",
+        "Condition or disease:",
+        ("Disease", "Blinded", "Deafened", "Paralyzed", "Poisoned"),
+    )
+
+
+def _choose_thaumaturgy_effect(qt, parent) -> str | None:
+    return _choose_string(
+        qt,
+        parent,
+        "Thaumaturgy",
+        "Magical effect:",
+        (
+            "Your voice booms up to three times as loud.",
+            "Flames flicker, brighten, dim, or change color.",
+            "Harmless tremors shake the ground.",
+            "An instantaneous sound rings from a point in range.",
+            "An unlocked door or window flies open or slams shut.",
+            "Your eyes alter in appearance.",
+        ),
+    )
+
+
+def _choose_string(qt, parent, title: str, prompt: str, options: tuple[str, ...]) -> str | None:
+    if qt is None or parent is None:
+        return options[0] if options else None
+    dialog = getattr(qt.QtWidgets, "QInputDialog", None)
+    if dialog is None:
+        return options[0] if options else None
+    selected = dialog.getItem(parent, title, prompt, list(options), 0, False)
+    if isinstance(selected, tuple):
+        value, accepted = selected
+        return str(value) if accepted else None
+    return str(selected) if selected is not None else None
+
+
+def _apply_cure_wounds(
+    app: DnDCombatEngineApp,
+    caster: Character,
+    target_id: str,
+    slot_level: int,
+    slot_message: str,
+) -> str:
+    target = app.characters.load(target_id)
+    modifier = caster.abilities.modifier("wisdom")
+    notation = f"{max(1, slot_level)}d8{modifier:+d}" if modifier else f"{max(1, slot_level)}d8"
+    result = app.dice.roll(notation)
+    healed = target.hit_points.heal(result.total)
+    app.characters.save(target)
+    return (
+        f"{caster.name} casts Cure Wounds on {target.name}. "
+        f"Healing {result.notation}: {result.total} rolls={result.rolls}. "
+        f"Healed {healed}; HP {target.hit_points.current}/{target.hit_points.maximum}. "
+        f"{slot_message}"
+    )
+
+
+def _apply_lesser_restoration(
+    app: DnDCombatEngineApp,
+    caster: Character,
+    target_id: str,
+    effect: str,
+    slot_message: str,
+) -> str:
+    target = app.characters.load(target_id)
+    removed = _remove_restoration_condition(target, effect)
+    app.characters.save(target)
+    if removed:
+        result = f"{effect.lower()} is ended"
+    elif effect.lower() == "disease":
+        result = "one disease is ended"
+    else:
+        result = f"{target.name} had no tracked {effect.lower()} condition"
+    return f"{caster.name} casts Lesser Restoration on {target.name}; {result}. {slot_message}"
+
+
+def _remove_restoration_condition(target: Character, effect: str) -> bool:
+    normalized = effect.lower()
+    if normalized == "disease":
+        return False
+    try:
+        condition_name = ConditionName(normalized)
+    except ValueError:
+        return False
+    before = len(target.conditions)
+    target.conditions = tuple(
+        condition for condition in target.conditions if condition.name != condition_name
+    )
+    return len(target.conditions) != before
+
+
+def _apply_revivify(
+    app: DnDCombatEngineApp,
+    caster: Character,
+    target_id: str,
+    slot_message: str,
+) -> str:
+    target = app.characters.load(target_id)
+    healed = target.hit_points.heal(1)
+    app.characters.save(target)
+    detail = "returns with 1 hit point" if healed else "is already above 0 hit points"
+    return f"{caster.name} casts Revivify on {target.name}; {detail}. {slot_message}"
+
+
+def _beacon_candidate_ids(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    caster: Character,
+) -> tuple[str, ...]:
+    if state is None or state.active_campaign_id is None:
+        return (caster.character_id,)
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id)
+    except (AttributeError, KeyError):
+        return (caster.character_id,)
+    return campaign.character_ids or (caster.character_id,)
+
+
+def _dialog_buttons(button_box_class):
+    standard_button = getattr(button_box_class, "StandardButton", button_box_class)
+    ok_button = getattr(standard_button, "Ok", None)
+    cancel_button = getattr(standard_button, "Cancel", None)
+    if ok_button is None:
+        ok_button = getattr(button_box_class, "Ok", None)
+    if cancel_button is None:
+        cancel_button = getattr(button_box_class, "Cancel", None)
+    if ok_button is not None and cancel_button is not None:
+        return ok_button | cancel_button
+    return None
+
+
+def _dialog_accepted(dialog_class, result) -> bool:
+    accepted = getattr(dialog_class, "DialogCode", dialog_class)
+    accepted_value = getattr(accepted, "Accepted", None)
+    if accepted_value is None:
+        accepted_value = getattr(dialog_class, "Accepted", None)
+    if accepted_value is None:
+        accepted_value = 1
+    return result == accepted_value or result is True
+
+
+def _set_concentration(state: GuiCampaignState, character_id: str, spell_id: str) -> None:
+    if state.concentration_character_id == character_id:
+        _clear_concentration(state)
+    state.concentration_character_id = character_id
+    state.concentration_spell_id = spell_id
+    if spell_id != "beacon_of_hope":
+        state.beacon_of_hope_targets = ()
+    if spell_id != "bless":
+        state.bless_targets = ()
+
+
+def _clear_concentration(state: GuiCampaignState) -> None:
+    state.concentration_character_id = None
+    state.concentration_spell_id = None
+    state.beacon_of_hope_targets = ()
+    state.bless_targets = ()
+
+
+def _character_names(app: DnDCombatEngineApp, character_ids: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(_character_name(app, character_id) for character_id in character_ids)
+
+
+def _character_name(app: DnDCombatEngineApp, character_id: str) -> str:
+    try:
+        return app.characters.load(character_id).name
+    except KeyError:
+        return character_id
+
+
+def _spell_name(app: DnDCombatEngineApp, spell_id: str) -> str:
+    try:
+        return app.compendium.load_spell(spell_id).name
+    except KeyError:
+        return spell_id
 
 
 def _activate_ability_button(
@@ -818,6 +1409,8 @@ def _party_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):
         qt,
         state.active_campaign_id,
         initiative_results=state.party_initiative,
+        beacon_of_hope_targets=state.beacon_of_hope_targets,
+        bless_targets=state.bless_targets,
         on_upload_sheet=lambda character_id: _replace_party_member_sheet(
             window,
             qt,

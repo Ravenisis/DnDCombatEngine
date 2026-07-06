@@ -63,7 +63,7 @@ New-Item -ItemType Directory -Force -Path $WixBuild | Out-Null
 New-Item -ItemType Directory -Force -Path $MsiOutput | Out-Null
 
 $HarvestedFiles = Join-Path $WixBuild "ApplicationFiles.wxs"
-$MsiPath = Join-Path $MsiOutput "DnDCombatEngine-0.1.0-x64.msi"
+$MsiPath = Join-Path $MsiOutput "DnDCombatEngine-0.1.1-x64.msi"
 
 function Get-StableHash {
     param([string]$Text)
@@ -176,7 +176,7 @@ $Writer.WriteEndElement()
 $Writer.WriteEndDocument()
 $Writer.Close()
 
-& $Wix build `
+& $Wix --acceptEula wix7 build `
     -arch x64 `
     -define "AppSource=$AppSource" `
     -intermediatefolder $WixBuild `

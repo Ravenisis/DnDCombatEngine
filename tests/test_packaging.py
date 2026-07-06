@@ -34,7 +34,7 @@ def test_msi_build_script_harvests_pyinstaller_output() -> None:
     assert "wix.exe" in script
     assert "ApplicationFiles.wxs" in script
     assert "ComponentGroup" in script
-    assert "DnDCombatEngine-0.1.0-x64.msi" in script
+    assert "DnDCombatEngine-0.1.1-x64.msi" in script
 
 
 def test_package_workflow_builds_distributions_executable_and_installer() -> None:

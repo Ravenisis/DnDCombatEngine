@@ -122,8 +122,8 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi`
+- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe`
+- `dist/msi/DnDCombatEngine-0.1.1-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -133,20 +133,21 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,564,142 bytes
-- `dist/installer/DnDCombatEngine-0.1.0-Setup.exe` - 35,145,030 bytes
-- `dist/msi/DnDCombatEngine-0.1.0-x64.msi` - 40,906,752 bytes
-- Verified with `python -m pytest`, `python -m ruff check .`, and a packaged
-  executable startup smoke test.
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,098,634 bytes
+- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 42,704,138 bytes
+- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,128,366 bytes
+- Verified with `python -m ruff check src tests`,
+  `python -m pytest --no-cov`, a PyInstaller rebuild, an Inno Setup rebuild,
+  and a WiX MSI rebuild.
 
 Latest verified local install smoke test:
 
-- Ran `DnDCombatEngine-0.1.0-Setup.exe` silently into a controlled test install
-  directory.
-- Launched the installed `DnDCombatEngine.exe` from that install directory.
-- Confirmed the app stayed running past startup and initialized user data under
+- The installer smoke-test workflow has previously been verified with a silent
+  install into a controlled test directory, installed app launch, startup
+  stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- Closed the launched app process after verification.
+- The rebuilt `0.1.1` executable, Inno installer, and MSI have been generated;
+  an end-to-end `0.1.1` install smoke test is still pending.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:
@@ -236,7 +237,7 @@ dnd-combat-engine init-user-data
 - Added an Inno Setup installer script that installs the executable, registers
   uninstall support, and can create Start Menu and desktop shortcuts.
 - Added a Windows installer build script that compiles
-  `DnDCombatEngine-0.1.0-Setup.exe` from the PyInstaller output.
+  `DnDCombatEngine-0.1.1-Setup.exe` from the PyInstaller output.
 - Added a GitHub Actions packaging workflow for linting, testing, building Python
   distributions, producing the Windows executable, and uploading installer
   artifacts.
@@ -258,7 +259,7 @@ dnd-combat-engine init-user-data
 - Ran the full PyInstaller build and produced
   `dist/DnDCombatEngine/DnDCombatEngine.exe`.
 - Installed Inno Setup locally with `winget` and compiled
-  `dist/installer/DnDCombatEngine-0.1.0-Setup.exe`.
+  `dist/installer/DnDCombatEngine-0.1.1-Setup.exe`.
 - Updated the installer build script to detect Inno Setup installed under the
   current user's local programs directory.
 - Re-ran the test and lint gates after the build script update.
@@ -277,7 +278,7 @@ dnd-combat-engine init-user-data
 - Added WiX Toolset MSI authoring for installing the complete PyInstaller
   application folder under Program Files.
 - Added an MSI build script that harvests the full packaged runtime, Qt support
-  files, bundled seed data, and executable into `DnDCombatEngine-0.1.0-x64.msi`.
+  files, bundled seed data, and executable into `DnDCombatEngine-0.1.1-x64.msi`.
 - Added GitHub Actions packaging support for building and uploading the MSI
   artifact.
 - Documented the local MSI build workflow and expanded packaging tests.
@@ -338,3 +339,14 @@ dnd-combat-engine init-user-data
   damage dice rolls, slot spending, and remaining slot reporting.
 - Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
   refreshed action bar behavior.
+
+### Add utility spell workflows and inventory icons
+
+- Added Character menu inventory access with RPG-style container sections,
+  item SVG icons, quantity overlays, and right-click consumable use.
+- Added spell-specific action bar workflows for Bless, Cure Wounds, Lesser
+  Restoration, Light, Revivify, Thaumaturgy, and Beacon of Hope.
+- Added concentration-backed party frame buff icons for Beacon of Hope and Bless.
+- Improved D&D Beyond PDF imports by reading literal PDF values, sending URL
+  imports through the editable review dialog, and preserving parsed inventory.
+- Bumped the package, installer, and MSI version to `0.1.1`.
