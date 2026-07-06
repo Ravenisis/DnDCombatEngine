@@ -1,0 +1,19 @@
+{
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": true,
+  "damage": null,
+  "description": "Add 1d4 to attacks and saving throws.",
+  "duration": "Concentration, up to 1 minute",
+  "level": 1,
+  "range_text": "30 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "school": "enchantment",
+  "spell_id": "bless",
+  "name": "Bless"
+}

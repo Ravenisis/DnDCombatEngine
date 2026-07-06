@@ -1,0 +1,10 @@
+{
+  "campaign_id": "starter",
+  "character_ids": [
+    "lyra_thorn_2"
+  ],
+  "encounter_ids": [],
+  "name": "Starter",
+  "notes": "",
+  "status": "planned"
+}

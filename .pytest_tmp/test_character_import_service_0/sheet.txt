@@ -1,0 +1,18 @@
+
+Character Name: Lyra Thorn
+Class & Level: Rogue 3
+Armor Class: 15
+Current HP: 19
+Max HP: 24
+Temporary HP: 4
+STR 8
+DEX 16
+CON 14
+INT 12
+WIS 10
+CHA 13
+Skills: Acrobatics, Stealth, Perception
+Equipment: thieves' tools, rope, torch
+Weapons:
+Rapier +5 1d8 piercing
+Shortbow +5 1d6 piercing

@@ -82,8 +82,10 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
     class FakeLayout:
         def __init__(self, widget) -> None:
             self.widget = widget
+            self.widgets = []
 
         def addWidget(self, widget) -> None:
+            self.widgets.append(widget)
             self.widget = widget
 
         def setAlignment(self, value) -> None:
@@ -165,6 +167,10 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
 
     assert window.title == "DnDCombatEngine"
     assert window.size == (1200, 800)
+    assert "Spellbook" not in window._dnd_docks
+    assert "Spellbook" not in window._dnd_panel_hosts
+    assert "Abilities" in window._dnd_panel_hosts
+    assert "Action Bar" in window._dnd_docks
 
 
 def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
@@ -408,4 +414,265 @@ def test_spellbook_spell_ids_filter_to_character_features() -> None:
     )
 
     assert widgets._spell_ids_for_character(app, "cleric") == ("bless",)
+
+
+def test_spell_slot_rows_are_sorted_by_slot_level() -> None:
+    from dnd_combat_engine.gui.widgets import _spell_slot_rows
+    from dnd_combat_engine.models import ResourcePool
+
+    rows = _spell_slot_rows(
+        {
+            "hit_dice": ResourcePool("hit_dice", 1, 1),
+            "spell_slot_3": ResourcePool("spell_slot_3", 2, 3),
+            "spell_slot_1": ResourcePool("spell_slot_1", 4, 4),
+        }
+    )
+
+    assert rows == ((1, 4, 4), (3, 2, 3))
+
+
+def test_main_workspace_uses_scrollable_left_splitter() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class FakeOrientation:
+        Horizontal = 1
+
+    class FakeQtNamespace:
+        Orientation = FakeOrientation
+
+    class FakeQtCore:
+        Qt = FakeQtNamespace
+
+    class FakeWidget:
+        pass
+
+    class FakeLayout:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+            self.margins = None
+            self.spacing = None
+
+        def setContentsMargins(self, *values) -> None:  # noqa: N802
+            self.margins = values
+
+        def setSpacing(self, value) -> None:  # noqa: N802
+            self.spacing = value
+
+    class FakeScroll:
+        def setWidgetResizable(self, value) -> None:  # noqa: N802
+            self.resizable = value
+
+        def setWidget(self, widget) -> None:  # noqa: N802
+            self.widget = widget
+
+    class FakeSplitter:
+        def __init__(self, orientation) -> None:
+            self.orientation = orientation
+            self.widgets = []
+            self.stretch = {}
+            self.sizes = None
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+        def setStretchFactor(self, index, value) -> None:  # noqa: N802
+            self.stretch[index] = value
+
+        def setSizes(self, sizes) -> None:  # noqa: N802
+            self.sizes = sizes
+
+    class FakeQtWidgets:
+        QWidget = FakeWidget
+        QVBoxLayout = FakeLayout
+        QScrollArea = FakeScroll
+        QSplitter = FakeSplitter
+
+    qt = SimpleNamespace(QtCore=FakeQtCore, QtWidgets=FakeQtWidgets)
+    window = SimpleNamespace()
+    workspace = FakeWidget()
+
+    splitter = main_window._main_workspace(window, qt, workspace)
+
+    assert splitter.orientation == 1
+    assert len(splitter.widgets) == 2
+    assert splitter.widgets[0].resizable is True
+    assert splitter.widgets[1] is workspace
+    assert splitter.stretch == {0: 2, 1: 1}
+    assert splitter.sizes == [800, 400]
+    assert window._dnd_left_layout.margins == (6, 6, 6, 6)
+
+
+def test_panel_replacement_swaps_stored_widget() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class FakeLayout:
+        def __init__(self) -> None:
+            self.removed = []
+            self.added = []
+
+        def removeWidget(self, widget) -> None:  # noqa: N802
+            self.removed.append(widget)
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.added.append(widget)
+
+    class FakeWidget:
+        def setParent(self, parent) -> None:  # noqa: N802
+            self.parent = parent
+
+    old_widget = FakeWidget()
+    host = SimpleNamespace(_dnd_panel_layout=FakeLayout(), _dnd_panel_widget=old_widget)
+    new_widget = FakeWidget()
+
+    main_window._replace_panel_widget({"Party": host}, "Party", new_widget)
+
+    assert host._dnd_panel_layout.removed == [old_widget]
+    assert host._dnd_panel_layout.added == [new_widget]
+    assert old_widget.parent is None
+    assert host._dnd_panel_widget is new_widget
+
+
+def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+    from dnd_combat_engine.gui.action_bar import ActionBarSession
+    from dnd_combat_engine.models import Character, HitPoints, ResourcePool
+
+    class FakeWidget:
+        pass
+
+    class FakeLayout:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+            self.widgets = []
+            parent.layout = self
+
+        def addWidget(self, widget, stretch=None) -> None:  # noqa: N802
+            self.widgets.append((widget, stretch))
+
+    class FakeQtWidgets:
+        QWidget = FakeWidget
+        QHBoxLayout = FakeLayout
+
+    qt = SimpleNamespace(QtWidgets=FakeQtWidgets)
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(10, 10),
+        resources={"spell_slot_1": ResourcePool("spell_slot_1", 4, 4)},
+    )
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
+    monkeypatch.setattr(main_window.ActionBarWidget, "create", lambda *args, **kwargs: "bar")
+    monkeypatch.setattr(
+        main_window.SpellSlotTrackerWidget,
+        "create",
+        lambda *args, **kwargs: "slots",
+    )
+
+    widget = main_window._action_bar_widget(
+        app,
+        qt,
+        main_window.GuiCampaignState(party_leader_character_id="ravenisis"),
+        ActionBarSession(),
+        lambda *args: None,
+    )
+
+    assert widget is not None
+    assert widget.layout.widgets == [("slots", None), ("bar", 1)]
+
+
+def test_layout_helpers_cover_fallback_paths() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class OneArgLayout:
+        def __init__(self, parent=None) -> None:
+            self.parent = parent
+            self.widgets = []
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+    class StretchRejectingLayout(OneArgLayout):
+        def addWidget(self, widget, stretch=None) -> None:  # noqa: N802
+            if stretch is not None:
+                raise TypeError
+            self.widgets.append(widget)
+
+    class FakeWidget:
+        pass
+
+    class FakeQtWidgets:
+        QWidget = FakeWidget
+        QVBoxLayout = OneArgLayout
+
+    qt = SimpleNamespace(QtWidgets=FakeQtWidgets)
+    widget = FakeWidget()
+    assert main_window._scroll_area(qt, widget) is widget
+
+    no_layout_window = SimpleNamespace()
+    main_window._add_left_panel(no_layout_window, qt, "Missing", widget)
+
+    layout = OneArgLayout()
+    window = SimpleNamespace(_dnd_left_layout=layout, _dnd_panel_hosts={})
+    main_window._add_left_panel(window, qt, "Panel", widget)
+    assert "Panel" in window._dnd_panel_hosts
+    assert layout.widgets
+
+    stretch_layout = StretchRejectingLayout()
+    main_window._layout_add_widget(stretch_layout, "child", 1)
+    assert stretch_layout.widgets == ["child"]
+
+    main_window._replace_panel_widget({}, "Missing", widget)
+
+
+def test_spell_slot_tracker_handles_empty_and_missing_leaders() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui.widgets import SpellSlotTrackerWidget
+
+    class FakeWidget:
+        def __init__(self, *args) -> None:
+            self.args = args
+
+    class FakeLabel(FakeWidget):
+        pass
+
+    class FakeLayout:
+        def __init__(self, parent) -> None:
+            parent.layout = self
+            self.widgets = []
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+    class FakeQtWidgets:
+        QWidget = FakeWidget
+        QLabel = FakeLabel
+        QVBoxLayout = FakeLayout
+
+    qt = SimpleNamespace(QtWidgets=FakeQtWidgets)
+
+    def missing_character(character_id):
+        raise KeyError(character_id)
+
+    app = SimpleNamespace(characters=SimpleNamespace(load=missing_character))
+
+    no_leader = SpellSlotTrackerWidget.create(app, qt, None)
+    missing_leader = SpellSlotTrackerWidget.create(app, qt, "missing")
+
+    assert [widget.args[0] for widget in no_leader.layout.widgets] == [
+        "Spell Slots",
+        "No leader",
+    ]
+    assert [widget.args[0] for widget in missing_leader.layout.widgets] == [
+        "Spell Slots",
+        "Missing leader",
+    ]
 

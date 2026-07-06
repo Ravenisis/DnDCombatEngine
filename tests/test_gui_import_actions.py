@@ -1,7 +1,8 @@
 from types import SimpleNamespace
 
 from dnd_combat_engine.gui import main_window
-from dnd_combat_engine.models import Campaign, Character, HitPoints
+from dnd_combat_engine.gui.action_bar import ActionBarSession
+from dnd_combat_engine.models import Campaign, Character, HitPoints, Spell, SpellSchool
 from dnd_combat_engine.models.imports import CharacterImportDraft
 
 
@@ -44,6 +45,70 @@ class FakeQtWidgets:
 
 class FakeQt:
     QtWidgets = FakeQtWidgets
+
+
+class FakeSignal:
+    def connect(self, callback) -> None:
+        self.callback = callback
+
+
+class FakeDialog:
+    last = None
+
+    def __init__(self, parent) -> None:
+        self.parent = parent
+        self.title = ""
+        self.size = None
+        self.shown = False
+        FakeDialog.last = self
+
+    def setWindowTitle(self, title) -> None:  # noqa: N802
+        self.title = title
+
+    def resize(self, width, height) -> None:
+        self.size = (width, height)
+
+    def show(self) -> None:
+        self.shown = True
+
+
+class FakeWidget:
+    def __init__(self, *args) -> None:
+        self.args = args
+
+    def setReadOnly(self, value) -> None:  # noqa: N802
+        self.read_only = value
+
+    def append(self, value) -> None:
+        self.appended = value
+
+
+class FakeLayout:
+    def __init__(self, parent) -> None:
+        self.parent = parent
+        self.widgets = []
+
+    def addWidget(self, widget) -> None:  # noqa: N802
+        self.widgets.append(widget)
+
+
+class FakeButton(FakeWidget):
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
+        self.clicked = FakeSignal()
+
+
+class FakePopupQtWidgets(FakeQtWidgets):
+    QDialog = FakeDialog
+    QLabel = FakeWidget
+    QPushButton = FakeButton
+    QTextEdit = FakeWidget
+    QVBoxLayout = FakeLayout
+    QWidget = FakeWidget
+
+
+class FakePopupQt:
+    QtWidgets = FakePopupQtWidgets
 
 
 def _import_result() -> SimpleNamespace:
@@ -244,6 +309,88 @@ def test_set_party_leader_menu_rejects_non_party_member(monkeypatch) -> None:
 
     assert window.status.message == "bran is not in the active party."
     assert FakeMessageBox.warning_calls[-1][1] == "Leader Failed"
+
+
+def test_character_spellbook_menu_opens_party_leader_popup() -> None:
+    window = FakeWindow()
+    window._dnd_action_bar_session = ActionBarSession()
+    state = main_window.GuiCampaignState(
+        selected_character_id="vale",
+        party_leader_character_id="ravenisis",
+    )
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(20, 20),
+        features=("Domain Spells: Bless",),
+    )
+    spell = Spell(
+        "bless",
+        "Bless",
+        1,
+        SpellSchool.ENCHANTMENT,
+        "1 action",
+        "30 feet",
+        "1 minute",
+    )
+    app = SimpleNamespace(
+        characters=SimpleNamespace(load=lambda character_id: character),
+        compendium=SimpleNamespace(
+            persistence_service=SimpleNamespace(list_spell_ids=lambda: ["bless"]),
+            load_spell=lambda spell_id: spell,
+        ),
+    )
+
+    main_window._run_menu_action(window, FakePopupQt, app, state, "character.spellbook")
+
+    assert FakeDialog.last.title == "Ravenisis Spellbook"
+    assert FakeDialog.last.size == (360, 520)
+    assert FakeDialog.last.shown is True
+    assert window._dnd_popups == [FakeDialog.last]
+    assert window.status.message == "Opened Ravenisis spellbook."
+
+
+def test_character_spellbook_menu_reports_missing_action_bar() -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(party_leader_character_id="ravenisis")
+    FakeMessageBox.warning_calls = []
+
+    main_window._run_menu_action(window, FakeQt, object(), state, "character.spellbook")
+
+    assert window.status.message == "Action bar is not ready."
+    assert FakeMessageBox.warning_calls[-1][1] == "Spellbook Failed"
+
+
+def test_character_spellbook_menu_requires_party_leader() -> None:
+    window = FakeWindow()
+    window._dnd_action_bar_session = ActionBarSession()
+    state = main_window.GuiCampaignState(
+        selected_character_id=None,
+        party_leader_character_id=None,
+    )
+    FakeMessageBox.warning_calls = []
+
+    main_window._run_menu_action(window, FakeQt, object(), state, "character.spellbook")
+
+    assert window.status.message == "Set a party leader before opening the spellbook."
+    assert FakeMessageBox.warning_calls[-1][1] == "Spellbook Failed"
+
+
+def test_character_spellbook_menu_reports_missing_party_leader_data() -> None:
+    window = FakeWindow()
+    window._dnd_action_bar_session = ActionBarSession()
+    state = main_window.GuiCampaignState(party_leader_character_id="missing")
+
+    def missing_character(character_id):
+        raise KeyError(character_id)
+
+    app = SimpleNamespace(characters=SimpleNamespace(load=missing_character))
+    FakeMessageBox.warning_calls = []
+
+    main_window._run_menu_action(window, FakeQt, app, state, "character.spellbook")
+
+    assert window.status.message == "Party leader missing could not be loaded."
+    assert FakeMessageBox.warning_calls[-1][1] == "Spellbook Failed"
 
 
 def test_replace_party_member_sheet_saves_over_existing_character(monkeypatch) -> None:

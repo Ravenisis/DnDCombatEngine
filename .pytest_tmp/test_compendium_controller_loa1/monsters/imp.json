@@ -1,0 +1,32 @@
+{
+  "abilities": {
+    "charisma": 10,
+    "constitution": 10,
+    "dexterity": 17,
+    "intelligence": 10,
+    "strength": 10,
+    "wisdom": 10
+  },
+  "actions": [],
+  "armor_class": 13,
+  "challenge_rating": 1,
+  "condition_immunities": [],
+  "creature_type": "humanoid",
+  "damage_immunities": [],
+  "damage_resistances": [
+    "fire"
+  ],
+  "hit_points": {
+    "current": 10,
+    "maximum": 10,
+    "temporary": 0
+  },
+  "languages": [],
+  "monster_id": "imp",
+  "name": "Imp",
+  "senses": [],
+  "size": "medium",
+  "speed": {
+    "walk": 30
+  }
+}

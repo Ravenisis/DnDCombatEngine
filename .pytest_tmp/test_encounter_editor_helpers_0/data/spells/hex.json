@@ -1,0 +1,24 @@
+{
+  "casting_time": "1 bonus action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": true,
+  "damage": [
+    {
+      "damage_type": "necrotic",
+      "dice": "1d6"
+    }
+  ],
+  "description": "Deal extra necrotic damage to a cursed target.",
+  "duration": "Concentration, up to 1 hour",
+  "level": 1,
+  "range_text": "90 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "school": "enchantment",
+  "spell_id": "hex",
+  "name": "Hex"
+}

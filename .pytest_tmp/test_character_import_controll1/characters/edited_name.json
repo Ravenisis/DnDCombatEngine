@@ -1,0 +1,25 @@
+{
+  "abilities": {
+    "charisma": 10,
+    "constitution": 10,
+    "dexterity": 10,
+    "intelligence": 10,
+    "strength": 10,
+    "wisdom": 10
+  },
+  "armor": null,
+  "character_id": "edited_name",
+  "conditions": [],
+  "features": [],
+  "hit_points": {
+    "current": 9,
+    "maximum": 9,
+    "temporary": 0
+  },
+  "inventory": [],
+  "level": 1,
+  "name": "Edited Name",
+  "resources": {},
+  "skills": [],
+  "weapons": []
+}

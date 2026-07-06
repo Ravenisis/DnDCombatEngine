@@ -34,6 +34,12 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
         GuiActionSpec("file.exit", "File", "Exit", "Close the application", "Ctrl+Q"),
         GuiActionSpec("view.reset_layout", "View", "Reset Layout", "Restore dock layout"),
         GuiActionSpec(
+            "character.spellbook",
+            "Character",
+            "Spellbook",
+            "Open the party leader spellbook",
+        ),
+        GuiActionSpec(
             "campaign.load_starter",
             "Campaign",
             "Load Starter Campaign",

@@ -1,0 +1,16 @@
+{
+  "damage": [
+    {
+      "damage_type": "piercing",
+      "dice": "1d8"
+    }
+  ],
+  "name": "Longbow",
+  "properties": [
+    "ammunition",
+    "heavy",
+    "two-handed"
+  ],
+  "range_long": 600,
+  "range_normal": 150
+}

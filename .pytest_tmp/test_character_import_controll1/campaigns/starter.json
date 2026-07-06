@@ -1,0 +1,10 @@
+{
+  "campaign_id": "starter",
+  "character_ids": [
+    "edited_name"
+  ],
+  "encounter_ids": [],
+  "name": "Starter",
+  "notes": "",
+  "status": "planned"
+}

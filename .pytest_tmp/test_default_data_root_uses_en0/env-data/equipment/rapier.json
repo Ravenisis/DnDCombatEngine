@@ -1,0 +1,14 @@
+{
+  "damage": [
+    {
+      "damage_type": "piercing",
+      "dice": "1d8"
+    }
+  ],
+  "name": "Rapier",
+  "properties": [
+    "finesse"
+  ],
+  "range_long": null,
+  "range_normal": null
+}

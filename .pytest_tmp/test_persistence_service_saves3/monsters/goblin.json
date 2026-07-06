@@ -1,0 +1,30 @@
+{
+  "abilities": {
+    "charisma": 10,
+    "constitution": 10,
+    "dexterity": 14,
+    "intelligence": 10,
+    "strength": 10,
+    "wisdom": 10
+  },
+  "actions": [],
+  "armor_class": 15,
+  "challenge_rating": "1/4",
+  "condition_immunities": [],
+  "creature_type": "humanoid",
+  "damage_immunities": [],
+  "damage_resistances": [],
+  "hit_points": {
+    "current": 7,
+    "maximum": 7,
+    "temporary": 0
+  },
+  "languages": [],
+  "monster_id": "goblin",
+  "name": "Goblin",
+  "senses": [],
+  "size": "medium",
+  "speed": {
+    "walk": 30
+  }
+}

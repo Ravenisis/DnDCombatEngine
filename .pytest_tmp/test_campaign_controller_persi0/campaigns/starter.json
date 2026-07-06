@@ -1,0 +1,12 @@
+{
+  "campaign_id": "starter",
+  "character_ids": [
+    "vale"
+  ],
+  "encounter_ids": [
+    "roadside_ambush"
+  ],
+  "name": "Starter",
+  "notes": "",
+  "status": "active"
+}

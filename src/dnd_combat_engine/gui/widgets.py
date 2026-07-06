@@ -246,6 +246,32 @@ class ActionBarWidget:
         return widget
 
 
+class SpellSlotTrackerWidget:
+    """Factory for compact spell slot tracking next to the action bar."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, character_id: str | None = None):
+        """Create a compact spell slot tracker for a character."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        layout.addWidget(qt.QtWidgets.QLabel("Spell Slots"))
+        if character_id is None:
+            layout.addWidget(qt.QtWidgets.QLabel("No leader"))
+            return widget
+        try:
+            character = app.characters.load(character_id)
+        except KeyError:
+            layout.addWidget(qt.QtWidgets.QLabel("Missing leader"))
+            return widget
+        slot_rows = _spell_slot_rows(character.resources)
+        if not slot_rows:
+            layout.addWidget(qt.QtWidgets.QLabel("None"))
+            return widget
+        for level, current, maximum in slot_rows:
+            layout.addWidget(qt.QtWidgets.QLabel(f"L{level}: {current}/{maximum}"))
+        return widget
+
+
 class SpellbookWidget:
     """Factory for the spellbook source window."""
 
@@ -472,6 +498,15 @@ def _add_rows(output, rows: list[tuple[str, str]]) -> None:
 def _add_participants(output, rows: list[tuple[str, str, str, str]]) -> None:
     for participant_id, name, kind, quantity in rows:
         output.append(f"{participant_id}: {name} ({kind}) x{quantity}")
+
+
+def _spell_slot_rows(resources) -> tuple[tuple[int, int, int], ...]:
+    rows = []
+    for name, resource in resources.items():
+        match = re.fullmatch(r"spell_slot_(\d+)", name)
+        if match:
+            rows.append((int(match.group(1)), resource.current, resource.maximum))
+    return tuple(sorted(rows))
 
 
 def _spellbook_title(app: DnDCombatEngineApp, character_id: str | None) -> str:

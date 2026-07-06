@@ -1,0 +1,35 @@
+{
+  "abilities": {
+    "charisma": 10,
+    "constitution": 10,
+    "dexterity": 10,
+    "intelligence": 10,
+    "strength": 10,
+    "wisdom": 10
+  },
+  "armor": null,
+  "character_id": "rogue",
+  "conditions": [],
+  "features": [],
+  "hit_points": {
+    "current": 10,
+    "maximum": 10,
+    "temporary": 0
+  },
+  "inventory": [
+    {
+      "category": "other",
+      "item_id": "torch",
+      "name": "Torch",
+      "notes": null,
+      "quantity": 1,
+      "tags": [],
+      "weight": 1.0
+    }
+  ],
+  "level": 1,
+  "name": "Vale",
+  "resources": {},
+  "skills": [],
+  "weapons": []
+}

@@ -1,0 +1,51 @@
+{
+  "abilities": {
+    "charisma": 8,
+    "constitution": 10,
+    "dexterity": 14,
+    "intelligence": 10,
+    "strength": 8,
+    "wisdom": 8
+  },
+  "actions": [
+    {
+      "damage": [
+        {
+          "damage_type": "slashing",
+          "dice": "1d6"
+        }
+      ],
+      "name": "Scimitar",
+      "properties": [
+        "light"
+      ],
+      "range_long": null,
+      "range_normal": null
+    }
+  ],
+  "armor_class": 15,
+  "challenge_rating": "1/4",
+  "condition_immunities": [],
+  "creature_type": "humanoid",
+  "damage_immunities": [],
+  "damage_resistances": [],
+  "hit_points": {
+    "current": 7,
+    "maximum": 7,
+    "temporary": 0
+  },
+  "languages": [
+    "Common",
+    "Goblin"
+  ],
+  "monster_id": "goblin",
+  "name": "Goblin",
+  "senses": [
+    "darkvision 60 ft.",
+    "passive Perception 9"
+  ],
+  "size": "small",
+  "speed": {
+    "walk": 30
+  }
+}

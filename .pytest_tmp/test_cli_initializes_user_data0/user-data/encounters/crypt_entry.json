@@ -1,0 +1,25 @@
+{
+  "encounter_id": "crypt_entry",
+  "name": "Crypt Entry",
+  "notes": "Second starter encounter for campaign workspace tests.",
+  "participants": [
+    {
+      "initiative_bonus": 1,
+      "kind": "character",
+      "name": "Bran",
+      "participant_id": "bran",
+      "quantity": 1,
+      "source_id": "bran"
+    },
+    {
+      "initiative_bonus": 2,
+      "kind": "monster",
+      "name": "Goblin",
+      "participant_id": "goblin",
+      "quantity": 2,
+      "source_id": "goblin"
+    }
+  ],
+  "round_number": 1,
+  "status": "draft"
+}

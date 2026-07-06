@@ -13,6 +13,7 @@ def test_default_action_specs_include_core_commands() -> None:
     assert {spec.action_id for spec in specs} >= {
         "file.exit",
         "view.reset_layout",
+        "character.spellbook",
         "campaign.load_starter",
         "campaign.activate_starter",
         "campaign.new",
@@ -33,7 +34,8 @@ def test_default_action_specs_include_core_commands() -> None:
 def test_action_specs_group_by_menu_preserves_order() -> None:
     grouped = action_specs_by_menu(default_action_specs())
 
-    assert tuple(grouped) == ("File", "View", "Campaign", "Combat", "Dice")
+    assert tuple(grouped) == ("File", "View", "Character", "Campaign", "Combat", "Dice")
+    assert grouped["Character"][0].action_id == "character.spellbook"
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
     assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
     assert grouped["Campaign"][6].action_id == "campaign.import_pdf"

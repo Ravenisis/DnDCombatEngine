@@ -32,6 +32,7 @@ from dnd_combat_engine.gui.widgets import (
     EncounterTrackerWidget,
     PartyFramesWidget,
     SpellbookWidget,
+    SpellSlotTrackerWidget,
 )
 from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton, Campaign, Character
 from dnd_combat_engine.models.damage import DamageProfile
@@ -61,35 +62,50 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     if hasattr(window, "setDockNestingEnabled"):
         window.setDockNestingEnabled(True)
 
-    central = qt.QtWidgets.QTextEdit()
-    central.setReadOnly(True)
-    central.append("Combat Workspace")
-    window.setCentralWidget(central)
-    window._dnd_central = central  # noqa: SLF001
+    workspace = qt.QtWidgets.QTextEdit()
+    workspace.setReadOnly(True)
+    workspace.append("Combat Workspace")
+    window._dnd_central = workspace  # noqa: SLF001
     window._dnd_docks = {}  # noqa: SLF001
+    window._dnd_panel_hosts = {}  # noqa: SLF001
+    window.setCentralWidget(_main_workspace(window, qt, workspace))
 
-    _add_dock(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
-    _add_dock(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
-    _add_dock(
+    _add_left_panel(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
+    _add_left_panel(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
+    _add_left_panel(
         window,
         qt,
         "Campaign Editor",
         _campaign_editor_widget(application, qt, campaign_state),
     )
-    _add_dock(window, qt, "Character Sheet", _character_widget(application, qt, campaign_state))
-    _add_dock(window, qt, "Combat Log", CombatLogWidget.create(qt))
-    _add_dock(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
-    _add_dock(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
-    _add_dock(window, qt, "Encounter Editor", EncounterEditorWidget.create(application, qt))
-    _add_dock(window, qt, "Attack", AttackPanelWidget.create(application, qt))
-    window._dnd_action_bar_session = action_bar_session  # noqa: SLF001
-    _add_dock(
+    _add_left_panel(
         window,
         qt,
-        "Spellbook",
-        _spellbook_widget(application, qt, campaign_state, action_bar_session),
+        "Character Sheet",
+        _character_widget(application, qt, campaign_state),
     )
-    _add_dock(
+    _add_left_panel(window, qt, "Combat Log", CombatLogWidget.create(qt))
+    _add_left_panel(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
+    _add_left_panel(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
+    _add_left_panel(
+        window,
+        qt,
+        "Encounter Editor",
+        EncounterEditorWidget.create(application, qt),
+    )
+    _add_left_panel(window, qt, "Attack", AttackPanelWidget.create(application, qt))
+    window._dnd_action_bar_session = action_bar_session  # noqa: SLF001
+    window._dnd_action_bar_on_activate = lambda slot, shift_pressed: _activate_action_bar_slot(  # noqa: SLF001
+        window,
+        qt,
+        application,
+        campaign_state,
+        action_bar_session,
+        slot,
+        shift_pressed,
+    )
+    window._dnd_popups = []  # noqa: SLF001
+    _add_left_panel(
         window,
         qt,
         "Abilities",
@@ -99,18 +115,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
         window,
         qt,
         "Action Bar",
-        ActionBarWidget.create(
+        _action_bar_widget(
+            application,
             qt,
+            campaign_state,
             action_bar_session,
-            on_activate=lambda slot, shift_pressed: _activate_action_bar_slot(
-                window,
-                qt,
-                application,
-                campaign_state,
-                action_bar_session,
-                slot,
-                shift_pressed,
-            ),
+            window._dnd_action_bar_on_activate,  # noqa: SLF001
         ),
     )
     _configure_menus(window, qt, application, campaign_state)
@@ -125,6 +135,83 @@ def run_gui(data_root: Path | str = "data") -> int:
     window = create_main_window(create_app(data_root))
     window.show()
     return int(app.exec())
+
+
+def _main_workspace(window, qt, workspace):
+    left_content = qt.QtWidgets.QWidget()
+    left_layout = qt.QtWidgets.QVBoxLayout(left_content)
+    if hasattr(left_layout, "setContentsMargins"):
+        left_layout.setContentsMargins(6, 6, 6, 6)
+    if hasattr(left_layout, "setSpacing"):
+        left_layout.setSpacing(6)
+    window._dnd_left_layout = left_layout  # noqa: SLF001
+
+    left_scroll = _scroll_area(qt, left_content)
+    splitter_class = getattr(qt.QtWidgets, "QSplitter", None)
+    if splitter_class is not None:
+        orientation = getattr(getattr(qt.QtCore.Qt, "Orientation", None), "Horizontal", None)
+        if orientation is None:
+            orientation = getattr(qt.QtCore.Qt, "Horizontal", None)
+        splitter = splitter_class(orientation)
+        splitter.addWidget(left_scroll)
+        splitter.addWidget(workspace)
+        if hasattr(splitter, "setStretchFactor"):
+            splitter.setStretchFactor(0, 2)
+            splitter.setStretchFactor(1, 1)
+        if hasattr(splitter, "setSizes"):
+            splitter.setSizes([800, 400])
+        return splitter
+
+    container = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QHBoxLayout(container)
+    _layout_add_widget(layout, left_scroll, 2)
+    _layout_add_widget(layout, workspace, 1)
+    return container
+
+
+def _scroll_area(qt, widget):
+    scroll_class = getattr(qt.QtWidgets, "QScrollArea", None)
+    if scroll_class is None:
+        return widget
+    scroll = scroll_class()
+    if hasattr(scroll, "setWidgetResizable"):
+        scroll.setWidgetResizable(True)
+    if hasattr(scroll, "setWidget"):
+        scroll.setWidget(widget)
+    return scroll
+
+
+def _add_left_panel(window, qt, title: str, widget) -> None:
+    layout = getattr(window, "_dnd_left_layout", None)
+    if layout is None:
+        return
+    host = _panel_host(qt, title, widget)
+    _layout_add_widget(layout, host)
+    if hasattr(window, "_dnd_panel_hosts"):
+        window._dnd_panel_hosts[title] = host  # noqa: SLF001
+
+
+def _panel_host(qt, title: str, widget):
+    host_class = getattr(qt.QtWidgets, "QGroupBox", qt.QtWidgets.QWidget)
+    try:
+        host = host_class(title)
+    except TypeError:
+        host = host_class()
+    layout = qt.QtWidgets.QVBoxLayout(host)
+    _layout_add_widget(layout, widget)
+    host._dnd_panel_layout = layout  # noqa: SLF001
+    host._dnd_panel_widget = widget  # noqa: SLF001
+    return host
+
+
+def _layout_add_widget(layout, widget, stretch: int | None = None) -> None:
+    if stretch is None:
+        layout.addWidget(widget)
+        return
+    try:
+        layout.addWidget(widget, stretch)
+    except TypeError:
+        layout.addWidget(widget)
 
 
 def _add_dock(window, qt, title: str, widget) -> None:
@@ -213,6 +300,9 @@ def _run_menu_action(
 ) -> None:
     if action_id == "file.exit":
         window.close()
+        return
+    if action_id == "character.spellbook":
+        _open_spellbook_window(window, qt, app, state)
         return
     if action_id == "campaign.load_starter":
         _open_campaign(window, qt, app, state, "starter_campaign")
@@ -364,14 +454,26 @@ def _refresh_campaign_docks(
     state: GuiCampaignState,
 ) -> None:
     docks = getattr(window, "_dnd_docks", {})
+    panels = getattr(window, "_dnd_panel_hosts", {})
+    _replace_panel_widget(panels, "Campaign", _campaign_widget(app, qt, state))
+    _replace_panel_widget(panels, "Party", _party_widget(window, app, qt, state))
+    _replace_panel_widget(panels, "Campaign Editor", _campaign_editor_widget(app, qt, state))
+    _replace_panel_widget(panels, "Character Sheet", _character_widget(app, qt, state))
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
     _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_dock_widget(docks, "Character Sheet", _character_widget(app, qt, state))
     session = getattr(window, "_dnd_action_bar_session", None)
     if session is not None:
-        _replace_dock_widget(docks, "Spellbook", _spellbook_widget(app, qt, state, session))
+        _replace_panel_widget(panels, "Abilities", _abilities_widget(app, qt, state, session))
         _replace_dock_widget(docks, "Abilities", _abilities_widget(app, qt, state, session))
+        on_activate = getattr(window, "_dnd_action_bar_on_activate", None)
+        if on_activate is not None:
+            _replace_dock_widget(
+                docks,
+                "Action Bar",
+                _action_bar_widget(app, qt, state, session, on_activate),
+            )
 
 
 def _add_party_member_from_menu(
@@ -453,6 +555,53 @@ def _set_party_leader_from_menu(
     state.selected_character_id = character_id
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Set {character_id} as party leader.")
+
+
+def _open_spellbook_window(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    session = getattr(window, "_dnd_action_bar_session", None)
+    if session is None:
+        _show_message(window, qt, "Spellbook Failed", "Action bar is not ready.", error=True)
+        return
+    character_id = _active_character_id(state)
+    if character_id is None:
+        _show_message(
+            window,
+            qt,
+            "Spellbook Failed",
+            "Set a party leader before opening the spellbook.",
+            error=True,
+        )
+        return
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        _show_message(
+            window,
+            qt,
+            "Spellbook Failed",
+            f"Party leader {character_id} could not be loaded.",
+            error=True,
+        )
+        return
+
+    popup = qt.QtWidgets.QDialog(window)
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle(f"{character.name} Spellbook")
+    if hasattr(popup, "resize"):
+        popup.resize(360, 520)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    layout.addWidget(_spellbook_widget(app, qt, state, session))
+    popups = getattr(window, "_dnd_popups", [])
+    popups.append(popup)
+    window._dnd_popups = popups  # noqa: SLF001
+    if hasattr(popup, "show"):
+        popup.show()
+    _set_status(window, f"Opened {character.name} spellbook.")
 
 
 def _activate_action_bar_slot(
@@ -569,6 +718,21 @@ def _replace_dock_widget(docks: dict[str, object], title: str, widget) -> None:
     dock = docks.get(title)
     if dock is not None and hasattr(dock, "setWidget"):
         dock.setWidget(widget)
+
+
+def _replace_panel_widget(panels: dict[str, object], title: str, widget) -> None:
+    host = panels.get(title)
+    if host is None:
+        return
+    layout = getattr(host, "_dnd_panel_layout", None)
+    old_widget = getattr(host, "_dnd_panel_widget", None)
+    if layout is not None:
+        if old_widget is not None and hasattr(layout, "removeWidget"):
+            layout.removeWidget(old_widget)
+        _layout_add_widget(layout, widget)
+    if old_widget is not None and hasattr(old_widget, "setParent"):
+        old_widget.setParent(None)
+    host._dnd_panel_widget = widget  # noqa: SLF001
 
 
 def _campaign_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):
@@ -710,6 +874,20 @@ def _abilities_widget(
     if character_id is None:
         return _label(qt, "No party leader selected")
     return AbilitiesWidget.create(app, qt, session, character_id)
+
+
+def _action_bar_widget(
+    app: DnDCombatEngineApp,
+    qt,
+    state: GuiCampaignState,
+    session: ActionBarSession,
+    on_activate,
+):
+    widget = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QHBoxLayout(widget)
+    _layout_add_widget(layout, SpellSlotTrackerWidget.create(app, qt, _active_character_id(state)))
+    _layout_add_widget(layout, ActionBarWidget.create(qt, session, on_activate=on_activate), 1)
+    return widget
 
 
 def _active_character_id(state: GuiCampaignState) -> str | None:

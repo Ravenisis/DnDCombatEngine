@@ -1,0 +1,17 @@
+{
+  "encounter_id": "editor",
+  "name": "Editor",
+  "notes": "",
+  "participants": [
+    {
+      "initiative_bonus": 3,
+      "kind": "character",
+      "name": "Vale",
+      "participant_id": "vale",
+      "quantity": 1,
+      "source_id": "vale"
+    }
+  ],
+  "round_number": 2,
+  "status": "completed"
+}
