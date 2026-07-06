@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.character import Character
+from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
@@ -23,6 +24,7 @@ class CharacterImportDraft:
     inventory: tuple[InventoryItem, ...] = field(default_factory=tuple)
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
+    currency: CurrencyPurse = field(default_factory=CurrencyPurse)
     source: str = "pdf"
 
     def to_character(self, character_id: str) -> Character:
@@ -37,5 +39,5 @@ class CharacterImportDraft:
             inventory=self.inventory,
             weapons=self.weapons,
             armor=self.armor,
+            currency=self.currency,
         )
-

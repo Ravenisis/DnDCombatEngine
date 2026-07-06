@@ -52,6 +52,40 @@ def test_character_import_service_parses_text_sheet() -> None:
     assert draft.armor.armor_class == 15
 
 
+def test_character_import_service_ignores_noisy_dnd_beyond_skill_footer() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Skills: SAVESHIT DICE, Total SUCCESSES, FAILURES, HIT POINTS,
+        Max HP Current HP Temp HP, SPEED, ARMOR, CLASS,
+        TM & (c) 2018 Wizards of the Coast LLC. (c)2018 D&D Beyond | All Rights Reserved.
+        PROFICIENCY BONUS,
+        Inventory: Rope
+        """,
+        source="test",
+    )
+
+    assert draft.skills == ()
+
+
+def test_character_import_service_reads_currency_from_sheet_text() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Inventory
+        Bag of Holding
+        2,989GP
+        PP GP SP CP
+        """,
+        source="test",
+    )
+
+    assert draft.currency.pp == 298
+    assert draft.currency.gp == 9
+    assert draft.currency.sp == 0
+    assert draft.currency.cp == 0
+
+
 def test_character_import_service_reads_dnd_beyond_label_below_name() -> None:
     draft = CharacterImportService().parse_text(
         """
@@ -85,6 +119,7 @@ def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
             b"/V(10)/V(+0)/V(15)/V(+2)/V(9)/V(-1)",
             b"/V(Darkvision 60 ft.)/V(20)/V(+3)/V(25 ft.)/V(63)/V(--)/V(6d8)",
             b"/V(Bag of Holding)/V(1)/V(5 lb.)/V(Potion of Healing (Greater))/V(1)/V(0.5 lb.)",
+            b"/V(2,989GP)",
         ]
     )
 
@@ -101,6 +136,8 @@ def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
         "Bag of Holding",
         "Potion of Healing (Greater",
     ]
+    assert draft.currency.pp == 298
+    assert draft.currency.gp == 9
 
 
 def test_character_import_service_parses_public_html_url(monkeypatch) -> None:

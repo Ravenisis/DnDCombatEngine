@@ -118,6 +118,7 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
         shift_pressed,
     )
     window._dnd_popups = []  # noqa: SLF001
+    window._dnd_named_popups = {}  # noqa: SLF001
     _add_bottom_dock(
         window,
         qt,
@@ -712,6 +713,8 @@ def _open_spellbook_window(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
 ) -> None:
+    if _toggle_named_popup(window, "spellbook", "Closed spellbook."):
+        return
     session = getattr(window, "_dnd_action_bar_session", None)
     if session is None:
         _show_message(window, qt, "Spellbook Failed", "Action bar is not ready.", error=True)
@@ -745,11 +748,7 @@ def _open_spellbook_window(
         popup.resize(360, 520)
     layout = qt.QtWidgets.QVBoxLayout(popup)
     layout.addWidget(_spellbook_widget(app, qt, state, session))
-    popups = getattr(window, "_dnd_popups", [])
-    popups.append(popup)
-    window._dnd_popups = popups  # noqa: SLF001
-    if hasattr(popup, "show"):
-        popup.show()
+    _show_popup(window, popup, key="spellbook")
     _set_status(window, f"Opened {character.name} spellbook.")
 
 
@@ -759,6 +758,8 @@ def _open_abilities_window(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
 ) -> None:
+    if _toggle_named_popup(window, "abilities", "Closed abilities."):
+        return
     session = getattr(window, "_dnd_action_bar_session", None)
     if session is None:
         _show_message(window, qt, "Abilities Failed", "Action bar is not ready.", error=True)
@@ -792,11 +793,7 @@ def _open_abilities_window(
         popup.resize(360, 520)
     layout = qt.QtWidgets.QVBoxLayout(popup)
     layout.addWidget(_abilities_widget(app, qt, state, session))
-    popups = getattr(window, "_dnd_popups", [])
-    popups.append(popup)
-    window._dnd_popups = popups  # noqa: SLF001
-    if hasattr(popup, "show"):
-        popup.show()
+    _show_popup(window, popup, key="abilities")
     _set_status(window, f"Opened {character.name} abilities.")
 
 
@@ -806,6 +803,8 @@ def _open_inventory_window(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
 ) -> None:
+    if _toggle_named_popup(window, "inventory", "Closed inventory."):
+        return
     character_id = _active_character_id(state)
     if character_id is None:
         _show_message(
@@ -855,15 +854,13 @@ def _open_inventory_window(
             ),
         )
     )
-    popups = getattr(window, "_dnd_popups", [])
-    popups.append(popup)
-    window._dnd_popups = popups  # noqa: SLF001
-    if hasattr(popup, "show"):
-        popup.show()
+    _show_popup(window, popup, key="inventory")
     _set_status(window, f"Opened {character.name} inventory.")
 
 
 def _open_key_binds_window(window, qt) -> None:
+    if _toggle_named_popup(window, "key_binds", "Closed key binds."):
+        return
     popup = qt.QtWidgets.QDialog(window)
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle("Key Binds")
@@ -887,11 +884,13 @@ def _open_key_binds_window(window, qt) -> None:
             "\n".join(f"{command}: {shortcut}" for command, shortcut in rows)
         )
         layout.addWidget(label)
-    _show_popup(window, popup)
+    _show_popup(window, popup, key="key_binds")
     _set_status(window, "Opened key binds.")
 
 
 def _open_preferences_window(window, qt) -> None:
+    if _toggle_named_popup(window, "preferences", "Closed preferences."):
+        return
     popup = qt.QtWidgets.QDialog(window)
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle("Preferences")
@@ -916,16 +915,38 @@ def _open_preferences_window(window, qt) -> None:
         if hasattr(combo, "currentIndexChanged"):
             combo.currentIndexChanged.connect(apply_scheme)
         layout.addWidget(combo)
-    _show_popup(window, popup)
+    _show_popup(window, popup, key="preferences")
     _set_status(window, "Opened preferences.")
 
 
-def _show_popup(window, popup) -> None:
+def _show_popup(window, popup, key: str | None = None) -> None:
     popups = getattr(window, "_dnd_popups", [])
     popups.append(popup)
     window._dnd_popups = popups  # noqa: SLF001
+    if key is not None:
+        named = getattr(window, "_dnd_named_popups", {})
+        named[key] = popup
+        window._dnd_named_popups = named  # noqa: SLF001
     if hasattr(popup, "show"):
         popup.show()
+
+
+def _toggle_named_popup(window, key: str, status_message: str) -> bool:
+    named = getattr(window, "_dnd_named_popups", {})
+    popup = named.get(key)
+    if popup is None:
+        return False
+    is_visible = popup.isVisible() if hasattr(popup, "isVisible") else True
+    if is_visible:
+        if hasattr(popup, "close"):
+            popup.close()
+        named.pop(key, None)
+        window._dnd_named_popups = named  # noqa: SLF001
+        _set_status(window, status_message)
+        return True
+    named.pop(key, None)
+    window._dnd_named_popups = named  # noqa: SLF001
+    return False
 
 
 def _apply_color_scheme(window, scheme: str) -> None:

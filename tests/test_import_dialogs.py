@@ -12,6 +12,7 @@ from dnd_combat_engine.gui.import_dialogs import (
 from dnd_combat_engine.models import (
     AbilityScores,
     Armor,
+    CurrencyPurse,
     DamageComponent,
     DamageProfile,
     DamageType,
@@ -168,11 +169,13 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
             ),
         ),
         armor=Armor("Leather", 14),
+        currency=CurrencyPurse(gp=12, sp=3),
         source="sheet.pdf",
     )
     rows = dict(character_import_review_rows(draft))
     rows["Name"] = "Lyra Thorn"
     rows["Inventory"] = "Rope, Torch"
+    rows["Currency"] = "1PP 100GP"
     rows["Weapons"] = "Rapier | 1d8 | piercing; Dagger 1d4 piercing"
 
     reviewed = draft_from_review_rows(list(rows.items()))
@@ -182,6 +185,8 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
     assert reviewed.hit_points.maximum == 12
     assert reviewed.abilities.dexterity == 16
     assert [item.name for item in reviewed.inventory] == ["Rope", "Torch"]
+    assert reviewed.currency.pp == 11
+    assert reviewed.currency.gp == 0
     assert [weapon.name for weapon in reviewed.weapons] == ["Rapier", "Dagger"]
     assert reviewed.armor is not None
     assert reviewed.armor.armor_class == 14

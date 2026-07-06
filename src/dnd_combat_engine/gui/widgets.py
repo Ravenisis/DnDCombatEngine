@@ -556,9 +556,7 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
     button_layout.addWidget(withdraw)
     layout.addWidget(buttons)
     boxes = _currency_boxes(qt, purse)
-    for label, box in boxes:
-        layout.addWidget(qt.QtWidgets.QLabel(label))
-        layout.addWidget(box)
+    layout.addWidget(_currency_box_grid(qt, boxes))
     current = {"purse": purse}
 
     def apply_ledger(multiplier: int) -> None:
@@ -616,6 +614,23 @@ def _currency_boxes(qt, purse: CurrencyPurse):
             box.setFixedWidth(48)
         boxes.append((label, box))
     return tuple(boxes)
+
+
+def _currency_box_grid(qt, boxes):
+    widget = qt.QtWidgets.QWidget()
+    grid_class = getattr(qt.QtWidgets, "QGridLayout", qt.QtWidgets.QVBoxLayout)
+    layout = grid_class(widget)
+    for index, (label, box) in enumerate(boxes):
+        row, column = divmod(index, 2)
+        cell = qt.QtWidgets.QWidget()
+        cell_layout = qt.QtWidgets.QHBoxLayout(cell)
+        cell_layout.addWidget(qt.QtWidgets.QLabel(label))
+        cell_layout.addWidget(box)
+        try:
+            layout.addWidget(cell, row, column)
+        except TypeError:
+            layout.addWidget(cell)
+    return widget
 
 
 def _set_currency_boxes(boxes, purse: CurrencyPurse) -> None:

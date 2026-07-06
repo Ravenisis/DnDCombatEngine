@@ -133,12 +133,14 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,118,386 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,121,576 bytes
 - `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 42,729,828 bytes
-- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,144,865 bytes
+- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,153,057 bytes
 - Verified with `python -m ruff check src tests`,
   `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
-  an Inno Setup rebuild, and a WiX MSI rebuild.
+  and a WiX MSI rebuild. The Inno Setup compiler was blocked by local Windows
+  execution permissions during this pass, so the setup `.exe` remains the prior
+  verified `0.1.1` build.
 
 Latest verified local install smoke test:
 
@@ -375,3 +377,23 @@ dnd-combat-engine init-user-data
   the spellbook action source.
 - Added Guiding Bolt spell data and refreshed the Ravenisis seed sheet with
   cleric saving throw proficiencies and prepared spell metadata.
+
+### Refine import review and popup controls
+
+- Changed inventory currency controls to a compact 2x2 PP/GP/SP/CP layout.
+- Added toggle behavior for shortcut-opened popups so Spellbook, Abilities,
+  Inventory, Key Binds, and Preferences close when their command is used again.
+- Tightened character sheet skill parsing to recognize valid D&D skill names and
+  ignore adjacent D&D Beyond footer/status text.
+- Added import support for sheet currency totals such as `2,989GP`, carrying the
+  parsed purse through the confirmation popup into the saved character.
+
+### Next milestone: MMORPG Campaign Controller
+
+- Build active target frames for party members, monsters, and encounter
+  participants.
+- Add target-aware action resolution for attacks, spells, healing, saves,
+  buffs, conditions, concentration, and resource costs.
+- Add combat-workspace feedback that behaves like an MMORPG controller: select a
+  target, press an action bar key, resolve the effect, then update frames, logs,
+  spell slots, conditions, and inventory immediately.

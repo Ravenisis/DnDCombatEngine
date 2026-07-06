@@ -7,6 +7,7 @@ import re
 from dnd_combat_engine.models import (
     AbilityScores,
     Armor,
+    CurrencyPurse,
     DamageComponent,
     DamageProfile,
     DamageType,
@@ -135,6 +136,7 @@ def character_import_review_rows(draft: CharacterImportDraft) -> list[tuple[str,
         ("Charisma", str(draft.abilities.charisma)),
         ("Skills", ", ".join(draft.skills)),
         ("Inventory", ", ".join(item.name for item in draft.inventory)),
+        ("Currency", _currency_review_text(draft.currency)),
         ("Weapons", "; ".join(_weapon_text(weapon) for weapon in draft.weapons)),
         ("Source", draft.source),
     ]
@@ -166,6 +168,7 @@ def draft_from_review_rows(rows: list[tuple[str, str]]) -> CharacterImportDraft:
         inventory=tuple(
             _inventory_item(name) for name in _split_review_list(values.get("inventory", ""))
         ),
+        currency=_parse_currency_review(values.get("currency", "")),
         weapons=tuple(
             _parse_weapon(value) for value in _split_review_list(values.get("weapons", ""))
         ),
@@ -182,6 +185,25 @@ def _populate_review_table(qt, table, rows: list[tuple[str, str]]) -> None:
         table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
     if hasattr(table, "resizeColumnsToContents"):
         table.resizeColumnsToContents()
+
+
+def _currency_review_text(currency: CurrencyPurse) -> str:
+    parts = []
+    for label, value in (
+        ("PP", currency.pp),
+        ("GP", currency.gp),
+        ("SP", currency.sp),
+        ("CP", currency.cp),
+    ):
+        if value:
+            parts.append(f"{value}{label}")
+    return " ".join(parts)
+
+
+def _parse_currency_review(value: str) -> CurrencyPurse:
+    if not value.strip():
+        return CurrencyPurse()
+    return CurrencyPurse.parse(value.replace(",", ""))
 
 
 def _review_buttons(qt, dialog):

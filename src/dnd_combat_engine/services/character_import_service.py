@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from dnd_combat_engine.models import (
     AbilityScores,
     Armor,
+    CurrencyPurse,
     DamageComponent,
     DamageProfile,
     DamageType,
@@ -89,6 +90,7 @@ class CharacterImportService:
             inventory=_extract_inventory(normalized),
             weapons=weapons,
             armor=Armor("Imported armor", armor_class) if armor_class else None,
+            currency=_extract_currency(normalized),
             source=source,
         )
 
@@ -232,6 +234,9 @@ def _dndbeyond_labeled_text(values: list[str]) -> tuple[str, ...]:
     inventory = _dndbeyond_inventory_items(values)
     if inventory:
         labeled.append(f"Inventory: {'; '.join(inventory)}")
+    currency = _dndbeyond_currency(values)
+    if currency:
+        labeled.append(f"Currency: {currency}")
     return tuple(labeled)
 
 
@@ -284,7 +289,16 @@ def _dndbeyond_inventory_items(values: list[str]) -> tuple[str, ...]:
     return tuple(items)
 
 
+def _dndbeyond_currency(values: list[str]) -> str | None:
+    for value in values:
+        if re.fullmatch(r"\d[\d,]*\s*(?:pp|gp|sp|cp)", value.strip(), flags=re.I):
+            return value.strip()
+    return None
+
+
 def _looks_like_inventory_name(value: str) -> bool:
+    if re.fullmatch(r"\d[\d,]*\s*(?:pp|gp|sp|cp)", value.strip(), flags=re.I):
+        return False
     return bool(re.search(r"[A-Za-z]", value)) and not re.fullmatch(r"[+-]?\d+(?:\.\d+)?", value)
 
 
@@ -402,14 +416,35 @@ def _extract_abilities(text: str) -> AbilityScores:
 
 def _extract_skills(text: str) -> tuple[str, ...]:
     match = re.search(
-        r"\bskills?\s*:?\s*(.+?)(?:\n(?:inventory|equipment|weapons?|features?)\b|$)",
+        r"^skills?\s*:?\s*(.+?)(?:\n(?:inventory|equipment|weapons?|features?|"
+        r"saves?|hit dice|hit points|speed|armor|class|proficiency bonus)\b|$)",
         text,
-        flags=re.IGNORECASE | re.DOTALL,
+        flags=re.IGNORECASE | re.DOTALL | re.MULTILINE,
     )
     if not match:
+        return _known_skills_in_text(text)
+    candidates = _split_list(match.group(1))
+    skills = _known_skills_from_candidates(candidates)
+    if skills:
+        return skills
+    if _looks_like_noisy_skill_block(match.group(1)):
         return ()
-    names = _split_list(match.group(1))
-    return tuple(name for name in names if name)
+    return tuple(name for name in candidates if name)
+
+
+def _extract_currency(text: str) -> CurrencyPurse:
+    labeled = re.findall(r"^currency\s*:?\s*(.+)$", text, flags=re.I | re.M)
+    if labeled:
+        return _currency_from_text(" ".join(labeled))
+    return _currency_from_text(text)
+
+
+def _currency_from_text(text: str) -> CurrencyPurse:
+    total_cp = 0
+    multipliers = {"pp": 1000, "gp": 100, "sp": 10, "cp": 1}
+    for amount, label in re.findall(r"(\d[\d,]*)\s*(pp|gp|sp|cp)\b", text, flags=re.I):
+        total_cp += int(amount.replace(",", "")) * multipliers[label.lower()]
+    return CurrencyPurse.from_cp(total_cp)
 
 
 def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
@@ -467,6 +502,56 @@ def _extract_weapons(text: str) -> tuple[Weapon, ...]:
 def _split_list(value: str) -> list[str]:
     parts = re.split(r",|;|\n", value)
     return [part.strip(" .:-") for part in parts if part.strip(" .:-")]
+
+
+_SKILL_DISPLAY_NAMES = {
+    "acrobatics": "Acrobatics",
+    "animal handling": "Animal Handling",
+    "arcana": "Arcana",
+    "athletics": "Athletics",
+    "deception": "Deception",
+    "history": "History",
+    "insight": "Insight",
+    "intimidation": "Intimidation",
+    "investigation": "Investigation",
+    "medicine": "Medicine",
+    "nature": "Nature",
+    "perception": "Perception",
+    "performance": "Performance",
+    "persuasion": "Persuasion",
+    "religion": "Religion",
+    "sleight of hand": "Sleight of Hand",
+    "stealth": "Stealth",
+    "survival": "Survival",
+}
+
+
+def _known_skills_from_candidates(candidates: list[str]) -> tuple[str, ...]:
+    skills = []
+    for candidate in candidates:
+        normalized = re.sub(r"\s+", " ", candidate.lower()).strip()
+        if normalized in _SKILL_DISPLAY_NAMES:
+            skills.append(_SKILL_DISPLAY_NAMES[normalized])
+    return tuple(dict.fromkeys(skills))
+
+
+def _known_skills_in_text(text: str) -> tuple[str, ...]:
+    skills = []
+    for normalized, display in _SKILL_DISPLAY_NAMES.items():
+        if re.search(rf"\b{re.escape(normalized)}\b", text, flags=re.I):
+            skills.append(display)
+    return tuple(skills)
+
+
+def _looks_like_noisy_skill_block(value: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:saves?|hit dice|hit points|speed|armor|class|proficiency bonus|"
+            r"wizards of the coast|d&d beyond)\b",
+            value,
+            flags=re.I,
+        )
+    )
 
 
 def _slug(value: str) -> str:
