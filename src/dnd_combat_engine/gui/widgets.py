@@ -30,6 +30,7 @@ from dnd_combat_engine.gui.panels import (
 )
 from dnd_combat_engine.models import CombatLog
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
+from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.inventory import InventoryItem
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
@@ -310,7 +311,81 @@ class SpellSlotTrackerWidget:
             layout.addWidget(qt.QtWidgets.QLabel("None"))
             return widget
         for level, current, maximum in slot_rows:
-            layout.addWidget(qt.QtWidgets.QLabel(f"L{level}: {current}/{maximum}"))
+            row = qt.QtWidgets.QWidget()
+            row_layout = qt.QtWidgets.QHBoxLayout(row)
+            row_layout.addWidget(qt.QtWidgets.QLabel(f"L{level}"))
+            for index in range(maximum):
+                checkbox_class = getattr(qt.QtWidgets, "QCheckBox", None)
+                slot = (
+                    checkbox_class()
+                    if checkbox_class is not None
+                    else qt.QtWidgets.QLabel("x" if index < current else "-")
+                )
+                if hasattr(slot, "setChecked"):
+                    slot.setChecked(index < current)
+                if hasattr(slot, "setEnabled"):
+                    slot.setEnabled(False)
+                if hasattr(slot, "setToolTip"):
+                    status = "available" if index < current else "spent"
+                    slot.setToolTip(f"Level {level} spell slot {index + 1}: {status}")
+                row_layout.addWidget(slot)
+            layout.addWidget(row)
+        return widget
+
+
+class SavingThrowWidget:
+    """Factory for quick saving throw buttons."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, character_id: str | None, on_roll=None):
+        """Create a two-column saving throw button cluster."""
+        widget = qt.QtWidgets.QWidget()
+        layout_class = getattr(
+            qt.QtWidgets,
+            "QGridLayout",
+            getattr(qt.QtWidgets, "QVBoxLayout", getattr(qt.QtWidgets, "QHBoxLayout", None)),
+        )
+        if layout_class is None or not hasattr(qt.QtWidgets, "QPushButton"):
+            return None
+        layout = layout_class(widget)
+        if character_id is None:
+            layout.addWidget(qt.QtWidgets.QLabel("Saves"))
+            return widget
+        try:
+            character = app.characters.load(character_id)
+        except KeyError:
+            layout.addWidget(qt.QtWidgets.QLabel("Saves"))
+            return widget
+        saves = (
+            ("strength", "STR", 0, 0),
+            ("intelligence", "INT", 0, 1),
+            ("dexterity", "DEX", 1, 0),
+            ("wisdom", "WIS", 1, 1),
+            ("constitution", "CON", 2, 0),
+            ("charisma", "CHA", 2, 1),
+        )
+        proficiencies = {name.lower() for name in character.saving_throw_proficiencies}
+        for ability, label, row, column in saves:
+            button = qt.QtWidgets.QPushButton(label)
+            proficient = ability in proficiencies
+            if proficient and hasattr(button, "setStyleSheet"):
+                button.setStyleSheet("border-left: 4px solid #4f8cff;")
+            if hasattr(button, "setToolTip"):
+                modifier = character.abilities.modifier(ability)  # type: ignore[arg-type]
+                bonus = _proficiency_bonus(character.level) if proficient else 0
+                button.setToolTip(
+                    f"{ability.title()} save: d20 {modifier:+d}"
+                    f"{' + proficiency ' + str(bonus) if proficient else ''}"
+                )
+            button.clicked.connect(
+                lambda checked=False, save=ability: on_roll(save)
+                if on_roll is not None
+                else None
+            )
+            try:
+                layout.addWidget(button, row, column)
+            except TypeError:
+                layout.addWidget(button)
         return widget
 
 
@@ -330,6 +405,25 @@ class SpellbookWidget:
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
         layout.addWidget(qt.QtWidgets.QLabel(_spellbook_title(app, character_id)))
+        for attack_name in _attack_names_for_character(app, character_id):
+            button = qt.QtWidgets.QPushButton(f"{attack_name} (Attack)")
+            if hasattr(button, "setToolTip"):
+                button.setToolTip(f"Place {attack_name} on the action bar.")
+            button.clicked.connect(
+                lambda checked=False, name=attack_name: output.append(
+                    session.place_next(
+                        ActionBarButton(
+                            slot=1,
+                            kind=ActionBarActionKind.ABILITY,
+                            action_id=_action_id(name),
+                            name=name,
+                            rank=1,
+                            uses_highest_rank=True,
+                        )
+                    )
+                )
+            )
+            layout.addWidget(button)
         for spell_id in _spell_ids_for_character(app, character_id):
             spell = app.compendium.load_spell(spell_id)
             rank_options = _spell_rank_options(app, character_id, spell)
@@ -360,6 +454,22 @@ class SpellbookWidget:
                 layout.addWidget(button)
         layout.addWidget(output)
         return widget
+
+
+def _attack_names_for_character(
+    app: DnDCombatEngineApp,
+    character_id: str | None,
+) -> tuple[str, ...]:
+    if character_id is None:
+        return ()
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        return ()
+    names = [weapon.name for weapon in character.weapons]
+    if "Unarmed Strike" not in names:
+        names.append("Unarmed Strike")
+    return tuple(names)
 
 
 class AbilitiesWidget:
@@ -401,12 +511,20 @@ class InventoryWidget:
     """Factory for an RPG-style inventory window."""
 
     @staticmethod
-    def create(app: DnDCombatEngineApp, qt, character_id: str, on_consume=None):
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        character_id: str,
+        on_consume=None,
+        on_currency_change=None,
+    ):
         """Create an icon inventory grouped by carried containers."""
         character = app.characters.load(character_id)
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
-        layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character.name}"))
+        layout.addWidget(
+            _inventory_header(qt, character.name, character.currency, on_currency_change)
+        )
         sections = _inventory_sections(character.inventory)
         for section_name, items in sections:
             section = _inventory_section(qt, section_name, items, on_consume)
@@ -414,6 +532,97 @@ class InventoryWidget:
         if hasattr(layout, "addStretch"):
             layout.addStretch(1)
         return widget
+
+
+def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency_change):
+    widget = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QHBoxLayout(widget)
+    layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character_name}"))
+    if hasattr(layout, "addStretch"):
+        layout.addStretch(1)
+    ledger = qt.QtWidgets.QLineEdit()
+    if hasattr(ledger, "setPlaceholderText"):
+        ledger.setPlaceholderText("1PP 100GP")
+    layout.addWidget(ledger)
+    buttons = qt.QtWidgets.QWidget()
+    button_layout = qt.QtWidgets.QVBoxLayout(buttons)
+    deposit = qt.QtWidgets.QPushButton("Deposit")
+    withdraw = qt.QtWidgets.QPushButton("Withdraw")
+    if hasattr(deposit, "setStyleSheet"):
+        deposit.setStyleSheet("background:#1f7a3a; color:white;")
+    if hasattr(withdraw, "setStyleSheet"):
+        withdraw.setStyleSheet("background:#9f2f2f; color:white;")
+    button_layout.addWidget(deposit)
+    button_layout.addWidget(withdraw)
+    layout.addWidget(buttons)
+    boxes = _currency_boxes(qt, purse)
+    for label, box in boxes:
+        layout.addWidget(qt.QtWidgets.QLabel(label))
+        layout.addWidget(box)
+    current = {"purse": purse}
+
+    def apply_ledger(multiplier: int) -> None:
+        if on_currency_change is None:
+            return
+        try:
+            amount = CurrencyPurse.parse(ledger.text()).total_cp * multiplier
+            updated = on_currency_change(amount)
+        except ValueError as exc:
+            if hasattr(ledger, "setText"):
+                ledger.setText(str(exc))
+            return
+        if updated is not None:
+            current["purse"] = updated
+            _set_currency_boxes(boxes, updated)
+            if hasattr(ledger, "clear"):
+                ledger.clear()
+
+    def apply_boxes() -> None:
+        if on_currency_change is None:
+            return
+        try:
+            target = CurrencyPurse(
+                **{label.lower(): max(int(box.text() or "0"), 0) for label, box in boxes}
+            )
+            updated = on_currency_change(target.total_cp - current["purse"].total_cp)
+        except ValueError as exc:
+            if hasattr(ledger, "setText"):
+                ledger.setText(str(exc))
+            _set_currency_boxes(boxes, current["purse"])
+            return
+        if updated is not None:
+            current["purse"] = updated
+            _set_currency_boxes(boxes, updated)
+
+    deposit.clicked.connect(lambda checked=False: apply_ledger(1))
+    withdraw.clicked.connect(lambda checked=False: apply_ledger(-1))
+    for _, box in boxes:
+        signal = getattr(box, "editingFinished", None)
+        if signal is not None and hasattr(signal, "connect"):
+            signal.connect(apply_boxes)
+    return widget
+
+
+def _currency_boxes(qt, purse: CurrencyPurse):
+    boxes = []
+    for label, value in (
+        ("PP", purse.pp),
+        ("GP", purse.gp),
+        ("SP", purse.sp),
+        ("CP", purse.cp),
+    ):
+        box = qt.QtWidgets.QLineEdit(str(value))
+        if hasattr(box, "setFixedWidth"):
+            box.setFixedWidth(48)
+        boxes.append((label, box))
+    return tuple(boxes)
+
+
+def _set_currency_boxes(boxes, purse: CurrencyPurse) -> None:
+    values = {"PP": purse.pp, "GP": purse.gp, "SP": purse.sp, "CP": purse.cp}
+    for label, box in boxes:
+        if hasattr(box, "setText"):
+            box.setText(str(values[label]))
 
 
 def _inventory_section(qt, section_name: str, items: tuple[InventoryItem, ...], on_consume):
@@ -466,7 +675,12 @@ def _inventory_button_class(qt, item: InventoryItem, on_consume):
     class ConsumableInventoryButton(base_class):
         def mousePressEvent(self, event) -> None:  # noqa: N802
             if _is_right_click(qt, event) and on_consume is not None:
-                on_consume(item.item_id)
+                remaining = on_consume(item.item_id)
+                if isinstance(remaining, int):
+                    if remaining <= 0 and hasattr(self, "setEnabled"):
+                        self.setEnabled(False)
+                    if hasattr(self, "setText"):
+                        self.setText(str(remaining) if remaining > 1 else "")
                 if hasattr(event, "accept"):
                     event.accept()
                 return
@@ -1056,6 +1270,9 @@ def _inventory_item_tooltip(item: InventoryItem) -> str:
     ]
     if item.weight:
         lines.append(f"Weight: {item.weight:g} lb each ({item.total_weight:g} lb total)")
+    price_cp = item.purchase_price_cp or _default_purchase_price_cp(item)
+    if price_cp:
+        lines.append(f"Sell Price: {_currency_price_text(price_cp // 2)}")
     if item.tags:
         lines.append(f"Tags: {', '.join(item.tags)}")
     if item.notes:
@@ -1063,6 +1280,27 @@ def _inventory_item_tooltip(item: InventoryItem) -> str:
     if item.category.value == "consumable" or "potion" in item.tags or "potion" in item.item_id:
         lines.append("Right-click to consume one.")
     return "\n".join(lines)
+
+
+def _default_purchase_price_cp(item: InventoryItem) -> int:
+    defaults = {
+        "potion_of_healing_greater": 50_000,
+        "potion_of_greater_healing": 50_000,
+    }
+    return defaults.get(item.item_id, 0)
+
+
+def _currency_price_text(amount_cp: int) -> str:
+    purse = CurrencyPurse.from_cp(amount_cp)
+    parts = []
+    for label, value in (("PP", purse.pp), ("GP", purse.gp), ("SP", purse.sp), ("CP", purse.cp)):
+        if value:
+            parts.append(f"{value}{label}")
+    return " ".join(parts) if parts else "0CP"
+
+
+def _proficiency_bonus(level: int) -> int:
+    return 2 + max(level - 1, 0) // 4
 
 
 def _damage_profile_text(damage) -> str:

@@ -1,0 +1,23 @@
+{
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S"
+  ],
+  "concentration": false,
+  "damage": [
+    {
+      "damage_type": "radiant",
+      "dice": "4d6"
+    }
+  ],
+  "description": "A flash of light streaks toward a creature and leaves the next attack against it with advantage.",
+  "duration": "1 round",
+  "level": 1,
+  "name": "Guiding Bolt",
+  "range_text": "120 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "school": "evocation",
+  "spell_id": "guiding_bolt"
+}

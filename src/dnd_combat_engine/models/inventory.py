@@ -30,6 +30,7 @@ class InventoryItem:
     category: ItemCategory = ItemCategory.OTHER
     notes: str | None = None
     tags: tuple[str, ...] = field(default_factory=tuple)
+    purchase_price_cp: int = 0
 
     def __post_init__(self) -> None:
         """Validate item identity and quantities."""
@@ -41,6 +42,8 @@ class InventoryItem:
             raise ValueError("quantity must be at least 1")
         if self.weight < 0:
             raise ValueError("weight cannot be negative")
+        if self.purchase_price_cp < 0:
+            raise ValueError("purchase_price_cp cannot be negative")
 
     @property
     def total_weight(self) -> float:
@@ -57,6 +60,7 @@ class InventoryItem:
             category=self.category,
             notes=self.notes,
             tags=self.tags,
+            purchase_price_cp=self.purchase_price_cp,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -69,6 +73,7 @@ class InventoryItem:
             "category": self.category.value,
             "notes": self.notes,
             "tags": list(self.tags),
+            "purchase_price_cp": self.purchase_price_cp,
         }
 
     @classmethod
@@ -82,5 +87,5 @@ class InventoryItem:
             category=ItemCategory(str(data.get("category", ItemCategory.OTHER.value))),
             notes=str(data["notes"]) if data.get("notes") is not None else None,
             tags=tuple(str(tag) for tag in data.get("tags", [])),
+            purchase_price_cp=int(data.get("purchase_price_cp", 0)),
         )
-

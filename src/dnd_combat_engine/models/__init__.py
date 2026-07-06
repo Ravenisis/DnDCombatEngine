@@ -6,6 +6,7 @@ from dnd_combat_engine.models.campaigns import Campaign, CampaignStatus
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
 from dnd_combat_engine.models.conditions import Condition, ConditionName
+from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, DamageType
 from dnd_combat_engine.models.encounters import (
     Encounter,
@@ -38,6 +39,7 @@ __all__ = [
     "ConditionName",
     "CreatureSize",
     "CreatureType",
+    "CurrencyPurse",
     "DamageComponent",
     "DamageProfile",
     "DamageType",

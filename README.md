@@ -133,12 +133,12 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,632,729 bytes
-- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 35,459,817 bytes
-- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 41,088,444 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,118,386 bytes
+- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 42,729,828 bytes
+- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,144,865 bytes
 - Verified with `python -m ruff check src tests`,
-  `python -m pytest --no-cov`, a PyInstaller rebuild, an Inno Setup rebuild,
-  and a WiX MSI rebuild.
+  `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
+  an Inno Setup rebuild, and a WiX MSI rebuild.
 
 Latest verified local install smoke test:
 
@@ -363,3 +363,15 @@ dnd-combat-engine init-user-data
 - Improved D&D Beyond PDF imports by reading literal PDF values, sending URL
   imports through the editable review dialog, and preserving parsed inventory.
 - Bumped the package, installer, and MSI version to `0.1.1`.
+
+### Add MMORPG-style inventory currency and action controls
+
+- Added normalized PP/GP/SP/CP character currency with editable inventory purse
+  boxes and a Deposit/Withdraw ledger input.
+- Updated inventory consumable use so right-clicked stacks refresh immediately
+  and item tooltips show sell price when purchase price data is available.
+- Added saving throw buttons beside the action bar, graphical spell slot
+  tracking, working Dice menu d20 rolls, and weapon/unarmed attack options in
+  the spellbook action source.
+- Added Guiding Bolt spell data and refreshed the Ravenisis seed sheet with
+  cleric saving throw proficiencies and prepared spell metadata.

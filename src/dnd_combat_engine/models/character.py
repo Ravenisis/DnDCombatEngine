@@ -7,6 +7,7 @@ from typing import Self
 
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.conditions import Condition, ConditionName
+from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
@@ -29,6 +30,8 @@ class Character:
     features: tuple[str, ...] = field(default_factory=tuple)
     conditions: tuple[Condition, ...] = field(default_factory=tuple)
     resources: dict[str, ResourcePool] = field(default_factory=dict)
+    currency: CurrencyPurse = field(default_factory=CurrencyPurse)
+    saving_throw_proficiencies: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         """Validate character identity and level."""
@@ -56,6 +59,8 @@ class Character:
             "resources": {
                 name: resource.to_dict() for name, resource in self.resources.items()
             },
+            "currency": self.currency.to_dict(),
+            "saving_throw_proficiencies": list(self.saving_throw_proficiencies),
         }
 
     @classmethod
@@ -82,6 +87,10 @@ class Character:
                 str(key): _resource_from_data(str(key), value)
                 for key, value in data.get("resources", {}).items()
             },
+            currency=CurrencyPurse.from_dict(data.get("currency", {})),  # type: ignore[arg-type]
+            saving_throw_proficiencies=tuple(
+                str(item) for item in data.get("saving_throw_proficiencies", [])
+            ),
         )
 
 

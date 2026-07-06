@@ -34,6 +34,7 @@ from dnd_combat_engine.gui.widgets import (
     EncounterTrackerWidget,
     InventoryWidget,
     PartyFramesWidget,
+    SavingThrowWidget,
     SpellbookWidget,
     SpellSlotTrackerWidget,
 )
@@ -127,6 +128,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
             campaign_state,
             action_bar_session,
             window._dnd_action_bar_on_activate,  # noqa: SLF001
+            on_save=lambda ability: _roll_saving_throw(
+                window,
+                application,
+                campaign_state,
+                ability,
+            ),
         ),
     )
     _configure_menus(window, qt, application, campaign_state)
@@ -330,6 +337,12 @@ def _run_menu_action(
         return
     if action_id == "character.break_concentration":
         _break_concentration_from_menu(window, qt, app, state)
+        return
+    if action_id == "dice.roll_d20":
+        result = app.dice.roll("1d20")
+        message = f"d20 roll: {result.total} rolls={result.rolls}"
+        _append_workspace(window, message)
+        _set_status(window, message)
         return
     if action_id == "campaign.load_starter":
         _open_campaign(window, qt, app, state, "starter_campaign")
@@ -545,7 +558,19 @@ def _refresh_campaign_docks(
             _replace_dock_widget(
                 docks,
                 "Action Bar",
-                _action_bar_widget(app, qt, state, session, on_activate),
+                _action_bar_widget(
+                    app,
+                    qt,
+                    state,
+                    session,
+                    on_activate,
+                    on_save=lambda ability: _roll_saving_throw(
+                        window,
+                        app,
+                        state,
+                        ability,
+                    ),
+                ),
             )
 
 
@@ -822,6 +847,12 @@ def _open_inventory_window(
                 character_id,
                 item_id,
             ),
+            on_currency_change=lambda delta_cp: _change_character_currency(
+                window,
+                app,
+                character_id,
+                delta_cp,
+            ),
         )
     )
     popups = getattr(window, "_dnd_popups", [])
@@ -940,7 +971,7 @@ def _consume_inventory_item(
     state: GuiCampaignState,
     character_id: str,
     item_id: str,
-) -> str:
+) -> object:
     try:
         character = app.characters.load(character_id)
     except KeyError:
@@ -958,7 +989,42 @@ def _consume_inventory_item(
         _refresh_campaign_docks(window, qt, app, state)
     _append_workspace(window, message)
     _set_status(window, message)
-    return message
+    try:
+        updated = app.characters.load(character_id)
+    except KeyError:
+        return 0
+    return app.inventory.quantity(updated, item_id)
+
+
+def _change_character_currency(
+    window,
+    app: DnDCombatEngineApp,
+    character_id: str,
+    delta_cp: int,
+):
+    character = app.characters.load(character_id)
+    try:
+        character.currency = character.currency.add_cp(delta_cp)
+    except ValueError:
+        _set_status(window, "Not enough currency for that withdrawal.")
+        raise
+    app.characters.save(character)
+    action = "Deposited" if delta_cp >= 0 else "Withdrew"
+    message = f"{action} {_currency_change_text(abs(delta_cp))} for {character.name}."
+    _append_workspace(window, message)
+    _set_status(window, message)
+    return character.currency
+
+
+def _currency_change_text(amount_cp: int) -> str:
+    pp, remainder = divmod(amount_cp, 1000)
+    gp, remainder = divmod(remainder, 100)
+    sp, cp = divmod(remainder, 10)
+    parts = []
+    for label, value in (("PP", pp), ("GP", gp), ("SP", sp), ("CP", cp)):
+        if value:
+            parts.append(f"{value}{label}")
+    return " ".join(parts) if parts else "0CP"
 
 
 def _consume_known_item(
@@ -1452,9 +1518,15 @@ def _activate_ability_button(
     character: Character,
     button: ActionBarButton,
 ) -> str:
-    if not _ability_uses_weapon_damage(button):
+    if not _ability_uses_weapon_damage(character, button):
         return f"{button.name} is character sheet information, not a configured combat action."
-    weapon = character.weapons[0] if character.weapons else None
+    if button.name.lower() == "unarmed strike" or button.action_id == "unarmed_strike":
+        damage = max(1 + character.abilities.modifier("strength"), 1)
+        return (
+            f"{character.name} uses Unarmed Strike rank {button.rank}. "
+            f"Damage {damage} bludgeoning."
+        )
+    weapon = _weapon_for_button(character, button)
     if weapon is None:
         return f"{character.name} uses {button.name}. No attack damage dice configured."
     damage_message = _roll_damage_profile(app, weapon.damage)
@@ -1464,7 +1536,16 @@ def _activate_ability_button(
     )
 
 
-def _ability_uses_weapon_damage(button: ActionBarButton) -> bool:
+def _weapon_for_button(character: Character, button: ActionBarButton):
+    action_id = button.action_id.lower()
+    name = button.name.lower()
+    for weapon in character.weapons:
+        if _action_identifier(weapon.name) == action_id or weapon.name.lower() == name:
+            return weapon
+    return character.weapons[0] if character.weapons else None
+
+
+def _ability_uses_weapon_damage(character: Character, button: ActionBarButton) -> bool:
     action_id = button.action_id.lower()
     name = button.name.lower()
     weapon_actions = {
@@ -1475,7 +1556,9 @@ def _ability_uses_weapon_damage(button: ActionBarButton) -> bool:
         "sharpshooter",
         "divine_smite",
         "rage",
+        "unarmed_strike",
     }
+    weapon_actions.update(_action_identifier(weapon.name) for weapon in character.weapons)
     return action_id in weapon_actions or name in {
         "attack",
         "basic attack",
@@ -1484,7 +1567,12 @@ def _ability_uses_weapon_damage(button: ActionBarButton) -> bool:
         "sharpshooter",
         "divine smite",
         "rage",
-    }
+        "unarmed strike",
+    } or name in {weapon.name.lower() for weapon in character.weapons}
+
+
+def _action_identifier(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
 def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> str:
@@ -1500,6 +1588,44 @@ def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) 
             f"{result.total} rolls={result.rolls}"
         )
     return f"Damage {total} ({'; '.join(parts)})."
+
+
+def _roll_saving_throw(
+    window,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    ability: str,
+) -> str:
+    character_id = _active_character_id(state)
+    if character_id is None:
+        message = "No party leader selected for saving throw."
+        _set_status(window, message)
+        return message
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        message = f"Party leader {character_id} could not be loaded."
+        _set_status(window, message)
+        return message
+    modifier = character.abilities.modifier(ability)  # type: ignore[arg-type]
+    proficient = ability.lower() in {
+        name.lower() for name in character.saving_throw_proficiencies
+    }
+    proficiency = _proficiency_bonus(character.level) if proficient else 0
+    result = app.dice.roll("1d20")
+    total = result.total + modifier + proficiency
+    message = (
+        f"{character.name} {ability.title()} save: {total} "
+        f"(d20 {result.total} rolls={result.rolls}, modifier {modifier:+d}"
+        f"{', proficiency +' + str(proficiency) if proficient else ''})."
+    )
+    _append_workspace(window, message)
+    _set_status(window, message)
+    return message
+
+
+def _proficiency_bonus(level: int) -> int:
+    return 2 + max(level - 1, 0) // 4
 
 
 def _append_workspace(window, message: str) -> None:
@@ -1692,11 +1818,20 @@ def _action_bar_widget(
     state: GuiCampaignState,
     session: ActionBarSession,
     on_activate,
+    on_save=None,
 ):
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(widget)
     _layout_add_widget(layout, SpellSlotTrackerWidget.create(app, qt, _active_character_id(state)))
     _layout_add_widget(layout, ActionBarWidget.create(qt, session, on_activate=on_activate), 1)
+    saving_throw_widget = SavingThrowWidget.create(
+        app,
+        qt,
+        _active_character_id(state),
+        on_roll=on_save,
+    )
+    if saving_throw_widget is not None:
+        _layout_add_widget(layout, saving_throw_widget)
     return widget
 
 

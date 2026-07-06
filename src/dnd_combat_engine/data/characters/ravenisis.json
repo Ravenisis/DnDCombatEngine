@@ -27,7 +27,8 @@
     "Dwarven Resilience",
     "Darkvision 60 ft.",
     "Cantrips: Light, Sacred Flame, Thaumaturgy",
-    "Domain Spells: Bless, Cure Wounds, Lesser Restoration, Spiritual Weapon, Beacon of Hope, Revivify"
+    "Domain Spells: Bless, Cure Wounds, Lesser Restoration, Spiritual Weapon, Beacon of Hope, Revivify",
+    "Prepared Spells: Guiding Bolt"
   ],
   "hit_points": {
     "current": 63,
@@ -254,6 +255,7 @@
       "item_id": "potion_of_healing_greater",
       "name": "Potion of Healing (Greater)",
       "notes": null,
+      "purchase_price_cp": 50000,
       "quantity": 1,
       "tags": [
         "potion"
@@ -263,6 +265,12 @@
   ],
   "level": 6,
   "name": "Ravenisis",
+  "currency": {
+    "cp": 0,
+    "gp": 0,
+    "pp": 0,
+    "sp": 0
+  },
   "resources": {
     "channel_divinity": {
       "current": 2,
@@ -295,6 +303,10 @@
     "insight",
     "medicine",
     "survival"
+  ],
+  "saving_throw_proficiencies": [
+    "wisdom",
+    "charisma"
   ],
   "weapons": [
     {
