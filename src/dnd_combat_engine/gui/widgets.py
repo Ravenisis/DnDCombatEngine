@@ -32,6 +32,16 @@ from dnd_combat_engine.models import CombatLog
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
+PARTY_FRAME_FEATURES = (
+    "Bless",
+    "Divine Smite",
+    "Great Weapon Master",
+    "Hex",
+    "Hunter's Mark",
+    "Rage",
+    "Sharpshooter",
+    "Sneak Attack",
+)
 
 
 class DiceTrayWidget:
@@ -609,8 +619,12 @@ def _party_member_frame(
     layout.addWidget(qt.QtWidgets.QLabel(_initiative_text(character_id, initiative_results)))
     if on_set_initiative is not None:
         _add_initiative_entry(qt, layout, character_id, on_set_initiative)
-    features = ", ".join(character.features) if character.features else "No features"
-    layout.addWidget(qt.QtWidgets.QLabel(features))
+    feature_text = _party_frame_feature_text(character.features)
+    if feature_text:
+        feature_label = qt.QtWidgets.QLabel(feature_text)
+        if hasattr(feature_label, "setWordWrap"):
+            feature_label.setWordWrap(True)
+        layout.addWidget(feature_label)
     _install_party_context_menu(
         qt,
         frame,
@@ -621,6 +635,15 @@ def _party_member_frame(
         on_set_initiative,
     )
     return frame
+
+
+def _party_frame_feature_text(features: tuple[str, ...]) -> str:
+    """Return a compact combat feature summary for party frames."""
+    feature_blob = " ".join(features).lower()
+    visible_features = [
+        feature for feature in PARTY_FRAME_FEATURES if feature.lower() in feature_blob
+    ]
+    return ", ".join(visible_features[:3])
 
 
 def _initiative_text(

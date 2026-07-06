@@ -268,6 +268,31 @@ def test_party_initiative_helpers_parse_and_prompt() -> None:
     assert _ask_initiative_roll(FakeQt, object(), 4) is None
 
 
+def test_party_frame_feature_text_filters_import_metadata() -> None:
+    from dnd_combat_engine.gui.widgets import _party_frame_feature_text
+
+    assert _party_frame_feature_text(()) == ""
+    assert _party_frame_feature_text(
+        (
+            "Cleric 6",
+            "Hill Dwarf",
+            "Folk Hero",
+            "wazic",
+            "Life Domain",
+            "Disciple of Life",
+        )
+    ) == ""
+    assert _party_frame_feature_text(
+        (
+            "Cleric 6, Hill Dwarf, Folk Hero",
+            "Bless",
+            "Sneak Attack",
+            "Hex",
+            "Rage",
+        )
+    ) == "Bless, Hex, Rage"
+
+
 def test_party_context_menu_wires_actions(monkeypatch) -> None:
     from dnd_combat_engine.gui import widgets
 
