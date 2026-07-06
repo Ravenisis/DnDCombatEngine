@@ -8,6 +8,12 @@ from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, Comba
 from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.damage import DamageComponent, DamageProfile, DamageType
+from dnd_combat_engine.models.effects import (
+    EffectKind,
+    EffectResolution,
+    TargetKind,
+    TargetReference,
+)
 from dnd_combat_engine.models.encounters import (
     Encounter,
     EncounterParticipant,
@@ -43,6 +49,8 @@ __all__ = [
     "DamageComponent",
     "DamageProfile",
     "DamageType",
+    "EffectKind",
+    "EffectResolution",
     "Encounter",
     "EncounterParticipant",
     "EncounterStatus",
@@ -54,5 +62,7 @@ __all__ = [
     "ResourcePool",
     "Spell",
     "SpellSchool",
+    "TargetKind",
+    "TargetReference",
     "Weapon",
 ]

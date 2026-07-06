@@ -31,6 +31,8 @@ from dnd_combat_engine.gui.panels import (
 from dnd_combat_engine.models import CombatLog
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
 from dnd_combat_engine.models.currency import CurrencyPurse
+from dnd_combat_engine.models.effects import TargetKind, TargetReference
+from dnd_combat_engine.models.encounters import ParticipantKind
 from dnd_combat_engine.models.inventory import InventoryItem
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
@@ -166,6 +168,85 @@ class PartyFramesWidget:
         if hasattr(layout, "addStretch"):
             layout.addStretch(1)
         return widget
+
+
+class TargetPanelWidget:
+    """Factory for active target selection controls."""
+
+    @staticmethod
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        campaign_id: str | None,
+        active_target: TargetReference | None = None,
+        on_select=None,
+    ):
+        """Create a target selector for party and encounter participants."""
+        widget = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(widget)
+        active_text = "No target selected"
+        if active_target is not None:
+            active_text = f"Target: {active_target.name} ({active_target.kind.value})"
+        layout.addWidget(qt.QtWidgets.QLabel(active_text))
+        targets = _target_panel_references(app, campaign_id)
+        if not targets:
+            layout.addWidget(qt.QtWidgets.QLabel("No targets available"))
+            return widget
+        for target in targets:
+            button = qt.QtWidgets.QPushButton(target.name)
+            if hasattr(button, "setToolTip"):
+                button.setToolTip(f"Set active target to {target.name}")
+            button.clicked.connect(
+                lambda checked=False, item=target: on_select(item)
+                if on_select is not None
+                else None
+            )
+            layout.addWidget(button)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch(1)
+        return widget
+
+
+def _target_panel_references(
+    app: DnDCombatEngineApp,
+    campaign_id: str | None,
+) -> tuple[TargetReference, ...]:
+    if campaign_id is None:
+        return ()
+    try:
+        campaign = app.campaigns.load(campaign_id)
+    except KeyError:
+        return ()
+    targets: list[TargetReference] = []
+    for character_id in campaign.character_ids:
+        try:
+            character = app.characters.load(character_id)
+        except KeyError:
+            continue
+        targets.append(
+            TargetReference(
+                target_id=character.character_id,
+                name=character.name,
+                kind=TargetKind.CHARACTER,
+                source_id=character.character_id,
+            )
+        )
+    for encounter_id in campaign.encounter_ids:
+        try:
+            encounter = app.encounters.load(encounter_id)
+        except KeyError:
+            continue
+        for participant in encounter.participants:
+            if participant.kind is ParticipantKind.MONSTER:
+                targets.append(
+                    TargetReference(
+                        target_id=participant.participant_id,
+                        name=participant.name,
+                        kind=TargetKind.MONSTER,
+                        source_id=participant.source_id,
+                    )
+                )
+    return tuple(targets)
 
 
 class CampaignEditorWidget:

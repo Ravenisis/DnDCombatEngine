@@ -37,6 +37,7 @@ from dnd_combat_engine.gui.widgets import (
     SavingThrowWidget,
     SpellbookWidget,
     SpellSlotTrackerWidget,
+    TargetPanelWidget,
 )
 from dnd_combat_engine.models import (
     ActionBarActionKind,
@@ -44,8 +45,12 @@ from dnd_combat_engine.models import (
     Campaign,
     Character,
     ConditionName,
+    EffectKind,
+    EffectResolution,
     InventoryItem,
     ItemCategory,
+    TargetKind,
+    TargetReference,
 )
 from dnd_combat_engine.models.damage import DamageProfile
 
@@ -62,6 +67,7 @@ class GuiCampaignState:
     concentration_spell_id: str | None = None
     beacon_of_hope_targets: tuple[str, ...] = field(default_factory=tuple)
     bless_targets: tuple[str, ...] = field(default_factory=tuple)
+    active_target: TargetReference | None = None
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
@@ -88,6 +94,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
 
     _add_left_panel(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
     _add_left_panel(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
+    _add_left_panel(
+        window,
+        qt,
+        "Target",
+        _target_widget(window, application, qt, campaign_state),
+    )
     _add_left_panel(
         window,
         qt,
@@ -503,6 +515,7 @@ def _open_campaign(
     state.active_campaign_id = campaign.campaign_id
     state.selected_character_id = campaign.character_ids[0] if campaign.character_ids else None
     state.party_leader_character_id = state.selected_character_id
+    state.active_target = None
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Opened {campaign.name}.")
 
@@ -511,6 +524,7 @@ def _close_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignState
     state.active_campaign_id = None
     state.selected_character_id = None
     state.party_leader_character_id = None
+    state.active_target = None
     state.party_initiative.clear()
     _clear_concentration(state)
     _refresh_campaign_docks(window, qt, app, state)
@@ -528,6 +542,7 @@ def _begin_new_campaign(window, qt, app: DnDCombatEngineApp, state: GuiCampaignS
     state.active_campaign_id = campaign.campaign_id
     state.selected_character_id = None
     state.party_leader_character_id = None
+    state.active_target = None
     state.party_initiative.clear()
     _clear_concentration(state)
     _refresh_campaign_docks(window, qt, app, state)
@@ -544,10 +559,12 @@ def _refresh_campaign_docks(
     panels = getattr(window, "_dnd_panel_hosts", {})
     _replace_panel_widget(panels, "Campaign", _campaign_widget(app, qt, state))
     _replace_panel_widget(panels, "Party", _party_widget(window, app, qt, state))
+    _replace_panel_widget(panels, "Target", _target_widget(window, app, qt, state))
     _replace_panel_widget(panels, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_panel_widget(panels, "Character Sheet", _character_widget(app, qt, state))
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
     _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
+    _replace_dock_widget(docks, "Target", _target_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_dock_widget(docks, "Character Sheet", _character_widget(app, qt, state))
     session = getattr(window, "_dnd_action_bar_session", None)
@@ -1132,7 +1149,7 @@ def _activate_action_button(
         return f"Selected character {character_id} could not be loaded."
     if button.kind == ActionBarActionKind.SPELL:
         return _activate_spell_button(app, character, button, state=state, window=window, qt=qt)
-    return _activate_ability_button(app, character, button)
+    return _activate_ability_button(app, character, button, state=state)
 
 
 def _activate_spell_button(
@@ -1240,7 +1257,19 @@ def _activate_spell_button(
             f"{character.name} casts Thaumaturgy. {special_choice} "
             f"The divine sign lingers for up to 1 minute. {slot_message}"
         )
-    damage_message = _roll_damage_profile(app, spell.damage)
+    damage_message, damage_total = _roll_damage_profile(app, spell.damage)
+    target = _active_target_for_effect(app, state)
+    if target is not None and damage_total > 0:
+        applied = _apply_damage_to_target(app, target, damage_total)
+        resolution = EffectResolution(
+            source_name=character.name,
+            effect_name=spell.name,
+            effect_kind=EffectKind.DAMAGE,
+            target=target,
+            total=damage_total,
+            detail=f"{damage_message} {applied} {slot_message}",
+        )
+        return resolution.message()
     return f"{character.name} casts {spell.name}. {damage_message} {slot_message}"
 
 
@@ -1538,11 +1567,23 @@ def _activate_ability_button(
     app: DnDCombatEngineApp,
     character: Character,
     button: ActionBarButton,
+    state: GuiCampaignState | None = None,
 ) -> str:
     if not _ability_uses_weapon_damage(character, button):
         return f"{button.name} is character sheet information, not a configured combat action."
     if button.name.lower() == "unarmed strike" or button.action_id == "unarmed_strike":
         damage = max(1 + character.abilities.modifier("strength"), 1)
+        target = _active_target_for_effect(app, state)
+        if target is not None:
+            applied = _apply_damage_to_target(app, target, damage)
+            return EffectResolution(
+                source_name=character.name,
+                effect_name="Unarmed Strike",
+                effect_kind=EffectKind.ATTACK,
+                target=target,
+                total=damage,
+                detail=f"Damage {damage} bludgeoning. {applied}",
+            ).message()
         return (
             f"{character.name} uses Unarmed Strike rank {button.rank}. "
             f"Damage {damage} bludgeoning."
@@ -1550,7 +1591,18 @@ def _activate_ability_button(
     weapon = _weapon_for_button(character, button)
     if weapon is None:
         return f"{character.name} uses {button.name}. No attack damage dice configured."
-    damage_message = _roll_damage_profile(app, weapon.damage)
+    damage_message, damage_total = _roll_damage_profile(app, weapon.damage)
+    target = _active_target_for_effect(app, state)
+    if target is not None:
+        applied = _apply_damage_to_target(app, target, damage_total)
+        return EffectResolution(
+            source_name=character.name,
+            effect_name=f"{button.name} with {weapon.name}",
+            effect_kind=EffectKind.ATTACK,
+            target=target,
+            total=damage_total,
+            detail=f"{damage_message} {applied}",
+        ).message()
     return (
         f"{character.name} uses {button.name} with {weapon.name} "
         f"rank {button.rank}. {damage_message}"
@@ -1596,9 +1648,9 @@ def _action_identifier(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
-def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> str:
+def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> tuple[str, int]:
     if damage is None:
-        return "No damage dice configured."
+        return "No damage dice configured.", 0
     parts = []
     total = 0
     for component in damage.components:
@@ -1608,7 +1660,55 @@ def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) 
             f"{result.notation} {component.damage_type.value}: "
             f"{result.total} rolls={result.rolls}"
         )
-    return f"Damage {total} ({'; '.join(parts)})."
+    return f"Damage {total} ({'; '.join(parts)}).", total
+
+
+def _active_target_for_effect(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+) -> TargetReference | None:
+    if state is None or state.active_target is None:
+        return None
+    target = state.active_target
+    if target.kind is TargetKind.CHARACTER:
+        try:
+            character = app.characters.load(target.source_id)
+        except KeyError:
+            return None
+        return TargetReference(
+            target_id=character.character_id,
+            name=character.name,
+            kind=TargetKind.CHARACTER,
+            source_id=character.character_id,
+        )
+    if target.kind is TargetKind.MONSTER:
+        try:
+            monster = app.compendium.load_monster(target.source_id)
+        except KeyError:
+            return None
+        return TargetReference(
+            target_id=target.target_id,
+            name=monster.name,
+            kind=TargetKind.MONSTER,
+            source_id=monster.monster_id,
+        )
+    return target
+
+
+def _apply_damage_to_target(
+    app: DnDCombatEngineApp,
+    target: TargetReference,
+    damage_total: int,
+) -> str:
+    if target.kind is not TargetKind.CHARACTER:
+        return "Encounter target HP tracking is pending."
+    character = app.characters.load(target.source_id)
+    dealt = character.hit_points.apply_damage(damage_total)
+    app.characters.save(character)
+    return (
+        f"Applied {dealt} damage; HP "
+        f"{character.hit_points.current}/{character.hit_points.maximum}."
+    )
 
 
 def _roll_saving_throw(
@@ -1723,6 +1823,28 @@ def _party_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):
     )
 
 
+def _target_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):
+    return TargetPanelWidget.create(
+        app,
+        qt,
+        state.active_campaign_id,
+        active_target=state.active_target,
+        on_select=lambda target: _set_active_target(window, qt, app, state, target),
+    )
+
+
+def _set_active_target(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    target: TargetReference,
+) -> None:
+    state.active_target = target
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, f"Target selected: {target.name}.")
+
+
 def _replace_party_member_sheet(
     window,
     qt,
@@ -1756,6 +1878,17 @@ def _replace_party_member_sheet(
         _show_message(window, qt, "Import Failed", str(exc), error=True)
         return
     state.selected_character_id = character_id
+    if (
+        state.active_target is not None
+        and state.active_target.kind is TargetKind.CHARACTER
+        and state.active_target.source_id == character_id
+    ):
+        state.active_target = TargetReference(
+            target_id=character_id,
+            name=reviewed.name,
+            kind=TargetKind.CHARACTER,
+            source_id=character_id,
+        )
     _refresh_campaign_docks(window, qt, app, state)
     _show_message(window, qt, "Character Sheet Updated", f"Updated {reviewed.name}.")
 
@@ -1783,6 +1916,12 @@ def _remove_party_member(
         state.party_leader_character_id = (
             campaign.character_ids[0] if campaign.character_ids else None
         )
+    if (
+        state.active_target is not None
+        and state.active_target.kind is TargetKind.CHARACTER
+        and state.active_target.source_id == character_id
+    ):
+        state.active_target = None
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Removed {character_id} from party.")
 

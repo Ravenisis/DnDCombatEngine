@@ -16,6 +16,8 @@ from dnd_combat_engine.models import (
     ResourcePool,
     Spell,
     SpellSchool,
+    TargetKind,
+    TargetReference,
     Weapon,
 )
 
@@ -432,6 +434,38 @@ def test_ability_action_rolls_first_weapon_damage() -> None:
 
     assert "Fighter uses Attack with Longsword rank 2" in message
     assert "1d8 slashing" in message
+
+
+def test_ability_action_applies_damage_to_active_character_target() -> None:
+    attacker = Character(
+        "fighter",
+        "Fighter",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Longsword",
+                DamageProfile((DamageComponent("1d8", DamageType.SLASHING),)),
+            ),
+        ),
+    )
+    target = Character("goblin", "Goblin", HitPoints(12, 12))
+    store = FakeCharacterStore((attacker, target))
+    app = SimpleNamespace(
+        characters=store,
+        compendium=FakeCompendium(_spell()),
+        dice=FakeDice(5),
+    )
+    state = main_window.GuiCampaignState(
+        party_leader_character_id="fighter",
+        active_target=TargetReference("goblin", "Goblin", TargetKind.CHARACTER, "goblin"),
+    )
+    button = ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack")
+
+    message = main_window._activate_action_button(app, state, button)
+
+    assert "Fighter resolves Attack with Longsword on Goblin [attack]. Total 5." in message
+    assert target.hit_points.current == 7
+    assert target in store.saved
 
 
 def test_action_activation_handles_empty_selection_and_missing_data() -> None:
