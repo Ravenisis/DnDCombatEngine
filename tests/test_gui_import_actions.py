@@ -2,7 +2,14 @@ from types import SimpleNamespace
 
 from dnd_combat_engine.gui import main_window
 from dnd_combat_engine.gui.action_bar import ActionBarSession
-from dnd_combat_engine.models import Campaign, Character, HitPoints, Spell, SpellSchool
+from dnd_combat_engine.models import (
+    Campaign,
+    Character,
+    HitPoints,
+    ResourcePool,
+    Spell,
+    SpellSchool,
+)
 from dnd_combat_engine.models.imports import CharacterImportDraft
 
 
@@ -309,6 +316,139 @@ def test_set_party_leader_menu_rejects_non_party_member(monkeypatch) -> None:
 
     assert window.status.message == "bran is not in the active party."
     assert FakeMessageBox.warning_calls[-1][1] == "Leader Failed"
+
+
+def test_long_rest_heals_party_and_restores_spell_slots(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(3, 20, temporary=4),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
+            "channel_divinity": ResourcePool("channel_divinity", 0, 1),
+        },
+    )
+    saved_characters = []
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(
+                campaign_id,
+                "Starter",
+                character_ids=("ravenisis",),
+            )
+        ),
+        characters=SimpleNamespace(
+            load=lambda character_id: character,
+            save=saved_characters.append,
+        ),
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.long_rest")
+
+    assert character.hit_points.current == 20
+    assert character.hit_points.temporary == 0
+    assert character.resources["spell_slot_1"].current == 4
+    assert character.resources["channel_divinity"].current == 1
+    assert saved_characters == [character]
+    assert window.status.message == (
+        "Long rest completed for 1 party member. Hit points and spell slots restored."
+    )
+
+
+def test_short_rest_heals_and_keeps_spell_slots_spent(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(3, 20, temporary=2),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
+            "second_wind": ResourcePool("second_wind", 0, 1),
+        },
+    )
+    saved_characters = []
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(
+                campaign_id,
+                "Starter",
+                character_ids=("ravenisis",),
+            )
+        ),
+        characters=SimpleNamespace(
+            load=lambda character_id: character,
+            save=saved_characters.append,
+        ),
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.short_rest")
+
+    assert character.hit_points.current == 13
+    assert character.hit_points.temporary == 2
+    assert character.resources["spell_slot_1"].current == 0
+    assert character.resources["second_wind"].current == 1
+    assert saved_characters == [character]
+    assert window.status.message == (
+        "Short rest completed for 1 party member. "
+        "Partial hit points and short-rest resources restored."
+    )
+
+
+def test_rest_menu_requires_open_campaign() -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id=None)
+    FakeMessageBox.warning_calls = []
+
+    main_window._run_menu_action(window, FakeQt, object(), state, "campaign.long_rest")
+
+    assert window.status.message == "Open or create a campaign first."
+    assert FakeMessageBox.warning_calls[-1][1] == "Rest Failed"
+
+
+def test_rest_menu_reports_missing_campaign() -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="missing")
+    FakeMessageBox.warning_calls = []
+
+    def missing_campaign(campaign_id):
+        raise KeyError(campaign_id)
+
+    app = SimpleNamespace(campaigns=SimpleNamespace(load=missing_campaign))
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.long_rest")
+
+    assert window.status.message == "'missing'"
+    assert FakeMessageBox.warning_calls[-1][1] == "Rest Failed"
+
+
+def test_rest_menu_skips_missing_party_members(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    saved_characters = []
+
+    def load_character(character_id):
+        raise KeyError(character_id)
+
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(campaign_id, "Starter", character_ids=("missing",))
+        ),
+        characters=SimpleNamespace(load=load_character, save=saved_characters.append),
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.short_rest")
+
+    assert saved_characters == []
+    assert window.status.message == (
+        "Short rest completed for 0 party members. "
+        "Partial hit points and short-rest resources restored."
+    )
 
 
 def test_character_spellbook_menu_opens_party_leader_popup() -> None:

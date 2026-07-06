@@ -212,6 +212,26 @@ def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
     assert _is_shift_left_click(FakeQt, FakeEvent(2, 1)) is False
 
 
+def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
+    from dnd_combat_engine.gui.widgets import _action_button_text
+    from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton
+
+    button = ActionBarButton(
+        slot=1,
+        kind=ActionBarActionKind.SPELL,
+        action_id="mass_healing_word",
+        name="Mass Healing Word",
+        rank=3,
+    )
+
+    lines = _action_button_text("1", button).splitlines()
+
+    assert lines[0] == "1"
+    assert len(lines) <= 4
+    assert all(len(line) <= 10 for line in lines[1:])
+    assert _action_button_text("2", None) == "2\nEmpty"
+
+
 def test_party_initiative_helpers_parse_and_prompt() -> None:
     from dnd_combat_engine.gui.widgets import (
         _ask_initiative_roll,
@@ -446,7 +466,8 @@ def test_main_workspace_uses_scrollable_left_splitter() -> None:
         Qt = FakeQtNamespace
 
     class FakeWidget:
-        pass
+        def setMinimumWidth(self, value) -> None:  # noqa: N802
+            self.minimum_width = value
 
     class FakeLayout:
         def __init__(self, parent) -> None:
@@ -461,6 +482,12 @@ def test_main_workspace_uses_scrollable_left_splitter() -> None:
             self.spacing = value
 
     class FakeScroll:
+        def setMinimumWidth(self, value) -> None:  # noqa: N802
+            self.minimum_width = value
+
+        def setMaximumWidth(self, value) -> None:  # noqa: N802
+            self.maximum_width = value
+
         def setWidgetResizable(self, value) -> None:  # noqa: N802
             self.resizable = value
 
@@ -473,6 +500,7 @@ def test_main_workspace_uses_scrollable_left_splitter() -> None:
             self.widgets = []
             self.stretch = {}
             self.sizes = None
+            self.collapsible = {}
 
         def addWidget(self, widget) -> None:  # noqa: N802
             self.widgets.append(widget)
@@ -482,6 +510,9 @@ def test_main_workspace_uses_scrollable_left_splitter() -> None:
 
         def setSizes(self, sizes) -> None:  # noqa: N802
             self.sizes = sizes
+
+        def setCollapsible(self, index, value) -> None:  # noqa: N802
+            self.collapsible[index] = value
 
     class FakeQtWidgets:
         QWidget = FakeWidget
@@ -498,7 +529,11 @@ def test_main_workspace_uses_scrollable_left_splitter() -> None:
     assert splitter.orientation == 1
     assert len(splitter.widgets) == 2
     assert splitter.widgets[0].resizable is True
+    assert splitter.widgets[0].minimum_width == 520
+    assert splitter.widgets[0].maximum_width == 980
     assert splitter.widgets[1] is workspace
+    assert workspace.minimum_width == 360
+    assert splitter.collapsible == {0: False, 1: False}
     assert splitter.stretch == {0: 2, 1: 1}
     assert splitter.sizes == [800, 400]
     assert window._dnd_left_layout.margins == (6, 6, 6, 6)

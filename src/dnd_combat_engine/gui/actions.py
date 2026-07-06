@@ -76,6 +76,20 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Set which party member owns the active spellbook",
         ),
         GuiActionSpec(
+            "campaign.long_rest",
+            "Campaign",
+            "Long Rest",
+            "Fully heal party members and restore spell slots",
+            submenu="Rest",
+        ),
+        GuiActionSpec(
+            "campaign.short_rest",
+            "Campaign",
+            "Short Rest",
+            "Recover short-rest resources and partial hit points",
+            submenu="Rest",
+        ),
+        GuiActionSpec(
             "campaign.import_pdf",
             "Campaign",
             "PDF",

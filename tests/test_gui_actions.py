@@ -20,6 +20,8 @@ def test_default_action_specs_include_core_commands() -> None:
         "campaign.close",
         "campaign.add_party_member",
         "campaign.set_party_leader",
+        "campaign.long_rest",
+        "campaign.short_rest",
         "campaign.import_pdf",
         "campaign.import_url",
         "combat.quick_attack",
@@ -29,6 +31,7 @@ def test_default_action_specs_include_core_commands() -> None:
     assert next(spec for spec in specs if spec.action_id == "campaign.import_pdf").submenu == (
         "Upload Character Sheet"
     )
+    assert next(spec for spec in specs if spec.action_id == "campaign.long_rest").submenu == "Rest"
 
 
 def test_action_specs_group_by_menu_preserves_order() -> None:
@@ -38,7 +41,8 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
     assert grouped["Character"][0].action_id == "character.spellbook"
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
     assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
-    assert grouped["Campaign"][6].action_id == "campaign.import_pdf"
+    assert grouped["Campaign"][6].action_id == "campaign.long_rest"
+    assert grouped["Campaign"][8].action_id == "campaign.import_pdf"
     assert grouped["Combat"][0].action_id == "combat.quick_attack"
 
 

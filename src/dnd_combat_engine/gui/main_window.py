@@ -147,6 +147,9 @@ def _main_workspace(window, qt, workspace):
     window._dnd_left_layout = left_layout  # noqa: SLF001
 
     left_scroll = _scroll_area(qt, left_content)
+    _set_size_constraint(left_scroll, "setMinimumWidth", 520)
+    _set_size_constraint(left_scroll, "setMaximumWidth", 980)
+    _set_size_constraint(workspace, "setMinimumWidth", 360)
     splitter_class = getattr(qt.QtWidgets, "QSplitter", None)
     if splitter_class is not None:
         orientation = getattr(getattr(qt.QtCore.Qt, "Orientation", None), "Horizontal", None)
@@ -155,6 +158,9 @@ def _main_workspace(window, qt, workspace):
         splitter = splitter_class(orientation)
         splitter.addWidget(left_scroll)
         splitter.addWidget(workspace)
+        if hasattr(splitter, "setCollapsible"):
+            splitter.setCollapsible(0, False)
+            splitter.setCollapsible(1, False)
         if hasattr(splitter, "setStretchFactor"):
             splitter.setStretchFactor(0, 2)
             splitter.setStretchFactor(1, 1)
@@ -167,6 +173,12 @@ def _main_workspace(window, qt, workspace):
     _layout_add_widget(layout, left_scroll, 2)
     _layout_add_widget(layout, workspace, 1)
     return container
+
+
+def _set_size_constraint(widget, method_name: str, value: int) -> None:
+    method = getattr(widget, method_name, None)
+    if method is not None:
+        method(value)
 
 
 def _scroll_area(qt, widget):
@@ -323,6 +335,12 @@ def _run_menu_action(
         return
     if action_id == "campaign.set_party_leader":
         _set_party_leader_from_menu(window, qt, app, state)
+        return
+    if action_id == "campaign.long_rest":
+        _rest_campaign(window, qt, app, state, long_rest=True)
+        return
+    if action_id == "campaign.short_rest":
+        _rest_campaign(window, qt, app, state, long_rest=False)
         return
     if action_id == "campaign.import_pdf":
         _import_pdf_from_menu(window, qt, app, state)
@@ -555,6 +573,57 @@ def _set_party_leader_from_menu(
     state.selected_character_id = character_id
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Set {character_id} as party leader.")
+
+
+def _rest_campaign(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    *,
+    long_rest: bool,
+) -> None:
+    if state.active_campaign_id is None:
+        _show_message(window, qt, "Rest Failed", "Open or create a campaign first.", error=True)
+        return
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id)
+    except KeyError as exc:
+        _show_message(window, qt, "Rest Failed", str(exc), error=True)
+        return
+    rested_count = 0
+    for character_id in campaign.character_ids:
+        try:
+            character = app.characters.load(character_id)
+        except KeyError:
+            continue
+        _rest_character(character, long_rest=long_rest)
+        app.characters.save(character)
+        rested_count += 1
+    _refresh_campaign_docks(window, qt, app, state)
+    rest_name = "Long rest" if long_rest else "Short rest"
+    member_text = "party member" if rested_count == 1 else "party members"
+    detail = (
+        "Hit points and spell slots restored."
+        if long_rest
+        else "Partial hit points and short-rest resources restored."
+    )
+    _set_status(window, f"{rest_name} completed for {rested_count} {member_text}. {detail}")
+
+
+def _rest_character(character: Character, *, long_rest: bool) -> None:
+    if long_rest:
+        character.hit_points.heal(character.hit_points.maximum)
+        character.hit_points.temporary = 0
+    else:
+        character.hit_points.heal(max(1, character.hit_points.maximum // 2))
+    for resource_name, resource in character.resources.items():
+        if long_rest or not _is_spell_slot_resource(resource_name):
+            resource.reset()
+
+
+def _is_spell_slot_resource(resource_name: str) -> bool:
+    return re.fullmatch(r"spell_slot_\d+", resource_name) is not None
 
 
 def _open_spellbook_window(

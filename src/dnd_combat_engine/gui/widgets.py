@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import textwrap
 
 from dnd_combat_engine.app import DnDCombatEngineApp
 from dnd_combat_engine.gui.action_bar import ActionBarSession
@@ -211,7 +212,9 @@ class ActionBarWidget:
         for slot in range(1, 13):
             button = button_class("", slot)
             if hasattr(button, "setFixedSize"):
-                button.setFixedSize(86, 58)
+                button.setFixedSize(92, 64)
+            if hasattr(button, "setStyleSheet"):
+                button.setStyleSheet("text-align: left top; padding: 4px;")
             hotkey = ACTION_BAR_HOTKEYS[slot - 1]
             if hasattr(button, "setShortcut"):
                 button.setShortcut(hotkey)
@@ -229,7 +232,8 @@ class ActionBarWidget:
         def refresh(bar: ActionBar) -> None:
             for slot, button in enumerate(buttons, start=1):
                 action = bar.button_at(slot)
-                text = action.label if action else f"{ACTION_BAR_HOTKEYS[slot - 1]}\nEmpty"
+                hotkey = ACTION_BAR_HOTKEYS[slot - 1]
+                text = _action_button_text(hotkey, action)
                 if hasattr(button, "setText"):
                     button.setText(text)
                 if hasattr(button, "setEnabled"):
@@ -507,6 +511,30 @@ def _spell_slot_rows(resources) -> tuple[tuple[int, int, int], ...]:
         if match:
             rows.append((int(match.group(1)), resource.current, resource.maximum))
     return tuple(sorted(rows))
+
+
+def _action_button_text(hotkey: str, action: ActionBarButton | None) -> str:
+    """Return wrapped action bar text with the shortcut on the first line."""
+    if action is None:
+        return f"{hotkey}\nEmpty"
+    rank = f" R{action.rank}" if action.rank > 1 else ""
+    return f"{hotkey}\n{_wrap_action_label(f'{action.name}{rank}')}"
+
+
+def _wrap_action_label(label: str, width: int = 10, max_lines: int = 3) -> str:
+    lines: list[str] = []
+    for raw_line in label.splitlines():
+        lines.extend(textwrap.wrap(raw_line, width=width, break_long_words=True) or [""])
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        lines[-1] = _truncate_wrapped_line(lines[-1], width)
+    return "\n".join(lines)
+
+
+def _truncate_wrapped_line(line: str, width: int) -> str:
+    if width <= 3:
+        return "." * width
+    return f"{line[: width - 3]}..."
 
 
 def _spellbook_title(app: DnDCombatEngineApp, character_id: str | None) -> str:
