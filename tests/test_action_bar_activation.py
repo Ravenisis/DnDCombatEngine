@@ -511,6 +511,35 @@ def test_ability_action_reports_missing_weapon_and_workspace_set_text_fallback()
     assert window._dnd_central.text == "Logged"
 
 
+def test_imported_trait_action_does_not_roll_weapon_damage() -> None:
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Handaxe",
+                DamageProfile((DamageComponent("1d6+1", DamageType.SLASHING),)),
+            ),
+        ),
+    )
+    app = _app(character)
+    imported_traits = (
+        ("cleric_6", "Cleric 6"),
+        ("hill_dwarf", "Hill Dwarf"),
+        ("folk_hero", "Folk Hero"),
+        ("domain_spells_bless_cure_wounds", "Domain Spells: Bless, Cure Wounds"),
+        ("cantrips_light_sacred_flame", "Cantrips: Light, Sacred Flame"),
+    )
+
+    for action_id, name in imported_traits:
+        button = ActionBarButton(1, ActionBarActionKind.ABILITY, action_id, name)
+        assert main_window._activate_ability_button(app, character, button) == (
+            f"{name} is character sheet information, not a configured combat action."
+        )
+    assert app.dice.notations == []
+
+
 def test_shift_action_bar_activation_rolls_d20_in_workspace(monkeypatch) -> None:
     window = FakeWindow()
     character = Character("cleric", "Cleric", HitPoints(20, 20))

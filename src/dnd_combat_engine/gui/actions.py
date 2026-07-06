@@ -38,18 +38,21 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Character",
             "Spellbook",
             "Open the party leader spellbook",
+            "K",
         ),
         GuiActionSpec(
             "character.abilities",
             "Character",
             "Abilities",
             "Open the party leader abilities",
+            "N",
         ),
         GuiActionSpec(
             "character.inventory",
             "Character",
             "Inventory",
             "Open the party leader inventory",
+            "B",
         ),
         GuiActionSpec(
             "character.break_concentration",
@@ -123,6 +126,19 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
         ),
         GuiActionSpec("combat.quick_attack", "Combat", "Quick Attack", "Run a sample attack"),
         GuiActionSpec("dice.roll_d20", "Dice", "Roll d20", "Roll a d20", "Ctrl+R"),
+        GuiActionSpec(
+            "settings.key_binds",
+            "Settings",
+            "Key Binds",
+            "Review available keyboard shortcuts",
+        ),
+        GuiActionSpec(
+            "settings.preferences",
+            "Settings",
+            "Preferences",
+            "Change visual preferences",
+        ),
+        GuiActionSpec("help.about", "Help", "About", "Show application information"),
     )
 
 

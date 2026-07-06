@@ -1,3 +1,6 @@
+from fractions import Fraction
+
+from dnd_combat_engine.controllers import CombatController
 from dnd_combat_engine.engine import AttackRequest
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
@@ -8,6 +11,7 @@ from dnd_combat_engine.gui.panels import (
     encounter_rows,
     initiative_rows,
 )
+from dnd_combat_engine.gui.widgets import _quick_attack_message
 from dnd_combat_engine.models import (
     Campaign,
     Character,
@@ -17,6 +21,7 @@ from dnd_combat_engine.models import (
     Encounter,
     EncounterParticipant,
     HitPoints,
+    Monster,
     ParticipantKind,
     Weapon,
 )
@@ -71,6 +76,50 @@ def test_attack_summary_text_describes_result() -> None:
     assert "Bran -> Goblin [HIT]" in attack_summary_text(result)
 
 
+def test_quick_attack_uses_first_campaign_character() -> None:
+    ravenisis = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Handaxe",
+                DamageProfile((DamageComponent("1d6", DamageType.SLASHING),)),
+            ),
+        ),
+    )
+    goblin = Monster(
+        "goblin",
+        "Goblin",
+        armor_class=10,
+        hit_points=HitPoints(7, 7),
+        abilities=ravenisis.abilities,
+        challenge_rating=Fraction(1, 4),
+    )
+    app = _quick_attack_app(ravenisis, goblin)
+
+    message = _quick_attack_message(app, campaign_id="starter_campaign")
+
+    assert "Ravenisis -> Goblin" in message
+
+
+def test_quick_attack_reports_missing_weapon() -> None:
+    ravenisis = Character("ravenisis", "Ravenisis", HitPoints(20, 20))
+    goblin = Monster(
+        "goblin",
+        "Goblin",
+        armor_class=10,
+        hit_points=HitPoints(7, 7),
+        abilities=ravenisis.abilities,
+        challenge_rating=Fraction(1, 4),
+    )
+    app = _quick_attack_app(ravenisis, goblin)
+
+    assert _quick_attack_message(app, campaign_id="starter_campaign") == (
+        "Ravenisis has no weapon configured for Quick Attack."
+    )
+
+
 def test_encounter_and_initiative_panel_rows() -> None:
     character = Character("rogue", "Vale", HitPoints(10, 10))
     encounter = Encounter(
@@ -88,3 +137,36 @@ def test_encounter_and_initiative_panel_rows() -> None:
     assert ("Participants", "2") in encounter_rows(encounter)
     assert encounter_participant_rows(encounter) == [("goblin", "Goblin", "monster", "2")]
     assert ("Active", "Vale") in initiative_rows(tracker)
+
+
+def _quick_attack_app(character: Character, monster: Monster):
+    class Characters:
+        def load(self, character_id: str) -> Character:
+            assert character_id == character.character_id
+            return character
+
+    class Campaigns:
+        def load(self, campaign_id: str) -> Campaign:
+            assert campaign_id == "starter_campaign"
+            return Campaign(campaign_id, "Starter", character_ids=(character.character_id,))
+
+    class Compendium:
+        def load_monster(self, monster_id: str) -> Monster:
+            assert monster_id == monster.monster_id
+            return monster
+
+    class SequenceCombat(CombatController):
+        def attack_with_weapon(self, *args, **kwargs):  # noqa: ANN002, ANN003
+            kwargs["rng"] = SequenceRng([12, 4])  # type: ignore[assignment]
+            return super().attack_with_weapon(*args, **kwargs)
+
+    return type(
+        "QuickAttackApp",
+        (),
+        {
+            "characters": Characters(),
+            "campaigns": Campaigns(),
+            "compendium": Compendium(),
+            "combat": SequenceCombat(CombatService()),
+        },
+    )()

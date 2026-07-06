@@ -555,6 +555,32 @@ def test_replace_party_member_sheet_saves_over_existing_character(monkeypatch) -
     assert FakeMessageBox.information_calls[-1][1] == "Character Sheet Updated"
 
 
+def test_replace_party_member_sheet_url_saves_over_existing_character(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter", selected_character_id="vale")
+    saved_characters = []
+    app = SimpleNamespace(
+        character_imports=SimpleNamespace(
+            preview_url=lambda url: CharacterImportDraft("Ravenisis", hit_points=HitPoints(8, 8))
+        ),
+        characters=SimpleNamespace(save=saved_characters.append),
+    )
+    FakeMessageBox.information_calls = []
+    monkeypatch.setattr(
+        main_window,
+        "ask_character_url",
+        lambda qt, parent: "https://example.test/ravenisis.pdf",
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._replace_party_member_sheet(window, FakeQt, app, state, "vale", "url")
+
+    assert saved_characters[-1].character_id == "vale"
+    assert saved_characters[-1].name == "Ravenisis"
+    assert state.selected_character_id == "vale"
+    assert FakeMessageBox.information_calls[-1][1] == "Character Sheet Updated"
+
+
 def test_remove_party_member_updates_campaign_and_selection(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState(

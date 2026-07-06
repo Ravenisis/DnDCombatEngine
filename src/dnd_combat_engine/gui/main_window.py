@@ -18,7 +18,11 @@ from dnd_combat_engine.gui.import_dialogs import (
 )
 from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
-from dnd_combat_engine.gui.theme import dark_theme_stylesheet
+from dnd_combat_engine.gui.theme import (
+    dark_theme_stylesheet,
+    high_contrast_theme_stylesheet,
+    parchment_theme_stylesheet,
+)
 from dnd_combat_engine.gui.widgets import (
     AbilitiesWidget,
     ActionBarWidget,
@@ -27,8 +31,6 @@ from dnd_combat_engine.gui.widgets import (
     CampaignWidget,
     CharacterSheetWidget,
     CombatLogWidget,
-    DiceTrayWidget,
-    EncounterEditorWidget,
     EncounterTrackerWidget,
     InventoryWidget,
     PartyFramesWidget,
@@ -91,22 +93,19 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
         "Campaign Editor",
         _campaign_editor_widget(application, qt, campaign_state),
     )
-    _add_left_panel(
-        window,
-        qt,
-        "Character Sheet",
-        _character_widget(application, qt, campaign_state),
-    )
     _add_left_panel(window, qt, "Combat Log", CombatLogWidget.create(qt))
-    _add_left_panel(window, qt, "Dice Tray", DiceTrayWidget.create(application, qt))
     _add_left_panel(window, qt, "Encounter", EncounterTrackerWidget.create(application, qt))
     _add_left_panel(
         window,
         qt,
-        "Encounter Editor",
-        EncounterEditorWidget.create(application, qt),
+        "Attack",
+        AttackPanelWidget.create(
+            application,
+            qt,
+            character_id=_active_character_id(campaign_state),
+            campaign_id=campaign_state.active_campaign_id or "starter_campaign",
+        ),
     )
-    _add_left_panel(window, qt, "Attack", AttackPanelWidget.create(application, qt))
     window._dnd_action_bar_session = action_bar_session  # noqa: SLF001
     window._dnd_action_bar_on_activate = lambda slot, shift_pressed: _activate_action_bar_slot(  # noqa: SLF001
         window,
@@ -363,6 +362,20 @@ def _run_menu_action(
         return
     if action_id == "campaign.import_url":
         _import_url_from_menu(window, qt, app, state)
+        return
+    if action_id == "settings.key_binds":
+        _open_key_binds_window(window, qt)
+        return
+    if action_id == "settings.preferences":
+        _open_preferences_window(window, qt)
+        return
+    if action_id == "help.about":
+        _show_message(
+            window,
+            qt,
+            "About DnDCombatEngine",
+            "DnDCombatEngine 0.1.1\nLayered Dungeons & Dragons combat workspace.",
+        )
         return
     _set_status(window, f"{action_id} selected.")
 
@@ -817,6 +830,107 @@ def _open_inventory_window(
     if hasattr(popup, "show"):
         popup.show()
     _set_status(window, f"Opened {character.name} inventory.")
+
+
+def _open_key_binds_window(window, qt) -> None:
+    popup = qt.QtWidgets.QDialog(window)
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle("Key Binds")
+    if hasattr(popup, "resize"):
+        popup.resize(420, 420)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    table_class = getattr(qt.QtWidgets, "QTableWidget", None)
+    item_class = getattr(qt.QtWidgets, "QTableWidgetItem", None)
+    rows = _key_bind_rows()
+    if table_class is not None and item_class is not None:
+        table = table_class(len(rows), 2)
+        table.setHorizontalHeaderLabels(["Command", "Shortcut"])
+        for row, (command, shortcut) in enumerate(rows):
+            table.setItem(row, 0, item_class(command))
+            table.setItem(row, 1, item_class(shortcut))
+        if hasattr(table, "resizeColumnsToContents"):
+            table.resizeColumnsToContents()
+        layout.addWidget(table)
+    else:
+        label = qt.QtWidgets.QLabel(
+            "\n".join(f"{command}: {shortcut}" for command, shortcut in rows)
+        )
+        layout.addWidget(label)
+    _show_popup(window, popup)
+    _set_status(window, "Opened key binds.")
+
+
+def _open_preferences_window(window, qt) -> None:
+    popup = qt.QtWidgets.QDialog(window)
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle("Preferences")
+    if hasattr(popup, "resize"):
+        popup.resize(360, 180)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    combo_class = getattr(qt.QtWidgets, "QComboBox", None)
+    label = qt.QtWidgets.QLabel("Color Scheme")
+    layout.addWidget(label)
+    if combo_class is None:
+        layout.addWidget(qt.QtWidgets.QLabel("Color scheme selection is unavailable."))
+    else:
+        combo = combo_class()
+        schemes = ("Dark", "Parchment", "High Contrast")
+        for scheme in schemes:
+            combo.addItem(scheme)
+
+        def apply_scheme(index: int) -> None:
+            scheme = schemes[index] if 0 <= index < len(schemes) else "Dark"
+            _apply_color_scheme(window, scheme)
+
+        if hasattr(combo, "currentIndexChanged"):
+            combo.currentIndexChanged.connect(apply_scheme)
+        layout.addWidget(combo)
+    _show_popup(window, popup)
+    _set_status(window, "Opened preferences.")
+
+
+def _show_popup(window, popup) -> None:
+    popups = getattr(window, "_dnd_popups", [])
+    popups.append(popup)
+    window._dnd_popups = popups  # noqa: SLF001
+    if hasattr(popup, "show"):
+        popup.show()
+
+
+def _apply_color_scheme(window, scheme: str) -> None:
+    styles = {
+        "Dark": dark_theme_stylesheet,
+        "Parchment": parchment_theme_stylesheet,
+        "High Contrast": high_contrast_theme_stylesheet,
+    }
+    stylesheet = styles.get(scheme, dark_theme_stylesheet)()
+    if hasattr(window, "setStyleSheet"):
+        window.setStyleSheet(stylesheet)
+    window._dnd_color_scheme = scheme  # noqa: SLF001
+    _set_status(window, f"Color scheme set to {scheme}.")
+
+
+def _key_bind_rows() -> tuple[tuple[str, str], ...]:
+    rows = [
+        ("Action Bar Slot 1", "1"),
+        ("Action Bar Slot 2", "2"),
+        ("Action Bar Slot 3", "3"),
+        ("Action Bar Slot 4", "4"),
+        ("Action Bar Slot 5", "5"),
+        ("Action Bar Slot 6", "6"),
+        ("Action Bar Slot 7", "7"),
+        ("Action Bar Slot 8", "8"),
+        ("Action Bar Slot 9", "9"),
+        ("Action Bar Slot 10", "0"),
+        ("Action Bar Slot 11", "-"),
+        ("Action Bar Slot 12", "="),
+        ("Inventory", "B"),
+        ("Spellbook", "K"),
+        ("Abilities", "N"),
+        ("Roll d20", "Ctrl+R"),
+        ("Exit", "Ctrl+Q"),
+    ]
+    return tuple(rows)
 
 
 def _consume_inventory_item(
@@ -1338,6 +1452,8 @@ def _activate_ability_button(
     character: Character,
     button: ActionBarButton,
 ) -> str:
+    if not _ability_uses_weapon_damage(button):
+        return f"{button.name} is character sheet information, not a configured combat action."
     weapon = character.weapons[0] if character.weapons else None
     if weapon is None:
         return f"{character.name} uses {button.name}. No attack damage dice configured."
@@ -1346,6 +1462,29 @@ def _activate_ability_button(
         f"{character.name} uses {button.name} with {weapon.name} "
         f"rank {button.rank}. {damage_message}"
     )
+
+
+def _ability_uses_weapon_damage(button: ActionBarButton) -> bool:
+    action_id = button.action_id.lower()
+    name = button.name.lower()
+    weapon_actions = {
+        "attack",
+        "basic_attack",
+        "sneak_attack",
+        "great_weapon_master",
+        "sharpshooter",
+        "divine_smite",
+        "rage",
+    }
+    return action_id in weapon_actions or name in {
+        "attack",
+        "basic attack",
+        "sneak attack",
+        "great weapon master",
+        "sharpshooter",
+        "divine smite",
+        "rage",
+    }
 
 
 def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> str:
@@ -1411,12 +1550,13 @@ def _party_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):
         initiative_results=state.party_initiative,
         beacon_of_hope_targets=state.beacon_of_hope_targets,
         bless_targets=state.bless_targets,
-        on_upload_sheet=lambda character_id: _replace_party_member_sheet(
+        on_upload_sheet=lambda character_id, source_kind: _replace_party_member_sheet(
             window,
             qt,
             app,
             state,
             character_id,
+            source_kind,
         ),
         on_remove_member=lambda character_id: _remove_party_member(
             window,
@@ -1442,13 +1582,21 @@ def _replace_party_member_sheet(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
     character_id: str,
+    source_kind: str = "pdf",
 ) -> None:
-    path = choose_character_pdf(qt, window)
-    if not path:
-        _set_status(window, "Character PDF import canceled.")
-        return
     try:
-        draft = app.character_imports.preview_pdf(path)
+        if source_kind == "url":
+            url = ask_character_url(qt, window)
+            if not url:
+                _set_status(window, "Character URL import canceled.")
+                return
+            draft = app.character_imports.preview_url(url)
+        else:
+            path = choose_character_pdf(qt, window)
+            if not path:
+                _set_status(window, "Character PDF import canceled.")
+                return
+            draft = app.character_imports.preview_pdf(path)
         reviewed = review_character_import(qt, window, draft)
         if reviewed is None:
             _set_status(window, "Character sheet update canceled.")

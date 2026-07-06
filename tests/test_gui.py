@@ -169,7 +169,10 @@ def test_main_window_uses_qt_loader(monkeypatch) -> None:
     assert window.size == (1200, 800)
     assert "Spellbook" not in window._dnd_docks
     assert "Spellbook" not in window._dnd_panel_hosts
-    assert "Abilities" in window._dnd_panel_hosts
+    assert "Abilities" not in window._dnd_panel_hosts
+    assert "Character Sheet" not in window._dnd_panel_hosts
+    assert "Dice Tray" not in window._dnd_panel_hosts
+    assert "Encounter Editor" not in window._dnd_panel_hosts
     assert "Action Bar" in window._dnd_docks
 
 
@@ -213,7 +216,7 @@ def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
 
 
 def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
-    from dnd_combat_engine.gui.widgets import _action_button_text
+    from dnd_combat_engine.gui.widgets import _action_bar_tooltip, _action_button_text
     from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton
 
     button = ActionBarButton(
@@ -230,6 +233,72 @@ def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
     assert len(lines) <= 4
     assert all(len(line) <= 10 for line in lines[1:])
     assert _action_button_text("2", None) == "2\nEmpty"
+    assert _action_bar_tooltip("1", 1, button) == "\n".join(
+        (
+            "Mass Healing Word rank 3",
+            "Type: Spell",
+            "Shortcut: 1",
+            "Click to cast; Shift+click rolls 1d20.",
+            "Shift+right-click to remove.",
+        )
+    )
+    assert _action_bar_tooltip("2", 2, None) == "Slot 2 (2) is empty."
+
+
+def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import (
+        DamageComponent,
+        DamageProfile,
+        DamageType,
+        InventoryItem,
+        ItemCategory,
+        Spell,
+        SpellSchool,
+    )
+
+    spell = Spell(
+        "bless",
+        "Bless",
+        1,
+        SpellSchool.ENCHANTMENT,
+        "1 action",
+        "30 feet",
+        "Concentration, up to 1 minute",
+        components=("V", "S", "M"),
+        concentration=True,
+        damage=DamageProfile((DamageComponent("1d4", DamageType.RADIANT),)),
+        saving_throw="Wisdom",
+        description="Add divine favor to allies in range.",
+    )
+    item = InventoryItem(
+        "potion_of_healing_greater",
+        "Potion of Healing (Greater)",
+        quantity=2,
+        weight=0.5,
+        category=ItemCategory.CONSUMABLE,
+        tags=("potion",),
+    )
+
+    spell_tooltip = widgets._spell_tooltip(spell, 2)
+    assert "Bless" in spell_tooltip
+    assert "Cast using level 2 slot" in spell_tooltip
+    assert "Range: 30 feet" in spell_tooltip
+    assert "Requires concentration." in spell_tooltip
+    assert "Damage: 1d4 radiant" in spell_tooltip
+
+    assert widgets._ability_tooltip("Basic Attack") == "\n".join(
+        (
+            "Basic Attack",
+            "Make a weapon attack with the active character's first weapon.",
+        )
+    )
+
+    item_tooltip = widgets._inventory_item_tooltip(item)
+    assert "Potion of Healing (Greater)" in item_tooltip
+    assert "Quantity: 2" in item_tooltip
+    assert "Weight: 0.5 lb each (1 lb total)" in item_tooltip
+    assert "Right-click to consume one." in item_tooltip
 
 
 def test_party_initiative_helpers_parse_and_prompt() -> None:
@@ -280,6 +349,9 @@ def test_party_frame_feature_text_filters_import_metadata() -> None:
             "wazic",
             "Life Domain",
             "Disciple of Life",
+            "Blessed Healer",
+            "Cantrips: Light, Sacred Flame, Thaumaturgy",
+            "Domain Spells: Bless, Cure Wounds, Revivify",
         )
     ) == ""
     assert _party_frame_feature_text(
@@ -309,17 +381,27 @@ def test_party_context_menu_wires_actions(monkeypatch) -> None:
 
     class FakeMenu:
         last = None
+        root = None
 
         def __init__(self, parent) -> None:
             self.parent = parent
             self.actions = []
+            self.submenus = []
             self.position = None
             FakeMenu.last = self
+            if FakeMenu.root is None:
+                FakeMenu.root = self
 
         def addAction(self, label: str):
             action = FakeAction(label)
             self.actions.append(action)
             return action
+
+        def addMenu(self, label: str):
+            menu = FakeMenu(self)
+            menu.label = label
+            self.submenus.append(menu)
+            return menu
 
         def exec(self, position) -> None:
             self.position = position
@@ -342,15 +424,24 @@ def test_party_context_menu_wires_actions(monkeypatch) -> None:
         "point",
         "vale",
         12,
-        lambda character_id: calls.append(("upload", character_id)),
+        lambda character_id, source_kind: calls.append(("upload", character_id, source_kind)),
         lambda character_id: calls.append(("remove", character_id)),
         lambda character_id, value: calls.append(("initiative", character_id, value)),
     )
 
-    assert FakeMenu.last.position == "global:point"
-    for action in FakeMenu.last.actions:
+    assert FakeMenu.root.position == "global:point"
+    upload_menu = FakeMenu.root.submenus[0]
+    assert upload_menu.label == "Upload Character Sheet"
+    for action in upload_menu.actions:
         action.triggered.callback()
-    assert calls == [("upload", "vale"), ("remove", "vale"), ("initiative", "vale", 19)]
+    for action in FakeMenu.root.actions:
+        action.triggered.callback()
+    assert calls == [
+        ("upload", "vale", "pdf"),
+        ("upload", "vale", "url"),
+        ("remove", "vale"),
+        ("initiative", "vale", 19),
+    ]
 
 
 def test_party_context_policy_and_frame_style(monkeypatch) -> None:
@@ -418,6 +509,36 @@ def test_party_context_policy_and_frame_style(monkeypatch) -> None:
     assert styled.shadow == 2
 
 
+def test_campaign_character_selector_prefers_combo_box() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import widgets
+
+    class FakeCombo:
+        def __init__(self) -> None:
+            self.items = []
+            self.current = ""
+
+        def addItem(self, item) -> None:  # noqa: N802
+            self.items.append(item)
+            if not self.current:
+                self.current = item
+
+        def currentText(self) -> str:  # noqa: N802
+            return self.current
+
+    class FakeQtWidgets:
+        QComboBox = FakeCombo
+
+    selector = widgets._campaign_character_selector(
+        SimpleNamespace(QtWidgets=FakeQtWidgets),
+        ("ravenisis", "bran"),
+    )
+
+    assert selector.items == ["ravenisis", "bran"]
+    assert widgets._selector_text(selector) == "ravenisis"
+
+
 def test_spellbook_spell_ids_filter_to_character_features() -> None:
     from types import SimpleNamespace
 
@@ -459,6 +580,62 @@ def test_spellbook_spell_ids_filter_to_character_features() -> None:
     )
 
     assert widgets._spell_ids_for_character(app, "cleric") == ("bless",)
+
+
+def test_abilities_filter_imported_traits_to_actionable_buttons() -> None:
+    from dnd_combat_engine.gui import widgets
+
+    features = (
+        "Cleric 6",
+        "Hill Dwarf",
+        "Folk Hero",
+        "Life Domain",
+        "Disciple of Life",
+        "Channel Divinity: Turn Undead",
+        "Blessed Healer",
+        "Dwarven Resilience",
+        "Cantrips: Light, Sacred Flame, Thaumaturgy",
+        "Domain Spells: Bless, Cure Wounds, Revivify",
+    )
+
+    assert widgets._actionable_ability_names(features) == (
+        "Basic Attack",
+        "Channel Divinity: Turn Undead",
+    )
+
+
+def test_spellbook_rank_options_include_available_spell_slot_levels() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import Character, HitPoints, ResourcePool, Spell, SpellSchool
+
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(10, 10),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
+            "spell_slot_2": ResourcePool("spell_slot_2", 1, 3),
+            "spell_slot_3": ResourcePool("spell_slot_3", 2, 2),
+        },
+    )
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
+    spell = Spell("bless", "Bless", 1, SpellSchool.ENCHANTMENT, "1 action", "30 feet", "1 minute")
+    cantrip = Spell(
+        "light",
+        "Light",
+        0,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "Touch",
+        "1 hour",
+    )
+
+    assert widgets._spell_rank_options(app, "cleric", spell) == (1, 2, 3)
+    assert widgets._spell_rank_options(app, "cleric", cantrip) == (1,)
+    assert widgets._spell_rank_button_text("Bless", 3) == "Bless (Level 3)"
+    assert widgets._spell_rank_button_text("Light", 1, 0) == "Light (Cantrip)"
 
 
 def test_spell_slot_rows_are_sorted_by_slot_level() -> None:
@@ -690,6 +867,39 @@ def test_layout_helpers_cover_fallback_paths() -> None:
     assert stretch_layout.widgets == ["child"]
 
     main_window._replace_panel_widget({}, "Missing", widget)
+
+
+def test_key_bind_rows_and_color_scheme_application() -> None:
+    from dnd_combat_engine.gui import main_window
+
+    class FakeStatus:
+        def showMessage(self, message) -> None:  # noqa: N802
+            self.message = message
+
+    class FakeWindow:
+        def __init__(self) -> None:
+            self.status = FakeStatus()
+            self.stylesheet = ""
+
+        def statusBar(self):  # noqa: N802
+            return self.status
+
+        def setStyleSheet(self, stylesheet) -> None:  # noqa: N802
+            self.stylesheet = stylesheet
+
+    rows = dict(main_window._key_bind_rows())
+    assert rows["Action Bar Slot 1"] == "1"
+    assert rows["Action Bar Slot 12"] == "="
+    assert rows["Inventory"] == "B"
+    assert rows["Spellbook"] == "K"
+    assert rows["Abilities"] == "N"
+
+    window = FakeWindow()
+    main_window._apply_color_scheme(window, "Parchment")
+
+    assert window._dnd_color_scheme == "Parchment"
+    assert "#f1eadc" in window.stylesheet
+    assert window.status.message == "Color scheme set to Parchment."
 
 
 def test_spell_slot_tracker_handles_empty_and_missing_leaders() -> None:

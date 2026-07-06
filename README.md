@@ -133,9 +133,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,098,634 bytes
-- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 42,704,138 bytes
-- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,128,366 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 3,632,729 bytes
+- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 35,459,817 bytes
+- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 41,088,444 bytes
 - Verified with `python -m ruff check src tests`,
   `python -m pytest --no-cov`, a PyInstaller rebuild, an Inno Setup rebuild,
   and a WiX MSI rebuild.
@@ -339,6 +339,19 @@ dnd-combat-engine init-user-data
   damage dice rolls, slot spending, and remaining slot reporting.
 - Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
   refreshed action bar behavior.
+
+### Add keyboard shortcuts and streamline campaign UI
+
+- Added default menu shortcuts for Spellbook (`K`), Inventory (`B`), and
+  Abilities (`N`), while preserving action bar hotkeys `1` through `=`.
+- Added Settings and Help menus, including key-bind reference and color scheme
+  preference windows.
+- Temporarily hid the Character Sheet, Dice Tray, and Encounter Editor panels
+  from the startup layout.
+- Changed the Campaign Editor party-member field to a dropdown of current
+  campaign characters for removal.
+- Updated party member right-click sheet replacement to offer PDF and URL
+  choices while overwriting the selected character instead of adding a new one.
 
 ### Add utility spell workflows and inventory icons
 

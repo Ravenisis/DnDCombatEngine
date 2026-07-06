@@ -9,7 +9,6 @@ from pathlib import Path
 from dnd_combat_engine.app import DnDCombatEngineApp
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.editors import (
-    add_character_to_campaign,
     add_character_to_encounter,
     add_encounter_to_campaign,
     add_monster_to_encounter,
@@ -40,6 +39,17 @@ PARTY_FRAME_FEATURES = (
     "Great Weapon Master",
     "Hex",
     "Hunter's Mark",
+    "Rage",
+    "Sharpshooter",
+    "Sneak Attack",
+)
+ACTIONABLE_ABILITY_FEATURES = (
+    "Basic Attack",
+    "Attack",
+    "Channel Divinity: Preserve Life",
+    "Channel Divinity: Turn Undead",
+    "Divine Smite",
+    "Great Weapon Master",
     "Rage",
     "Sharpshooter",
     "Sneak Attack",
@@ -165,12 +175,13 @@ class CampaignEditorWidget:
         """Create a campaign editor widget."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
-        character_input = qt.QtWidgets.QLineEdit("vale")
+        campaign = app.campaigns.load(campaign_id)
+        character_input = _campaign_character_selector(qt, campaign.character_ids)
         encounter_input = qt.QtWidgets.QLineEdit("roadside_ambush")
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
 
-        _add_rows(output, campaign_reference_rows(app.campaigns.load(campaign_id)))
+        _add_rows(output, campaign_reference_rows(campaign))
 
         def run(action) -> None:
             try:
@@ -181,16 +192,14 @@ class CampaignEditorWidget:
                 message = str(exc)
             output.append(message)
 
-        add_character = qt.QtWidgets.QPushButton("Add Character")
-        add_character.clicked.connect(
-            lambda: run(
-                lambda: add_character_to_campaign(app, campaign_id, character_input.text())
-            )
-        )
         remove_character = qt.QtWidgets.QPushButton("Remove Character")
         remove_character.clicked.connect(
             lambda: run(
-                lambda: remove_character_from_campaign(app, campaign_id, character_input.text())
+                lambda: remove_character_from_campaign(
+                    app,
+                    campaign_id,
+                    _selector_text(character_input),
+                )
             )
         )
         add_encounter = qt.QtWidgets.QPushButton("Add Encounter")
@@ -205,13 +214,30 @@ class CampaignEditorWidget:
         )
 
         layout.addWidget(character_input)
-        layout.addWidget(add_character)
         layout.addWidget(remove_character)
         layout.addWidget(encounter_input)
         layout.addWidget(add_encounter)
         layout.addWidget(remove_encounter)
         layout.addWidget(output)
         return widget
+
+
+def _campaign_character_selector(qt, character_ids: tuple[str, ...]):
+    combo_class = getattr(qt.QtWidgets, "QComboBox", None)
+    if combo_class is None:
+        return qt.QtWidgets.QLineEdit(character_ids[0] if character_ids else "")
+    combo = combo_class()
+    for character_id in character_ids:
+        combo.addItem(character_id)
+    return combo
+
+
+def _selector_text(widget) -> str:
+    if hasattr(widget, "currentText"):
+        return str(widget.currentText()).strip()
+    if hasattr(widget, "text"):
+        return str(widget.text()).strip()
+    return ""
 
 
 class ActionBarWidget:
@@ -256,12 +282,7 @@ class ActionBarWidget:
                 if hasattr(button, "setEnabled"):
                     button.setEnabled(action is not None)
                 if hasattr(button, "setToolTip"):
-                    tooltip = (
-                        "Empty action slot."
-                        if action is None
-                        else f"{bar.activate(slot)} Shift+right-click to remove."
-                    )
-                    button.setToolTip(tooltip)
+                    button.setToolTip(_action_bar_tooltip(hotkey, slot, action))
 
         session.subscribe(refresh)
         return widget
@@ -317,6 +338,8 @@ class SpellbookWidget:
                 button = qt.QtWidgets.QPushButton(
                     _spell_rank_button_text(spell.name, rank, spell.level)
                 )
+                if hasattr(button, "setToolTip"):
+                    button.setToolTip(_spell_tooltip(spell, rank))
                 button.clicked.connect(
                     lambda checked=False,
                     item=spell,
@@ -350,9 +373,11 @@ class AbilitiesWidget:
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
         character = app.characters.load(character_id)
-        features = character.features or ("Basic Attack",)
+        features = _actionable_ability_names(character.features)
         for feature in features:
             button = qt.QtWidgets.QPushButton(feature)
+            if hasattr(button, "setToolTip"):
+                button.setToolTip(_ability_tooltip(feature))
             button.clicked.connect(
                 lambda checked=False, name=feature: output.append(
                     session.place_next(
@@ -418,7 +443,7 @@ def _inventory_item_button(qt, item: InventoryItem, on_consume):
     button_class = _inventory_button_class(qt, item, on_consume)
     button = button_class(_inventory_quantity_text(item))
     if hasattr(button, "setToolTip"):
-        button.setToolTip(item.name)
+        button.setToolTip(_inventory_item_tooltip(item))
     if hasattr(button, "setFixedSize"):
         button.setFixedSize(72, 72)
     if hasattr(button, "setStyleSheet"):
@@ -625,7 +650,12 @@ class AttackPanelWidget:
     """Factory for the quick attack widget."""
 
     @staticmethod
-    def create(app: DnDCombatEngineApp, qt):
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        character_id: str | None = None,
+        campaign_id: str = "starter_campaign",
+    ):
         """Create a quick attack widget backed by controllers."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
@@ -634,28 +664,61 @@ class AttackPanelWidget:
         output.setReadOnly(True)
 
         def attack() -> None:
-            attacker = app.characters.load("vale")
-            monster = app.compendium.load_monster("goblin")
-            target = attacker.__class__(
-                character_id=monster.monster_id,
-                name=monster.name,
-                hit_points=monster.hit_points,
-                abilities=monster.abilities,
-            )
-            result = app.combat.attack_with_weapon(
-                attacker=attacker,
-                target=target,
-                weapon=attacker.weapons[0],
-                target_armor_class=monster.armor_class,
-                attack_bonus=5,
-                active_features=("Sneak Attack",),
-            )
-            output.append(attack_summary_text(result))
+            output.append(_quick_attack_message(app, character_id, campaign_id))
 
         button.clicked.connect(attack)
         layout.addWidget(button)
         layout.addWidget(output)
         return widget
+
+
+def _quick_attack_message(
+    app: DnDCombatEngineApp,
+    character_id: str | None = None,
+    campaign_id: str = "starter_campaign",
+) -> str:
+    """Resolve a quick attack and return a panel-safe message."""
+    try:
+        attacker_id = character_id or _first_campaign_character_id(app, campaign_id)
+        attacker = app.characters.load(attacker_id)
+        if not attacker.weapons:
+            return f"{attacker.name} has no weapon configured for Quick Attack."
+        monster = app.compendium.load_monster("goblin")
+        target = attacker.__class__(
+            character_id=monster.monster_id,
+            name=monster.name,
+            hit_points=monster.hit_points,
+            abilities=monster.abilities,
+        )
+        result = app.combat.attack_with_weapon(
+            attacker=attacker,
+            target=target,
+            weapon=attacker.weapons[0],
+            target_armor_class=monster.armor_class,
+            attack_bonus=5,
+            active_features=_quick_attack_features(attacker.features),
+        )
+    except (KeyError, ValueError, IndexError) as exc:
+        return f"Quick Attack failed: {exc}"
+    return attack_summary_text(result)
+
+
+def _first_campaign_character_id(app: DnDCombatEngineApp, campaign_id: str) -> str:
+    try:
+        campaign = app.campaigns.load(campaign_id)
+    except KeyError:
+        return "vale"
+    return campaign.character_ids[0] if campaign.character_ids else "vale"
+
+
+def _quick_attack_features(features: tuple[str, ...]) -> tuple[str, ...]:
+    feature_names = {feature.lower() for feature in _party_frame_feature_candidates(features)}
+    active = [
+        feature
+        for feature in ("Sneak Attack", "Bless", "Rage", "Hex")
+        if feature.lower() in feature_names
+    ]
+    return tuple(active)
 
 
 def _add_rows(output, rows: list[tuple[str, str]]) -> None:
@@ -685,6 +748,23 @@ def _action_button_text(hotkey: str, action: ActionBarButton | None) -> str:
     return f"{hotkey}\n{_wrap_action_label(f'{action.name}{rank}')}"
 
 
+def _action_bar_tooltip(hotkey: str, slot: int, action: ActionBarButton | None) -> str:
+    """Return a concise tooltip for an action bar slot."""
+    if action is None:
+        return f"Slot {slot} ({hotkey}) is empty."
+    lines = [
+        f"{action.name} rank {action.rank}",
+        f"Type: {action.kind.value.title()}",
+        f"Shortcut: {hotkey}",
+    ]
+    if action.kind == ActionBarActionKind.SPELL:
+        lines.append("Click to cast; Shift+click rolls 1d20.")
+    else:
+        lines.append("Click to use; Shift+click rolls 1d20.")
+    lines.append("Shift+right-click to remove.")
+    return "\n".join(lines)
+
+
 def _wrap_action_label(label: str, width: int = 10, max_lines: int = 3) -> str:
     lines: list[str] = []
     for raw_line in label.splitlines():
@@ -709,6 +789,31 @@ def _spellbook_title(app: DnDCombatEngineApp, character_id: str | None) -> str:
     except KeyError:
         return "Spellbook"
     return f"Spellbook: {character.name}"
+
+
+def _spell_tooltip(spell, rank: int) -> str:
+    """Return a spellbook tooltip from spell metadata."""
+    level_text = "Cantrip" if spell.level == 0 else f"Level {spell.level}"
+    cast_level_text = "Cantrip" if spell.level == 0 else f"Cast using level {rank} slot"
+    lines = [
+        spell.name,
+        f"{level_text} {spell.school.value.title()}",
+        cast_level_text,
+        f"Casting Time: {spell.casting_time}",
+        f"Range: {spell.range_text}",
+        f"Duration: {spell.duration}",
+    ]
+    if spell.components:
+        lines.append(f"Components: {', '.join(spell.components)}")
+    if spell.concentration:
+        lines.append("Requires concentration.")
+    if spell.saving_throw:
+        lines.append(f"Save: {spell.saving_throw}")
+    if spell.damage is not None:
+        lines.append(f"Damage: {_damage_profile_text(spell.damage)}")
+    if spell.description:
+        lines.append(_wrap_tooltip_text(spell.description))
+    return "\n".join(lines)
 
 
 def _spell_ids_for_character(
@@ -856,11 +961,61 @@ def _party_buff_icon(
 
 def _party_frame_feature_text(features: tuple[str, ...]) -> str:
     """Return a compact combat feature summary for party frames."""
-    feature_blob = " ".join(features).lower()
+    feature_names = {feature.lower() for feature in _party_frame_feature_candidates(features)}
     visible_features = [
-        feature for feature in PARTY_FRAME_FEATURES if feature.lower() in feature_blob
+        feature for feature in PARTY_FRAME_FEATURES if feature.lower() in feature_names
     ]
     return ", ".join(visible_features[:3])
+
+
+def _party_frame_feature_candidates(features: tuple[str, ...]) -> tuple[str, ...]:
+    metadata_prefixes = (
+        "background",
+        "cantrips",
+        "class",
+        "class & level",
+        "domain spells",
+        "player name",
+        "species",
+    )
+    names: list[str] = []
+    for feature in features:
+        feature_text = feature.strip()
+        if not feature_text:
+            continue
+        lowered = feature_text.lower()
+        if lowered.startswith(metadata_prefixes):
+            continue
+        names.extend(part.strip() for part in feature_text.split(",") if part.strip())
+    return tuple(names)
+
+
+def _actionable_ability_names(features: tuple[str, ...]) -> tuple[str, ...]:
+    """Return feature names that should be placeable on the action bar."""
+    feature_blob = "\n".join(features).lower()
+    names = ["Basic Attack"]
+    for ability in ACTIONABLE_ABILITY_FEATURES:
+        if ability == "Basic Attack":
+            continue
+        if ability.lower() in feature_blob:
+            names.append(ability)
+    return tuple(dict.fromkeys(names))
+
+
+def _ability_tooltip(feature: str) -> str:
+    """Return a short tooltip for an action-ready ability."""
+    descriptions = {
+        "Basic Attack": "Make a weapon attack with the active character's first weapon.",
+        "Attack": "Make a weapon attack with the active character's first weapon.",
+        "Sneak Attack": "Add rogue precision damage when Sneak Attack conditions are met.",
+        "Divine Smite": "Spend divine power to add radiant damage to a weapon hit.",
+        "Great Weapon Master": "Use the heavy-weapon damage feature when available.",
+        "Sharpshooter": "Use the ranged-weapon damage feature when available.",
+        "Rage": "Use rage-enhanced melee damage when available.",
+        "Channel Divinity: Turn Undead": "Present your holy symbol and turn undead creatures.",
+        "Channel Divinity: Preserve Life": "Restore hit points to creatures within range.",
+    }
+    return "\n".join((feature, descriptions.get(feature, "Character ability.")))
 
 
 def _spell_rank_options(
@@ -890,6 +1045,34 @@ def _spell_rank_button_text(spell_name: str, rank: int, spell_level: int | None 
     if spell_level == 0 or rank <= 0:
         return f"{spell_name} (Cantrip)"
     return f"{spell_name} (Level {rank})"
+
+
+def _inventory_item_tooltip(item: InventoryItem) -> str:
+    """Return an inventory tooltip with stack, weight, and use notes."""
+    lines = [
+        item.name,
+        f"Category: {item.category.value.replace('_', ' ').title()}",
+        f"Quantity: {item.quantity}",
+    ]
+    if item.weight:
+        lines.append(f"Weight: {item.weight:g} lb each ({item.total_weight:g} lb total)")
+    if item.tags:
+        lines.append(f"Tags: {', '.join(item.tags)}")
+    if item.notes:
+        lines.append(_wrap_tooltip_text(item.notes))
+    if item.category.value == "consumable" or "potion" in item.tags or "potion" in item.item_id:
+        lines.append("Right-click to consume one.")
+    return "\n".join(lines)
+
+
+def _damage_profile_text(damage) -> str:
+    return ", ".join(
+        f"{component.dice} {component.damage_type.value}" for component in damage.components
+    )
+
+
+def _wrap_tooltip_text(value: str, width: int = 72) -> str:
+    return "\n".join(textwrap.wrap(value, width=width)) or value
 
 
 def _initiative_text(
@@ -995,7 +1178,20 @@ def _show_party_context_menu(
     if menu_class is None:
         return
     menu = menu_class(frame)
-    _add_menu_action(menu, "Upload New Character Sheet", on_upload_sheet, character_id)
+    if on_upload_sheet is not None:
+        upload_menu = menu.addMenu("Upload Character Sheet")
+        _add_menu_action(
+            upload_menu,
+            "PDF",
+            lambda item_id: on_upload_sheet(item_id, "pdf"),
+            character_id,
+        )
+        _add_menu_action(
+            upload_menu,
+            "URL",
+            lambda item_id: on_upload_sheet(item_id, "url"),
+            character_id,
+        )
     _add_menu_action(menu, "Remove Player from Party", on_remove_member, character_id)
     if on_set_initiative is not None:
         action = menu.addAction("Enter Initiative Roll")
