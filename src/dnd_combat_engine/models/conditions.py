@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Self
 
+from dnd_combat_engine.models.rules import RuleSource
+
 
 class ConditionName(StrEnum):
     """Standard Dungeons & Dragons condition names."""
@@ -34,6 +36,7 @@ class Condition:
     name: ConditionName
     source: str | None = None
     remaining_rounds: int | None = None
+    rule_source: RuleSource | None = None
 
     def __post_init__(self) -> None:
         """Validate condition duration."""
@@ -50,6 +53,7 @@ class Condition:
             name=self.name,
             source=self.source,
             remaining_rounds=self.remaining_rounds - 1,
+            rule_source=self.rule_source,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -58,6 +62,7 @@ class Condition:
             "name": self.name.value,
             "source": self.source,
             "remaining_rounds": self.remaining_rounds,
+            "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
     @classmethod
@@ -68,5 +73,11 @@ class Condition:
             name=ConditionName(str(data["name"])),
             source=str(data["source"]) if data.get("source") is not None else None,
             remaining_rounds=int(rounds) if rounds is not None else None,
+            rule_source=_rule_source_from_data(data.get("rule_source")),
         )
 
+
+def _rule_source_from_data(data: object) -> RuleSource | None:
+    if isinstance(data, dict):
+        return RuleSource.from_dict(data)
+    return None

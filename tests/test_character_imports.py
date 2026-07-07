@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from dnd_combat_engine.controllers import CharacterImportController
-from dnd_combat_engine.models import Campaign, HitPoints
+from dnd_combat_engine.models import Campaign, HitPoints, RuleSource
 from dnd_combat_engine.models.imports import CharacterImportDraft
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import (
@@ -50,6 +50,14 @@ def test_character_import_service_parses_text_sheet() -> None:
     assert [weapon.name for weapon in draft.weapons] == ["Rapier", "Shortbow"]
     assert draft.armor is not None
     assert draft.armor.armor_class == 15
+
+
+def test_character_import_draft_can_keep_rule_source_metadata() -> None:
+    source = RuleSource.srd_5_2_1("character-creation.md")
+    draft = CharacterImportDraft("Lyra Thorn", rule_source=source)
+
+    assert draft.rule_source == source
+    assert draft.to_character("lyra").name == "Lyra Thorn"
 
 
 def test_character_import_service_ignores_noisy_dnd_beyond_skill_footer() -> None:

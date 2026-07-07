@@ -11,6 +11,7 @@ from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.damage import DamageType
 from dnd_combat_engine.models.equipment import Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
+from dnd_combat_engine.models.rules import RuleSource
 
 
 class CreatureSize(StrEnum):
@@ -62,6 +63,7 @@ class Monster:
     damage_resistances: tuple[DamageType, ...] = field(default_factory=tuple)
     damage_immunities: tuple[DamageType, ...] = field(default_factory=tuple)
     condition_immunities: tuple[str, ...] = field(default_factory=tuple)
+    rule_source: RuleSource | None = None
 
     def __post_init__(self) -> None:
         """Validate monster identity and stat block values."""
@@ -94,6 +96,7 @@ class Monster:
             "damage_resistances": [damage_type.value for damage_type in self.damage_resistances],
             "damage_immunities": [damage_type.value for damage_type in self.damage_immunities],
             "condition_immunities": list(self.condition_immunities),
+            "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
     @classmethod
@@ -121,6 +124,7 @@ class Monster:
             condition_immunities=tuple(
                 str(condition) for condition in data.get("condition_immunities", [])
             ),
+            rule_source=_rule_source_from_data(data.get("rule_source")),
         )
 
 
@@ -133,3 +137,8 @@ def _format_fraction(value: Fraction) -> str | int:
 def _parse_fraction(value: object) -> Fraction:
     return Fraction(str(value))
 
+
+def _rule_source_from_data(data: object) -> RuleSource | None:
+    if isinstance(data, dict):
+        return RuleSource.from_dict(data)
+    return None

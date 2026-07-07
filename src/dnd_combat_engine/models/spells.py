@@ -7,6 +7,7 @@ from enum import StrEnum
 from typing import Self
 
 from dnd_combat_engine.models.damage import DamageProfile
+from dnd_combat_engine.models.rules import RuleSource
 
 
 class SpellSchool(StrEnum):
@@ -39,6 +40,7 @@ class Spell:
     damage: DamageProfile | None = None
     saving_throw: str | None = None
     description: str = ""
+    rule_source: RuleSource | None = None
 
     def __post_init__(self) -> None:
         """Validate spell identity and level."""
@@ -76,6 +78,7 @@ class Spell:
             "damage": self.damage.to_dict() if self.damage else None,
             "saving_throw": self.saving_throw,
             "description": self.description,
+            "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
     @classmethod
@@ -98,4 +101,11 @@ class Spell:
                 str(data["saving_throw"]) if data.get("saving_throw") is not None else None
             ),
             description=str(data.get("description", "")),
+            rule_source=_rule_source_from_data(data.get("rule_source")),
         )
+
+
+def _rule_source_from_data(data: object) -> RuleSource | None:
+    if isinstance(data, dict):
+        return RuleSource.from_dict(data)
+    return None

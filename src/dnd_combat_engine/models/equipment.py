@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Self
 
 from dnd_combat_engine.models.damage import DamageProfile
+from dnd_combat_engine.models.rules import RuleSource
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,6 +18,7 @@ class Weapon:
     properties: tuple[str, ...] = field(default_factory=tuple)
     range_normal: int | None = None
     range_long: int | None = None
+    rule_source: RuleSource | None = None
 
     def to_dict(self) -> dict[str, object]:
         """Serialize the weapon to plain JSON-compatible data."""
@@ -26,6 +28,7 @@ class Weapon:
             "properties": list(self.properties),
             "range_normal": self.range_normal,
             "range_long": self.range_long,
+            "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
     @classmethod
@@ -37,6 +40,7 @@ class Weapon:
             properties=tuple(str(item) for item in data.get("properties", [])),
             range_normal=data.get("range_normal"),  # type: ignore[arg-type]
             range_long=data.get("range_long"),  # type: ignore[arg-type]
+            rule_source=_rule_source_from_data(data.get("rule_source")),
         )
 
 
@@ -47,6 +51,7 @@ class Armor:
     name: str
     armor_class: int
     stealth_disadvantage: bool = False
+    rule_source: RuleSource | None = None
 
     def to_dict(self) -> dict[str, object]:
         """Serialize the armor to plain JSON-compatible data."""
@@ -54,6 +59,7 @@ class Armor:
             "name": self.name,
             "armor_class": self.armor_class,
             "stealth_disadvantage": self.stealth_disadvantage,
+            "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
     @classmethod
@@ -63,5 +69,11 @@ class Armor:
             name=str(data["name"]),
             armor_class=int(data["armor_class"]),
             stealth_disadvantage=bool(data.get("stealth_disadvantage", False)),
+            rule_source=_rule_source_from_data(data.get("rule_source")),
         )
 
+
+def _rule_source_from_data(data: object) -> RuleSource | None:
+    if isinstance(data, dict):
+        return RuleSource.from_dict(data)
+    return None

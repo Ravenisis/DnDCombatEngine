@@ -15,6 +15,12 @@ Utilities
 Milestone 1 establishes the foundation: domain models, a dice parser and roller, JSON
 persistence, seed data, and a test suite.
 
+## Rules Reference
+
+The project can use the local D&D 5e SRD Markdown reference as an open licensed
+rules baseline for future design work. See [SRD Design Guide](docs/srd-design-guide.md)
+for attribution requirements and the planned rules-to-engine architecture.
+
 ## Development
 
 ```bash

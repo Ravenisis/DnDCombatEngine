@@ -11,6 +11,7 @@ from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
 from dnd_combat_engine.models.resources import ResourcePool
+from dnd_combat_engine.models.rules import RuleSource
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +29,7 @@ class CharacterImportDraft:
     currency: CurrencyPurse = field(default_factory=CurrencyPurse)
     resources: dict[str, ResourcePool] = field(default_factory=dict)
     source: str = "pdf"
+    rule_source: RuleSource | None = None
 
     def to_character(self, character_id: str) -> Character:
         """Convert the draft into a persisted character model."""

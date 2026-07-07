@@ -8,6 +8,7 @@ from dnd_combat_engine.services.character_import_service import (
 from dnd_combat_engine.services.character_service import CharacterService
 from dnd_combat_engine.services.combat_log_service import CombatLogService
 from dnd_combat_engine.services.combat_service import CombatService
+from dnd_combat_engine.services.concentration_service import ConcentrationService
 from dnd_combat_engine.services.dice_service import DiceService
 from dnd_combat_engine.services.encounter_service import EncounterService
 from dnd_combat_engine.services.initiative_service import InitiativeService
@@ -23,6 +24,7 @@ __all__ = [
     "CharacterImportService",
     "CombatLogService",
     "CombatService",
+    "ConcentrationService",
     "DiceService",
     "EncounterService",
     "InitiativeService",
