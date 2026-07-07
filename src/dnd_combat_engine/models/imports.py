@@ -10,6 +10,7 @@ from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
+from dnd_combat_engine.models.resources import ResourcePool
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +26,7 @@ class CharacterImportDraft:
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
     currency: CurrencyPurse = field(default_factory=CurrencyPurse)
+    resources: dict[str, ResourcePool] = field(default_factory=dict)
     source: str = "pdf"
 
     def to_character(self, character_id: str) -> Character:
@@ -40,4 +42,5 @@ class CharacterImportDraft:
             weapons=self.weapons,
             armor=self.armor,
             currency=self.currency,
+            resources=dict(self.resources),
         )

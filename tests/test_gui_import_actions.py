@@ -358,6 +358,59 @@ def test_long_rest_heals_party_and_restores_spell_slots(monkeypatch) -> None:
     )
 
 
+def test_campaign_activity_is_recorded_from_gui_action() -> None:
+    campaign = Campaign("starter", "Starter")
+    saved = []
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: campaign,
+            save=saved.append,
+        )
+    )
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+
+    main_window._record_campaign_activity(app, state, "Money changed.", "currency")
+
+    assert saved[0].activity_log[0].message == "Money changed."
+    assert saved[0].activity_log[0].category == "currency"
+
+
+def test_long_rest_restores_imported_spell_slots(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    draft = CharacterImportDraft(
+        "Ravenisis",
+        level=6,
+        hit_points=HitPoints(3, 20),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
+            "spell_slot_2": ResourcePool("spell_slot_2", 0, 3),
+            "spell_slot_3": ResourcePool("spell_slot_3", 0, 3),
+        },
+    )
+    character = draft.to_character("ravenisis")
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(
+                campaign_id,
+                "Starter",
+                character_ids=("ravenisis",),
+            )
+        ),
+        characters=SimpleNamespace(
+            load=lambda character_id: character,
+            save=lambda saved: None,
+        ),
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.long_rest")
+
+    assert character.resources["spell_slot_1"].current == 4
+    assert character.resources["spell_slot_2"].current == 3
+    assert character.resources["spell_slot_3"].current == 3
+
+
 def test_short_rest_heals_and_keeps_spell_slots_spent(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState(active_campaign_id="starter")

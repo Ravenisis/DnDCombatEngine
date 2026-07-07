@@ -2,7 +2,7 @@
 
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
-from dnd_combat_engine.models.campaigns import Campaign, CampaignStatus
+from dnd_combat_engine.models.campaigns import Campaign, CampaignActivityEntry, CampaignStatus
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
 from dnd_combat_engine.models.conditions import Condition, ConditionName
@@ -35,6 +35,7 @@ __all__ = [
     "ActionBarButton",
     "Armor",
     "Campaign",
+    "CampaignActivityEntry",
     "CampaignStatus",
     "Character",
     "CharacterImportDraft",

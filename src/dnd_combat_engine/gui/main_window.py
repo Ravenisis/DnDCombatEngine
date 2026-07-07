@@ -27,6 +27,7 @@ from dnd_combat_engine.gui.widgets import (
     AbilitiesWidget,
     ActionBarWidget,
     AttackPanelWidget,
+    CampaignActivityWidget,
     CampaignEditorWidget,
     CampaignWidget,
     CharacterSheetWidget,
@@ -49,6 +50,7 @@ from dnd_combat_engine.models import (
     EffectResolution,
     InventoryItem,
     ItemCategory,
+    ParticipantKind,
     TargetKind,
     TargetReference,
 )
@@ -78,6 +80,7 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window = qt.QtWidgets.QMainWindow()
     action_bar_session = ActionBarSession()
     campaign_state = GuiCampaignState()
+    window._dnd_campaign_state = campaign_state  # noqa: SLF001
     window.setWindowTitle("DnDCombatEngine")
     window.resize(session.window_width, session.window_height)
     window.setStyleSheet(dark_theme_stylesheet())
@@ -93,6 +96,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window.setCentralWidget(_main_workspace(window, qt, workspace))
 
     _add_left_panel(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
+    _add_left_panel(
+        window,
+        qt,
+        "Activity",
+        _activity_widget(application, qt, campaign_state),
+    )
     _add_left_panel(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
     _add_left_panel(
         window,
@@ -496,6 +505,12 @@ def _run_import_result(
     if state.party_leader_character_id is None:
         state.party_leader_character_id = result.character.character_id
     state.party_initiative.pop(result.character.character_id, None)
+    _record_campaign_activity(
+        app,
+        state,
+        f"Imported {result.character.name} into {result.campaign.name}.",
+        "import",
+    )
     _refresh_campaign_docks(window, qt, app, state)
     message = (
         f"Imported {result.character.name} as {result.character.character_id} "
@@ -558,11 +573,13 @@ def _refresh_campaign_docks(
     docks = getattr(window, "_dnd_docks", {})
     panels = getattr(window, "_dnd_panel_hosts", {})
     _replace_panel_widget(panels, "Campaign", _campaign_widget(app, qt, state))
+    _replace_panel_widget(panels, "Activity", _activity_widget(app, qt, state))
     _replace_panel_widget(panels, "Party", _party_widget(window, app, qt, state))
     _replace_panel_widget(panels, "Target", _target_widget(window, app, qt, state))
     _replace_panel_widget(panels, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_panel_widget(panels, "Character Sheet", _character_widget(app, qt, state))
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
+    _replace_dock_widget(docks, "Activity", _activity_widget(app, qt, state))
     _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Target", _target_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
@@ -698,7 +715,6 @@ def _rest_campaign(
         _rest_character(character, long_rest=long_rest)
         app.characters.save(character)
         rested_count += 1
-    _refresh_campaign_docks(window, qt, app, state)
     rest_name = "Long rest" if long_rest else "Short rest"
     member_text = "party member" if rested_count == 1 else "party members"
     detail = (
@@ -706,7 +722,10 @@ def _rest_campaign(
         if long_rest
         else "Partial hit points and short-rest resources restored."
     )
-    _set_status(window, f"{rest_name} completed for {rested_count} {member_text}. {detail}")
+    message = f"{rest_name} completed for {rested_count} {member_text}. {detail}"
+    _record_campaign_activity(app, state, message, "rest")
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, message)
 
 
 def _rest_character(character: Character, *, long_rest: bool) -> None:
@@ -1024,8 +1043,9 @@ def _consume_inventory_item(
     else:
         message = _consume_known_item(app, character, item)
         app.inventory.remove_item(character, item.item_id, 1, autosave=True)
-        _refresh_campaign_docks(window, qt, app, state)
     _append_workspace(window, message)
+    _record_campaign_activity(app, state, str(message), "inventory")
+    _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, message)
     try:
         updated = app.characters.load(character_id)
@@ -1050,6 +1070,9 @@ def _change_character_currency(
     action = "Deposited" if delta_cp >= 0 else "Withdrew"
     message = f"{action} {_currency_change_text(abs(delta_cp))} for {character.name}."
     _append_workspace(window, message)
+    state = getattr(window, "_dnd_campaign_state", None)
+    if state is not None:
+        _record_campaign_activity(app, state, message, "currency")
     _set_status(window, message)
     return character.currency
 
@@ -1125,8 +1148,9 @@ def _activate_action_bar_slot(
     else:
         button = session.bar.button_at(slot)
         message = _activate_action_button(app, state, button, window=window, qt=qt)
-        _refresh_campaign_docks(window, qt, app, state)
     _append_workspace(window, message)
+    _record_campaign_activity(app, state, message, "action")
+    _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, message)
     return message
 
@@ -1190,15 +1214,17 @@ def _activate_spell_button(
         if not bless_targets:
             return f"{character.name} holds Bless; no targets selected."
     elif spell.spell_id in {"cure_wounds", "lesser_restoration", "light", "revivify"}:
-        special_target = _choose_single_party_target(
-            qt,
-            window,
-            app,
-            state,
-            character,
-            f"{spell.name} Target",
-            f"Choose a target for {spell.name}:",
-        )
+        special_target = _active_character_target_id(app, state)
+        if special_target is None:
+            special_target = _choose_single_party_target(
+                qt,
+                window,
+                app,
+                state,
+                character,
+                f"{spell.name} Target",
+                f"Choose a target for {spell.name}:",
+            )
         if special_target is None:
             return f"{character.name} holds {spell.name}; no target selected."
         if spell.spell_id == "lesser_restoration":
@@ -1435,12 +1461,23 @@ def _apply_cure_wounds(
     result = app.dice.roll(notation)
     healed = target.hit_points.heal(result.total)
     app.characters.save(target)
-    return (
-        f"{caster.name} casts Cure Wounds on {target.name}. "
-        f"Healing {result.notation}: {result.total} rolls={result.rolls}. "
-        f"Healed {healed}; HP {target.hit_points.current}/{target.hit_points.maximum}. "
-        f"{slot_message}"
+    target_reference = TargetReference(
+        target_id=target.character_id,
+        name=target.name,
+        kind=TargetKind.CHARACTER,
+        source_id=target.character_id,
     )
+    return EffectResolution(
+        source_name=caster.name,
+        effect_name="Cure Wounds",
+        effect_kind=EffectKind.HEALING,
+        target=target_reference,
+        total=healed,
+        detail=(
+            f"Healing {result.notation}: {result.total} rolls={result.rolls}. "
+            f"HP {target.hit_points.current}/{target.hit_points.maximum}. {slot_message}"
+        ),
+    ).message()
 
 
 def _apply_lesser_restoration(
@@ -1695,13 +1732,23 @@ def _active_target_for_effect(
     return target
 
 
+def _active_character_target_id(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+) -> str | None:
+    target = _active_target_for_effect(app, state)
+    if target is None or target.kind is not TargetKind.CHARACTER:
+        return None
+    return target.source_id
+
+
 def _apply_damage_to_target(
     app: DnDCombatEngineApp,
     target: TargetReference,
     damage_total: int,
 ) -> str:
-    if target.kind is not TargetKind.CHARACTER:
-        return "Encounter target HP tracking is pending."
+    if target.kind is TargetKind.MONSTER:
+        return _apply_damage_to_monster_target(app, target, damage_total)
     character = app.characters.load(target.source_id)
     dealt = character.hit_points.apply_damage(damage_total)
     app.characters.save(character)
@@ -1709,6 +1756,39 @@ def _apply_damage_to_target(
         f"Applied {dealt} damage; HP "
         f"{character.hit_points.current}/{character.hit_points.maximum}."
     )
+
+
+def _apply_damage_to_monster_target(
+    app: DnDCombatEngineApp,
+    target: TargetReference,
+    damage_total: int,
+) -> str:
+    try:
+        encounter_ids = app.encounters.persistence_service.list_encounter_ids()
+    except AttributeError:
+        return "Encounter target HP tracking is unavailable."
+    for encounter_id in encounter_ids:
+        try:
+            encounter = app.encounters.load(encounter_id)
+        except KeyError:
+            continue
+        for participant in encounter.participants:
+            if (
+                participant.kind is ParticipantKind.MONSTER
+                or getattr(participant.kind, "value", None) == ParticipantKind.MONSTER.value
+            ) and (
+                participant.participant_id == target.target_id
+                and participant.source_id == target.source_id
+            ):
+                monster = app.compendium.load_monster(participant.source_id)
+                maximum_hp = monster.hit_points.maximum * participant.quantity
+                updated_participant, dealt = participant.apply_damage(damage_total, maximum_hp)
+                app.encounters.save(encounter.with_participant(updated_participant))
+                return (
+                    f"Applied {dealt} damage; HP "
+                    f"{updated_participant.current_hit_points}/{maximum_hp}."
+                )
+    return "Encounter target could not be found."
 
 
 def _roll_saving_throw(
@@ -1760,6 +1840,24 @@ def _append_workspace(window, message: str) -> None:
         workspace.setText(message)
 
 
+def _record_campaign_activity(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    message: str,
+    category: str = "system",
+) -> None:
+    if state is None or state.active_campaign_id is None or not message:
+        return
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id)
+    except (AttributeError, KeyError):
+        return
+    try:
+        app.campaigns.save(campaign.with_activity(message, category))
+    except AttributeError:
+        return
+
+
 def _replace_dock_widget(docks: dict[str, object], title: str, widget) -> None:
     dock = docks.get(title)
     if dock is not None and hasattr(dock, "setWidget"):
@@ -1785,6 +1883,10 @@ def _campaign_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):
     if state.active_campaign_id is None:
         return _label(qt, "No campaign open")
     return CampaignWidget.create(app, qt, state.active_campaign_id)
+
+
+def _activity_widget(app: DnDCombatEngineApp, qt, state: GuiCampaignState):
+    return CampaignActivityWidget.create(app, qt, state.active_campaign_id)
 
 
 def _party_widget(window, app: DnDCombatEngineApp, qt, state: GuiCampaignState):

@@ -2,7 +2,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
     Name="DnDCombatEngine"
-    Version="0.1.1"
+    Version="0.1.2"
     Manufacturer="Ravenisis"
     UpgradeCode="{F57DAFB7-43CF-4D4D-88B7-5D2D14356744}"
     Scope="perMachine">

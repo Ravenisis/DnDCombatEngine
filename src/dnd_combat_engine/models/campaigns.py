@@ -17,6 +17,33 @@ class CampaignStatus(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class CampaignActivityEntry:
+    """A persisted campaign activity entry for the controller workspace."""
+
+    message: str
+    category: str = "system"
+
+    def __post_init__(self) -> None:
+        """Validate activity entry fields."""
+        if not self.message:
+            raise ValueError("message is required")
+        if not self.category:
+            raise ValueError("category is required")
+
+    def to_dict(self) -> dict[str, str]:
+        """Serialize the activity entry to plain JSON-compatible data."""
+        return {"message": self.message, "category": self.category}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Self:
+        """Build an activity entry from JSON-compatible data."""
+        return cls(
+            message=str(data["message"]),
+            category=str(data.get("category", "system")),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class Campaign:
     """A campaign workspace that groups characters, encounters, and notes."""
 
@@ -26,6 +53,7 @@ class Campaign:
     character_ids: tuple[str, ...] = field(default_factory=tuple)
     encounter_ids: tuple[str, ...] = field(default_factory=tuple)
     notes: str = ""
+    activity_log: tuple[CampaignActivityEntry, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         """Validate campaign identity and references."""
@@ -72,6 +100,16 @@ class Campaign:
             encounter_ids=tuple(item for item in self.encounter_ids if item != encounter_id),
         )
 
+    def with_activity(self, message: str, category: str = "system") -> Self:
+        """Return a campaign with a new activity entry appended."""
+        return replace(
+            self,
+            activity_log=(
+                *self.activity_log,
+                CampaignActivityEntry(message=message, category=category),
+            ),
+        )
+
     def to_dict(self) -> dict[str, object]:
         """Serialize the campaign to plain JSON-compatible data."""
         return {
@@ -81,6 +119,7 @@ class Campaign:
             "character_ids": list(self.character_ids),
             "encounter_ids": list(self.encounter_ids),
             "notes": self.notes,
+            "activity_log": [entry.to_dict() for entry in self.activity_log],
         }
 
     @classmethod
@@ -93,4 +132,8 @@ class Campaign:
             character_ids=tuple(str(item) for item in data.get("character_ids", [])),
             encounter_ids=tuple(str(item) for item in data.get("encounter_ids", [])),
             notes=str(data.get("notes", "")),
+            activity_log=tuple(
+                CampaignActivityEntry.from_dict(entry)
+                for entry in data.get("activity_log", [])
+            ),
         )

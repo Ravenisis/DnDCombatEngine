@@ -43,6 +43,17 @@ def test_encounter_participant_builds_from_character_and_monster() -> None:
     assert monster.kind is ParticipantKind.MONSTER
     assert monster.quantity == 3
     assert monster.initiative_bonus == 2
+    assert monster.current_hit_points == 21
+
+
+def test_encounter_participant_tracks_current_hit_points() -> None:
+    participant = EncounterParticipant.from_monster(make_monster(), quantity=2)
+
+    updated, dealt = participant.apply_damage(5, maximum_hit_points=14)
+
+    assert dealt == 5
+    assert updated.current_hit_points == 9
+    assert EncounterParticipant.from_dict(updated.to_dict()) == updated
 
 
 def test_encounter_round_trips_to_plain_data() -> None:
@@ -98,4 +109,3 @@ def test_encounter_validates_values() -> None:
         EncounterParticipant(**{**participant_kwargs, "source_id": ""})
     with pytest.raises(ValueError):
         EncounterParticipant(**{**participant_kwargs, "quantity": 0})
-

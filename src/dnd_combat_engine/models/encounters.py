@@ -35,6 +35,7 @@ class EncounterParticipant:
     source_id: str
     quantity: int = 1
     initiative_bonus: int = 0
+    current_hit_points: int | None = None
 
     def __post_init__(self) -> None:
         """Validate participant fields."""
@@ -46,6 +47,8 @@ class EncounterParticipant:
             raise ValueError("source_id is required")
         if self.quantity < 1:
             raise ValueError("quantity must be at least 1")
+        if self.current_hit_points is not None and self.current_hit_points < 0:
+            raise ValueError("current_hit_points cannot be negative")
 
     @classmethod
     def from_character(cls, character: Character) -> Self:
@@ -68,11 +71,32 @@ class EncounterParticipant:
             source_id=monster.monster_id,
             quantity=quantity,
             initiative_bonus=monster.abilities.modifier("dexterity"),
+            current_hit_points=monster.hit_points.current * quantity,
         )
+
+    def with_current_hit_points(self, current_hit_points: int) -> Self:
+        """Return a copy with updated encounter-specific hit points."""
+        return type(self)(
+            participant_id=self.participant_id,
+            name=self.name,
+            kind=self.kind,
+            source_id=self.source_id,
+            quantity=self.quantity,
+            initiative_bonus=self.initiative_bonus,
+            current_hit_points=current_hit_points,
+        )
+
+    def apply_damage(self, amount: int, maximum_hit_points: int) -> tuple[Self, int]:
+        """Return an updated participant and damage applied to current HP."""
+        if amount < 0:
+            raise ValueError("damage amount cannot be negative")
+        current = maximum_hit_points if self.current_hit_points is None else self.current_hit_points
+        dealt = min(amount, current)
+        return self.with_current_hit_points(current - dealt), dealt
 
     def to_dict(self) -> dict[str, object]:
         """Serialize the participant to plain JSON-compatible data."""
-        return {
+        data: dict[str, object] = {
             "participant_id": self.participant_id,
             "name": self.name,
             "kind": self.kind.value,
@@ -80,6 +104,9 @@ class EncounterParticipant:
             "quantity": self.quantity,
             "initiative_bonus": self.initiative_bonus,
         }
+        if self.current_hit_points is not None:
+            data["current_hit_points"] = self.current_hit_points
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> Self:
@@ -91,6 +118,11 @@ class EncounterParticipant:
             source_id=str(data["source_id"]),
             quantity=int(data.get("quantity", 1)),
             initiative_bonus=int(data.get("initiative_bonus", 0)),
+            current_hit_points=(
+                int(data["current_hit_points"])
+                if data.get("current_hit_points") is not None
+                else None
+            ),
         )
 
 
@@ -170,4 +202,3 @@ class Encounter:
             round_number=int(data.get("round_number", 1)),
             notes=str(data.get("notes", "")),
         )
-

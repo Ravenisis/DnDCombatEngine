@@ -1,6 +1,6 @@
 import pytest
 
-from dnd_combat_engine.models import Campaign, CampaignStatus
+from dnd_combat_engine.models import Campaign, CampaignActivityEntry, CampaignStatus
 
 
 def test_campaign_round_trips_to_plain_data() -> None:
@@ -31,6 +31,16 @@ def test_campaign_adds_and_removes_references_without_duplicates() -> None:
     assert updated.without_encounter("missing").encounter_ids == ("ambush",)
 
 
+def test_campaign_records_activity_entries() -> None:
+    campaign = Campaign("starter", "Starter").with_activity("Long rest completed.", "rest")
+
+    restored = Campaign.from_dict(campaign.to_dict())
+
+    assert restored.activity_log == (
+        CampaignActivityEntry("Long rest completed.", "rest"),
+    )
+
+
 def test_campaign_rejects_invalid_values() -> None:
     with pytest.raises(ValueError):
         Campaign("", "Starter")
@@ -48,3 +58,5 @@ def test_campaign_rejects_invalid_values() -> None:
         Campaign("starter", "Starter").with_character("")
     with pytest.raises(ValueError):
         Campaign("starter", "Starter").with_encounter("")
+    with pytest.raises(ValueError):
+        CampaignActivityEntry("")

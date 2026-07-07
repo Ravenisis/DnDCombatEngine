@@ -106,6 +106,24 @@ def test_character_import_service_reads_dnd_beyond_label_below_name() -> None:
     assert draft.name == "Ravenisis"
 
 
+def test_character_import_service_adds_spell_slots_for_cleric_sheet() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        Domain Spells: Bless, Cure Wounds, Revivify
+        """,
+        source="test",
+    )
+    character = draft.to_character("ravenisis")
+
+    assert draft.resources["spell_slot_1"].maximum == 4
+    assert draft.resources["spell_slot_2"].maximum == 3
+    assert draft.resources["spell_slot_3"].maximum == 3
+    assert character.resources["spell_slot_1"].current == 4
+    assert character.resources["hit_dice"].maximum == 6
+
+
 def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
     literal_pdf = b"".join(
         [

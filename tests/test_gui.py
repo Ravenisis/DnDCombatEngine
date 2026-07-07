@@ -301,6 +301,123 @@ def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
     assert "Right-click to consume one." in item_tooltip
 
 
+def test_inventory_money_log_button_shows_session_currency_changes() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui.widgets import _inventory_header
+    from dnd_combat_engine.models import CurrencyPurse
+
+    class FakeSignal:
+        def __init__(self) -> None:
+            self.callback = None
+
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+        def emit(self) -> None:
+            self.callback(False)
+
+    class FakeWidget:
+        def __init__(self, *args) -> None:
+            self.args = args
+
+    class FakeLabel(FakeWidget):
+        pass
+
+    class FakeLineEdit(FakeWidget):
+        def __init__(self, text: str = "") -> None:
+            super().__init__(text)
+            self._text = text
+
+        def text(self) -> str:
+            return self._text
+
+        def setText(self, value: str) -> None:  # noqa: N802
+            self._text = value
+
+        def clear(self) -> None:
+            self._text = ""
+
+        def setPlaceholderText(self, value: str) -> None:  # noqa: N802
+            self.placeholder = value
+
+    class FakeButton(FakeWidget):
+        def __init__(self, text: str) -> None:
+            super().__init__(text)
+            self.clicked = FakeSignal()
+
+        def setToolTip(self, value: str) -> None:  # noqa: N802
+            self.tooltip = value
+
+        def setStyleSheet(self, value: str) -> None:  # noqa: N802
+            self.stylesheet = value
+
+    class FakeTextEdit(FakeWidget):
+        def setReadOnly(self, value: bool) -> None:  # noqa: N802
+            self.read_only = value
+
+        def setPlainText(self, value: str) -> None:  # noqa: N802
+            self.text = value
+
+    class FakeDialog(FakeWidget):
+        def setWindowTitle(self, value: str) -> None:  # noqa: N802
+            self.title = value
+
+        def resize(self, width: int, height: int) -> None:
+            self.size = (width, height)
+
+        def show(self) -> None:
+            self.visible = True
+
+    class FakeLayout:
+        def __init__(self, parent) -> None:
+            parent.layout = self
+            self.widgets = []
+
+        def addWidget(self, widget, *args) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+        def addStretch(self, stretch: int) -> None:  # noqa: N802
+            self.stretch = stretch
+
+    class FakeQtWidgets:
+        QWidget = FakeWidget
+        QLabel = FakeLabel
+        QLineEdit = FakeLineEdit
+        QPushButton = FakeButton
+        QTextEdit = FakeTextEdit
+        QDialog = FakeDialog
+        QHBoxLayout = FakeLayout
+        QVBoxLayout = FakeLayout
+        QGridLayout = FakeLayout
+
+    purse = {"value": CurrencyPurse(gp=2)}
+
+    def change_currency(delta_cp: int) -> CurrencyPurse:
+        purse["value"] = purse["value"].add_cp(delta_cp)
+        return purse["value"]
+
+    header = _inventory_header(
+        SimpleNamespace(QtWidgets=FakeQtWidgets),
+        "Ravenisis",
+        purse["value"],
+        change_currency,
+    )
+    money_log_button = header.layout.widgets[1]
+    ledger = header.layout.widgets[2]
+    deposit_button = header.layout.widgets[3].layout.widgets[0]
+
+    ledger.setText("1GP")
+    deposit_button.clicked.emit()
+    money_log_button.clicked.emit()
+
+    dialog = header._dnd_money_log_dialogs[0]
+    log_text = dialog.layout.widgets[0].text
+    assert "Opening balance: 2GP" in log_text
+    assert "Deposit: 1GP (+1GP) -> 3GP" in log_text
+    assert "Current balance: 3GP" in log_text
+
+
 def test_party_initiative_helpers_parse_and_prompt() -> None:
     from dnd_combat_engine.gui.widgets import (
         _ask_initiative_roll,
@@ -338,7 +455,11 @@ def test_party_initiative_helpers_parse_and_prompt() -> None:
 
 
 def test_party_frame_feature_text_filters_import_metadata() -> None:
-    from dnd_combat_engine.gui.widgets import _party_frame_feature_text
+    from dnd_combat_engine.gui.widgets import (
+        _party_frame_condition_text,
+        _party_frame_feature_text,
+    )
+    from dnd_combat_engine.models import Condition, ConditionName
 
     assert _party_frame_feature_text(()) == ""
     assert _party_frame_feature_text(
@@ -363,6 +484,9 @@ def test_party_frame_feature_text_filters_import_metadata() -> None:
             "Rage",
         )
     ) == "Bless, Hex, Rage"
+    assert _party_frame_condition_text((Condition(ConditionName.POISONED),)) == (
+        "Conditions: Poisoned"
+    )
 
 
 def test_party_context_menu_wires_actions(monkeypatch) -> None:

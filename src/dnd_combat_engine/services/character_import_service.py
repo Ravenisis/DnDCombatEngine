@@ -21,6 +21,7 @@ from dnd_combat_engine.models import (
     HitPoints,
     InventoryItem,
     ItemCategory,
+    ResourcePool,
     Weapon,
 )
 from dnd_combat_engine.models.imports import CharacterImportDraft
@@ -81,9 +82,10 @@ class CharacterImportService:
         armor_class = _extract_int(normalized, (r"\barmor class\b", r"\bac\b"))
         abilities = _extract_abilities(normalized)
         weapons = _extract_weapons(normalized)
+        level = _extract_level(normalized)
         return CharacterImportDraft(
             name=name,
-            level=_extract_level(normalized),
+            level=level,
             hit_points=HitPoints(current=current_hp, maximum=maximum_hp, temporary=temporary_hp),
             abilities=abilities,
             skills=_extract_skills(normalized),
@@ -91,6 +93,7 @@ class CharacterImportService:
             weapons=weapons,
             armor=Armor("Imported armor", armor_class) if armor_class else None,
             currency=_extract_currency(normalized),
+            resources=_extract_resources(normalized, level),
             source=source,
         )
 
@@ -381,6 +384,68 @@ def _extract_level(text: str) -> int:
         return max(1, int(match.group(1)))
     match = re.search(r"\bclass(?:\s*&\s*level)?\s*:?.*?\b(\d{1,2})\b", text, flags=re.I)
     return max(1, int(match.group(1))) if match else 1
+
+
+def _extract_resources(text: str, level: int) -> dict[str, ResourcePool]:
+    resources: dict[str, ResourcePool] = {}
+    for slot_level, maximum in _spell_slots_for_imported_character(text, level).items():
+        name = f"spell_slot_{slot_level}"
+        resources[name] = ResourcePool(name, maximum, maximum)
+    if level > 0:
+        resources["hit_dice"] = ResourcePool("hit_dice", level, level)
+    return resources
+
+
+def _spell_slots_for_imported_character(text: str, level: int) -> dict[int, int]:
+    progression = _caster_progression(text)
+    if progression is None:
+        return {}
+    effective_level = max(1, level)
+    if progression == "half":
+        effective_level = max(1, (level + 1) // 2)
+    if progression == "third":
+        effective_level = max(1, (level + 2) // 3)
+    return _full_caster_spell_slots(effective_level)
+
+
+def _caster_progression(text: str) -> str | None:
+    lowered = text.lower()
+    if re.search(r"\b(?:bard|cleric|druid|sorcerer|wizard)\b", lowered):
+        return "full"
+    if re.search(r"\b(?:paladin|ranger|artificer)\b", lowered):
+        return "half"
+    if re.search(r"\b(?:eldritch knight|arcane trickster)\b", lowered):
+        return "third"
+    if re.search(r"\b(?:cantrips?|domain spells?|spellcasting|prepared spells?)\b", lowered):
+        return "full"
+    return None
+
+
+def _full_caster_spell_slots(level: int) -> dict[int, int]:
+    slots_by_level = {
+        1: (2,),
+        2: (3,),
+        3: (4, 2),
+        4: (4, 3),
+        5: (4, 3, 2),
+        6: (4, 3, 3),
+        7: (4, 3, 3, 1),
+        8: (4, 3, 3, 2),
+        9: (4, 3, 3, 3, 1),
+        10: (4, 3, 3, 3, 2),
+        11: (4, 3, 3, 3, 2, 1),
+        12: (4, 3, 3, 3, 2, 1),
+        13: (4, 3, 3, 3, 2, 1, 1),
+        14: (4, 3, 3, 3, 2, 1, 1),
+        15: (4, 3, 3, 3, 2, 1, 1, 1),
+        16: (4, 3, 3, 3, 2, 1, 1, 1),
+        17: (4, 3, 3, 3, 2, 1, 1, 1, 1),
+        18: (4, 3, 3, 3, 3, 1, 1, 1, 1),
+        19: (4, 3, 3, 3, 3, 2, 1, 1, 1),
+        20: (4, 3, 3, 3, 3, 2, 2, 1, 1),
+    }
+    slots = slots_by_level[min(max(level, 1), 20)]
+    return dict(enumerate(slots, start=1))
 
 
 def _extract_int(text: str, labels: tuple[str, ...], default: int | None = None) -> int | None:

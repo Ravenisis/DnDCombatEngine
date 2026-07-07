@@ -97,6 +97,30 @@ class CombatLogWidget:
         return output
 
 
+class CampaignActivityWidget:
+    """Factory for persisted campaign activity rows."""
+
+    @staticmethod
+    def create(app: DnDCombatEngineApp, qt, campaign_id: str | None = None):
+        """Create a compact persisted campaign activity widget."""
+        output = qt.QtWidgets.QTextEdit()
+        output.setReadOnly(True)
+        if campaign_id is None:
+            output.append("No campaign open")
+            return output
+        try:
+            campaign = app.campaigns.load(campaign_id)
+        except KeyError:
+            output.append("Campaign activity unavailable")
+            return output
+        if not campaign.activity_log:
+            output.append("No campaign activity yet.")
+            return output
+        for entry in campaign.activity_log[-12:]:
+            output.append(f"[{entry.category}] {entry.message}")
+        return output
+
+
 class CharacterSheetWidget:
     """Factory for the character sheet widget."""
 
@@ -193,9 +217,15 @@ class TargetPanelWidget:
             layout.addWidget(qt.QtWidgets.QLabel("No targets available"))
             return widget
         for target in targets:
-            button = qt.QtWidgets.QPushButton(target.name)
+            button = qt.QtWidgets.QPushButton(_target_button_text(app, target))
             if hasattr(button, "setToolTip"):
                 button.setToolTip(f"Set active target to {target.name}")
+            if (
+                active_target is not None
+                and target.target_id == active_target.target_id
+                and hasattr(button, "setStyleSheet")
+            ):
+                button.setStyleSheet("border:2px solid #4f8cff; text-align:left;")
             button.clicked.connect(
                 lambda checked=False, item=target: on_select(item)
                 if on_select is not None
@@ -247,6 +277,47 @@ def _target_panel_references(
                     )
                 )
     return tuple(targets)
+
+
+def _target_button_text(app: DnDCombatEngineApp, target: TargetReference) -> str:
+    if target.kind is TargetKind.CHARACTER:
+        try:
+            character = app.characters.load(target.source_id)
+        except KeyError:
+            return f"{target.name}\nMissing character"
+        return (
+            f"{character.name}\n"
+            f"HP {character.hit_points.current}/{character.hit_points.maximum} "
+            f"THP {character.hit_points.temporary}"
+        )
+    if target.kind is TargetKind.MONSTER:
+        try:
+            monster = app.compendium.load_monster(target.source_id)
+        except KeyError:
+            return f"{target.name}\nMissing monster"
+        current_hp = _monster_target_current_hp(app, target, monster.hit_points.maximum)
+        return f"{target.name}\nHP {current_hp}/{monster.hit_points.maximum}"
+    return target.name
+
+
+def _monster_target_current_hp(
+    app: DnDCombatEngineApp,
+    target: TargetReference,
+    default_hp: int,
+) -> int:
+    try:
+        encounter_ids = app.encounters.persistence_service.list_encounter_ids()
+    except AttributeError:
+        return default_hp
+    for encounter_id in encounter_ids:
+        try:
+            encounter = app.encounters.load(encounter_id)
+        except KeyError:
+            continue
+        for participant in encounter.participants:
+            if participant.participant_id == target.target_id:
+                return participant.current_hit_points or default_hp * participant.quantity
+    return default_hp
 
 
 class CampaignEditorWidget:
@@ -621,6 +692,11 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
     layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character_name}"))
     if hasattr(layout, "addStretch"):
         layout.addStretch(1)
+    money_log = [f"Opening balance: {_currency_price_text(purse.total_cp)}"]
+    money_log_button = qt.QtWidgets.QPushButton("Money Log")
+    if hasattr(money_log_button, "setToolTip"):
+        money_log_button.setToolTip("Show currency changes made while this inventory is open.")
+    layout.addWidget(money_log_button)
     ledger = qt.QtWidgets.QLineEdit()
     if hasattr(ledger, "setPlaceholderText"):
         ledger.setPlaceholderText("1PP 100GP")
@@ -643,8 +719,9 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
     def apply_ledger(multiplier: int) -> None:
         if on_currency_change is None:
             return
+        entry_text = ledger.text()
         try:
-            amount = CurrencyPurse.parse(ledger.text()).total_cp * multiplier
+            amount = CurrencyPurse.parse(entry_text).total_cp * multiplier
             updated = on_currency_change(amount)
         except ValueError as exc:
             if hasattr(ledger, "setText"):
@@ -652,6 +729,10 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
             return
         if updated is not None:
             current["purse"] = updated
+            action = "Deposit" if multiplier > 0 else "Withdraw"
+            money_log.append(
+                _money_log_entry(action, abs(amount), updated, raw_entry=entry_text)
+            )
             _set_currency_boxes(boxes, updated)
             if hasattr(ledger, "clear"):
                 ledger.clear()
@@ -663,7 +744,8 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
             target = CurrencyPurse(
                 **{label.lower(): max(int(box.text() or "0"), 0) for label, box in boxes}
             )
-            updated = on_currency_change(target.total_cp - current["purse"].total_cp)
+            delta_cp = target.total_cp - current["purse"].total_cp
+            updated = on_currency_change(delta_cp)
         except ValueError as exc:
             if hasattr(ledger, "setText"):
                 ledger.setText(str(exc))
@@ -671,8 +753,13 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
             return
         if updated is not None:
             current["purse"] = updated
+            if delta_cp:
+                money_log.append(_money_log_entry("Set Currency", delta_cp, updated))
             _set_currency_boxes(boxes, updated)
 
+    money_log_button.clicked.connect(
+        lambda checked=False: _show_money_log(qt, widget, character_name, money_log, current)
+    )
     deposit.clicked.connect(lambda checked=False: apply_ledger(1))
     withdraw.clicked.connect(lambda checked=False: apply_ledger(-1))
     for _, box in boxes:
@@ -680,6 +767,65 @@ def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency
         if signal is not None and hasattr(signal, "connect"):
             signal.connect(apply_boxes)
     return widget
+
+
+def _show_money_log(qt, parent, character_name: str, entries: list[str], current: dict):
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    if dialog_class is None:
+        return None
+    try:
+        dialog = dialog_class(parent)
+    except TypeError:
+        dialog = dialog_class()
+    if hasattr(dialog, "setWindowTitle"):
+        dialog.setWindowTitle(f"{character_name} Money Log")
+    if hasattr(dialog, "resize"):
+        dialog.resize(360, 320)
+    layout = qt.QtWidgets.QVBoxLayout(dialog)
+    text = "\n".join(_money_log_lines(entries, current["purse"]))
+    text_edit_class = getattr(qt.QtWidgets, "QTextEdit", None)
+    if text_edit_class is not None:
+        output = text_edit_class()
+        if hasattr(output, "setReadOnly"):
+            output.setReadOnly(True)
+        _set_text_content(output, text)
+    else:
+        output = qt.QtWidgets.QLabel(text)
+    layout.addWidget(output)
+    dialogs = getattr(parent, "_dnd_money_log_dialogs", [])
+    dialogs.append(dialog)
+    parent._dnd_money_log_dialogs = dialogs  # noqa: SLF001
+    if hasattr(dialog, "show"):
+        dialog.show()
+    return dialog
+
+
+def _money_log_lines(entries: list[str], current_purse: CurrencyPurse) -> tuple[str, ...]:
+    return (*entries, f"Current balance: {_currency_price_text(current_purse.total_cp)}")
+
+
+def _money_log_entry(
+    action: str,
+    amount_cp: int,
+    updated: CurrencyPurse,
+    raw_entry: str | None = None,
+) -> str:
+    amount_text = _currency_delta_text(amount_cp)
+    if raw_entry:
+        amount_text = f"{raw_entry.strip()} ({amount_text})"
+    return f"{action}: {amount_text} -> {_currency_price_text(updated.total_cp)}"
+
+
+def _currency_delta_text(amount_cp: int) -> str:
+    prefix = "-" if amount_cp < 0 else "+"
+    return f"{prefix}{_currency_price_text(abs(amount_cp))}"
+
+
+def _set_text_content(widget, text: str) -> None:
+    if hasattr(widget, "setPlainText"):
+        widget.setPlainText(text)
+    elif hasattr(widget, "setText"):
+        widget.setText(text)
 
 
 def _currency_boxes(qt, purse: CurrencyPurse):
@@ -1198,6 +1344,14 @@ def _party_member_frame(
         if hasattr(feature_label, "setWordWrap"):
             feature_label.setWordWrap(True)
         layout.addWidget(feature_label)
+    condition_text = _party_frame_condition_text(character.conditions)
+    if condition_text:
+        condition_label = qt.QtWidgets.QLabel(condition_text)
+        if hasattr(condition_label, "setWordWrap"):
+            condition_label.setWordWrap(True)
+        if hasattr(condition_label, "setToolTip"):
+            condition_label.setToolTip("Tracked conditions on this party member.")
+        layout.addWidget(condition_label)
     _install_party_context_menu(
         qt,
         frame,
@@ -1276,6 +1430,16 @@ def _party_frame_feature_text(features: tuple[str, ...]) -> str:
         feature for feature in PARTY_FRAME_FEATURES if feature.lower() in feature_names
     ]
     return ", ".join(visible_features[:3])
+
+
+def _party_frame_condition_text(conditions) -> str:
+    """Return a compact condition summary for party frames."""
+    names = []
+    for condition in conditions:
+        name = getattr(getattr(condition, "name", condition), "value", str(condition))
+        if name:
+            names.append(str(name).replace("_", " ").title())
+    return f"Conditions: {', '.join(names)}" if names else ""
 
 
 def _party_frame_feature_candidates(features: tuple[str, ...]) -> tuple[str, ...]:

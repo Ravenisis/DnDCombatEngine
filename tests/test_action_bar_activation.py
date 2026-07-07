@@ -1,8 +1,10 @@
+from fractions import Fraction
 from types import SimpleNamespace
 
 from dnd_combat_engine.gui import main_window
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.models import (
+    AbilityScores,
     ActionBar,
     ActionBarActionKind,
     ActionBarButton,
@@ -12,7 +14,11 @@ from dnd_combat_engine.models import (
     DamageComponent,
     DamageProfile,
     DamageType,
+    Encounter,
+    EncounterParticipant,
     HitPoints,
+    Monster,
+    ParticipantKind,
     ResourcePool,
     Spell,
     SpellSchool,
@@ -91,12 +97,35 @@ class FakeCharacterStore:
 
 
 class FakeCompendium:
-    def __init__(self, spell: Spell) -> None:
+    def __init__(self, spell: Spell, monster: Monster | None = None) -> None:
         self.spell = spell
+        self.monster = monster
 
     def load_spell(self, spell_id: str) -> Spell:
         assert spell_id == self.spell.spell_id
         return self.spell
+
+    def load_monster(self, monster_id: str) -> Monster:
+        assert self.monster is not None
+        assert monster_id == self.monster.monster_id
+        return self.monster
+
+
+class FakeEncounterStore:
+    def __init__(self, encounter: Encounter) -> None:
+        self.encounter = encounter
+        self.saved = []
+        self.persistence_service = SimpleNamespace(
+            list_encounter_ids=lambda: [self.encounter.encounter_id]
+        )
+
+    def load(self, encounter_id: str) -> Encounter:
+        assert encounter_id == self.encounter.encounter_id
+        return self.encounter
+
+    def save(self, encounter: Encounter) -> None:
+        self.encounter = encounter
+        self.saved.append(encounter)
 
 
 def _raise_key_error(*args):
@@ -331,11 +360,47 @@ def test_cure_wounds_heals_selected_target_and_spends_slot(monkeypatch) -> None:
         state=main_window.GuiCampaignState(),
     )
 
-    assert "Cleric casts Cure Wounds on Ally." in message
+    assert "Cleric resolves Cure Wounds on Ally [healing]. Total 6." in message
     assert "Healing 2d8: 6" in message
     assert target.hit_points.current == 10
     assert caster.resources["spell_slot_2"].current == 0
     assert target in store.saved
+
+
+def test_cure_wounds_uses_active_character_target_without_prompt(monkeypatch) -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_1": ResourcePool("spell_slot_1", 1, 1)},
+    )
+    target = Character("ally", "Ally", HitPoints(5, 12))
+    store = FakeCharacterStore((caster, target))
+    spell = Spell(
+        "cure_wounds",
+        "Cure Wounds",
+        1,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "Touch",
+        "Instantaneous",
+    )
+    app = SimpleNamespace(characters=store, compendium=FakeCompendium(spell), dice=FakeDice(4))
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "cure_wounds", "Cure Wounds")
+    state = main_window.GuiCampaignState(
+        active_target=TargetReference("ally", "Ally", TargetKind.CHARACTER, "ally"),
+    )
+    monkeypatch.setattr(
+        main_window,
+        "_choose_single_party_target",
+        lambda *args: (_ for _ in ()).throw(AssertionError("prompt should not open")),
+    )
+
+    message = main_window._activate_spell_button(app, caster, button, state=state)
+
+    assert "Cleric resolves Cure Wounds on Ally [healing]. Total 4." in message
+    assert target.hit_points.current == 9
+    assert caster.resources["spell_slot_1"].current == 0
 
 
 def test_lesser_restoration_removes_selected_condition(monkeypatch) -> None:
@@ -466,6 +531,55 @@ def test_ability_action_applies_damage_to_active_character_target() -> None:
     assert "Fighter resolves Attack with Longsword on Goblin [attack]. Total 5." in message
     assert target.hit_points.current == 7
     assert target in store.saved
+
+
+def test_ability_action_applies_damage_to_active_monster_target() -> None:
+    attacker = Character(
+        "fighter",
+        "Fighter",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Longsword",
+                DamageProfile((DamageComponent("1d8", DamageType.SLASHING),)),
+            ),
+        ),
+    )
+    monster = Monster(
+        monster_id="goblin",
+        name="Goblin",
+        armor_class=15,
+        hit_points=HitPoints(7, 7),
+        abilities=AbilityScores(dexterity=14),
+        challenge_rating=Fraction(1, 4),
+    )
+    participant = EncounterParticipant(
+        "goblin",
+        "Goblin",
+        ParticipantKind.MONSTER,
+        "goblin",
+        current_hit_points=7,
+    )
+    encounters = FakeEncounterStore(
+        Encounter("ambush", "Ambush", participants=(participant,))
+    )
+    app = SimpleNamespace(
+        characters=FakeCharacterStore((attacker,)),
+        compendium=FakeCompendium(_spell(), monster),
+        dice=FakeDice(5),
+        encounters=encounters,
+    )
+    state = main_window.GuiCampaignState(
+        party_leader_character_id="fighter",
+        active_target=TargetReference("goblin", "Goblin", TargetKind.MONSTER, "goblin"),
+    )
+    button = ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack")
+
+    message = main_window._activate_action_button(app, state, button)
+
+    assert "Fighter resolves Attack with Longsword on Goblin [attack]. Total 5." in message
+    assert "HP 2/7" in message
+    assert encounters.saved[0].participants[0].current_hit_points == 2
 
 
 def test_action_activation_handles_empty_selection_and_missing_data() -> None:

@@ -56,4 +56,5 @@ class CampaignService:
             character_ids=campaign.character_ids,
             encounter_ids=campaign.encounter_ids,
             notes=campaign.notes,
+            activity_log=campaign.activity_log,
         )

@@ -122,8 +122,8 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.1-x64.msi`
+- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`
+- `dist/msi/DnDCombatEngine-0.1.2-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -133,14 +133,12 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,121,576 bytes
-- `dist/installer/DnDCombatEngine-0.1.1-Setup.exe` - 42,729,828 bytes
-- `dist/msi/DnDCombatEngine-0.1.1-x64.msi` - 50,153,057 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,136,114 bytes
+- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe` - 48,723,904 bytes
+- `dist/msi/DnDCombatEngine-0.1.2-x64.msi` - 57,867,505 bytes
 - Verified with `python -m ruff check src tests`,
   `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
-  and a WiX MSI rebuild. The Inno Setup compiler was blocked by local Windows
-  execution permissions during this pass, so the setup `.exe` remains the prior
-  verified `0.1.1` build.
+  an Inno Setup rebuild, and a WiX MSI rebuild.
 
 Latest verified local install smoke test:
 
@@ -148,8 +146,8 @@ Latest verified local install smoke test:
   install into a controlled test directory, installed app launch, startup
   stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `0.1.1` executable, Inno installer, and MSI have been generated;
-  an end-to-end `0.1.1` install smoke test is still pending.
+- The rebuilt `0.1.2` executable, Inno installer, and MSI have been generated;
+  an end-to-end `0.1.2` install smoke test is still pending.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:
@@ -239,7 +237,7 @@ dnd-combat-engine init-user-data
 - Added an Inno Setup installer script that installs the executable, registers
   uninstall support, and can create Start Menu and desktop shortcuts.
 - Added a Windows installer build script that compiles
-  `DnDCombatEngine-0.1.1-Setup.exe` from the PyInstaller output.
+  `DnDCombatEngine-0.1.2-Setup.exe` from the PyInstaller output.
 - Added a GitHub Actions packaging workflow for linting, testing, building Python
   distributions, producing the Windows executable, and uploading installer
   artifacts.
@@ -261,7 +259,7 @@ dnd-combat-engine init-user-data
 - Ran the full PyInstaller build and produced
   `dist/DnDCombatEngine/DnDCombatEngine.exe`.
 - Installed Inno Setup locally with `winget` and compiled
-  `dist/installer/DnDCombatEngine-0.1.1-Setup.exe`.
+  `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`.
 - Updated the installer build script to detect Inno Setup installed under the
   current user's local programs directory.
 - Re-ran the test and lint gates after the build script update.
@@ -280,7 +278,7 @@ dnd-combat-engine init-user-data
 - Added WiX Toolset MSI authoring for installing the complete PyInstaller
   application folder under Program Files.
 - Added an MSI build script that harvests the full packaged runtime, Qt support
-  files, bundled seed data, and executable into `DnDCombatEngine-0.1.1-x64.msi`.
+  files, bundled seed data, and executable into `DnDCombatEngine-0.1.2-x64.msi`.
 - Added GitHub Actions packaging support for building and uploading the MSI
   artifact.
 - Documented the local MSI build workflow and expanded packaging tests.
@@ -364,7 +362,7 @@ dnd-combat-engine init-user-data
 - Added concentration-backed party frame buff icons for Beacon of Hope and Bless.
 - Improved D&D Beyond PDF imports by reading literal PDF values, sending URL
   imports through the editable review dialog, and preserving parsed inventory.
-- Bumped the package, installer, and MSI version to `0.1.1`.
+- Bumped the package, installer, and MSI version to `0.1.2`.
 
 ### Add MMORPG-style inventory currency and action controls
 
@@ -397,3 +395,22 @@ dnd-combat-engine init-user-data
 - Add combat-workspace feedback that behaves like an MMORPG controller: select a
   target, press an action bar key, resolve the effect, then update frames, logs,
   spell slots, conditions, and inventory immediately.
+
+### Begin MMORPG Campaign Controller
+
+- Added campaign-persisted activity entries for imports, rests, inventory use,
+  money changes, and action bar resolutions.
+- Added an Activity panel to the GUI so campaign history is visible in the main
+  controller workspace.
+- Improved active target frames with HP-aware labels and selected-target
+  highlighting for party members and encounter monsters.
+- Added encounter-specific monster HP tracking so selected monster targets can
+  take persistent damage from action bar attacks.
+- Added active-target healing and utility spell routing for Cure Wounds, Lesser
+  Restoration, Light, and Revivify.
+- Added visible party-frame condition summaries and an inventory Money Log popup
+  for session currency changes.
+- Fixed imported spellcasters losing spell slots by inferring spell slots and
+  hit dice from imported caster class and level, then preserving those resources
+  when saving the character.
+- Bumped the package, installer, and MSI version to `0.1.2`.
