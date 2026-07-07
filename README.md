@@ -1,422 +1,94 @@
 # DnDCombatEngine
 
-A professional, open-source Dungeons & Dragons combat engine built in layers:
+DnDCombatEngine is a Windows desktop campaign controller for Dungeons & Dragons
+combat. It is being built for the table: import characters, choose a party
+leader, select targets, press action-bar buttons, track resources, and keep the
+combat log moving.
 
-```text
-GUI
-Controllers
-Rules Engine
-Combat Engine
-Models
-Persistence
-Utilities
-```
+The current release is an early open-source build. It already includes a PySide6
+desktop interface, character import workflows, campaign and encounter panels,
+spell slots, inventory, party frames, targeting, and a World of Warcraft-style
+action bar.
 
-Milestone 1 establishes the foundation: domain models, a dice parser and roller, JSON
-persistence, seed data, and a test suite.
+## Get Started
 
-## Rules Reference
+1. Download or build the Windows installer.
+2. Install DnDCombatEngine.
+3. Launch `DnDCombatEngine` from the Start Menu or desktop shortcut.
+4. Open the starter campaign, or create a new campaign from the Campaign menu.
+5. Add party members by importing a character sheet PDF or URL.
+6. Set a party leader from the Campaign menu.
+7. Open the Spellbook, Abilities, or Inventory windows from the Character menu.
+8. Put actions on the action bar and run combat from the main workspace.
 
-The project can use the local D&D 5e SRD Markdown reference as an open licensed
-rules baseline for future design work. See [SRD Design Guide](docs/srd-design-guide.md)
-for attribution requirements and the planned rules-to-engine architecture.
+For local build and packaging notes, see [DEVNOTES.md](DEVNOTES.md).
 
-## Development
+## Main Controls
 
-```bash
-python -m pip install -e ".[dev]"
-python -m pytest
-python -m ruff check .
-```
+- `K` toggles the party leader's Spellbook.
+- `N` toggles the party leader's Abilities window.
+- `B` toggles the party leader's Inventory.
+- `1` through `=` activate action-bar slots.
+- Shift-click an action-bar button to roll a d20 instead of resolving the action.
+- Shift-right-click an action-bar button to remove the assigned action.
 
-Run the sample attack:
+Menu items show their keyboard shortcuts where available.
 
-```bash
-python examples/quick_attack.py
-```
+## Running Combat
 
-Or use the CLI:
+The intended combat loop is:
 
-```bash
-dnd-combat-engine roll 4d6dl1
-dnd-combat-engine quick-attack
-```
+1. Select or confirm the active campaign.
+2. Add or import party members.
+3. Set the party leader.
+4. Select a target in the Target panel.
+5. Press an action-bar hotkey or click an action.
+6. Review the combat result in the Combat Workspace.
+7. Watch HP, spell slots, concentration, inventory, and the activity log update.
 
-Install and launch the GUI:
+See [DM Workflow](docs/dm-workflow.md) and
+[Action Bar](docs/action-bar.md) for a fuller walkthrough.
 
-```bash
-python -m pip install -e ".[gui]"
-dnd-combat-engine gui
-```
+## Character Sheets
 
-Initialize writable user data for an installed app profile:
+Character sheets can be imported from:
 
-```bash
-dnd-combat-engine init-user-data
-```
+- Local PDF files.
+- Public character sheet URLs, including D&D Beyond sheet PDF links.
 
-Build a Windows desktop executable:
+The import confirmation window lets you review and edit fields before saving.
+Existing party members can also be updated from their party-frame right-click menu.
 
-```powershell
-.\scripts\build_windows.ps1
-```
+See [Import Character Sheet](docs/import-character-sheet.md).
 
-Build a Windows installer after the executable:
+## Current Features
 
-```powershell
-.\scripts\build_installer.ps1
-```
-
-Build a Windows MSI installer after the executable:
-
-```powershell
-.\scripts\build_msi.ps1
-```
-
-## Architecture
-
-The project keeps combat behavior event-driven. Characters and weapons are data-rich
-domain objects, while services and future feature plugins decide what happens during
-an attack, spell, or condition update.
-
-## Current Foundation
-
-- Domain models for campaigns, characters, hit points, damage, equipment, inventory,
-  conditions, resources, spells, monsters, and encounters.
-- Services for campaigns, characters, combat, dice, initiative, inventory, monsters,
-  spells, encounters, and JSON persistence.
-- Controllers for UI-facing campaign, character, combat, compendium, dice, encounter,
-  and inventory workflows.
-- Application wiring through `dnd_combat_engine.app.create_app`.
-- Combat log models, service, and controller for UI display.
-- PySide6 GUI shell with dockable character sheet, combat log, and dice tray.
-- Campaign workspace support with campaign persistence, controller workflows, seed
-  campaign data, CLI inspection, GUI campaign editing, and encounter editing docks.
-- PDF character sheet import support for creating a character draft, saving it as
-  JSON, and linking the imported character to a campaign.
-- URL character sheet import support for public PDF, HTML, and text sheet links,
-  using the same save-and-link campaign workflow.
-- Event-driven combat feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
-  Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
-- Seed JSON under `data/` for starter equipment, a campaign, a character, a monster,
-  spells, and an encounter.
-
-## Release Gate
-
-Milestone code should pass:
-
-```bash
-python -m ruff check .
-python -m pytest
-```
-
-## Windows Installer
-
-The Windows packaging path uses PyInstaller for the desktop executable. Inno Setup
-builds a guided `.exe` installer, and WiX Toolset builds a Windows Installer
-`.msi` package.
-
-```powershell
-python -m pip install -e ".[dev,gui,installer]"
-python -m ruff check .
-python -m pytest
-.\scripts\build_windows.ps1 -SkipInstall
-.\scripts\build_installer.ps1 -SkipExecutableBuild
-.\scripts\build_msi.ps1 -SkipExecutableBuild
-```
-
-Expected outputs:
-
-- `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.2-x64.msi`
-
-The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
-
-```powershell
-winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-source-agreements
-```
-
-Latest verified local build:
-
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,136,114 bytes
-- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe` - 48,723,904 bytes
-- `dist/msi/DnDCombatEngine-0.1.2-x64.msi` - 57,867,505 bytes
-- Verified with `python -m ruff check src tests`,
-  `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
-  an Inno Setup rebuild, and a WiX MSI rebuild.
-
-Latest verified local install smoke test:
-
-- The installer smoke-test workflow has previously been verified with a silent
-  install into a controlled test directory, installed app launch, startup
-  stability check, and user data initialization under
-  `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `0.1.2` executable, Inno installer, and MSI have been generated;
-  an end-to-end `0.1.2` install smoke test is still pending.
-
-The installed application initializes writable user data automatically from the
-bundled seed JSON. The same initialization can be run manually with:
-
-```bash
-dnd-combat-engine init-user-data
-```
-
-## Release Checklist
-
-- Run `python -m ruff check .`.
-- Run `python -m pytest`.
-- Build Python distributions with `python -m build`.
-- Build the Windows executable with `.\scripts\build_windows.ps1 -SkipInstall`.
-- Build the Windows installer with `.\scripts\build_installer.ps1 -SkipExecutableBuild`.
-- Build the Windows MSI with `.\scripts\build_msi.ps1 -SkipExecutableBuild`.
-- Confirm the installer launches `DnDCombatEngine.exe` and creates uninstall entries.
-- Upload the wheel, source distribution, executable folder artifact, and installer
-  artifact from the `Package` GitHub Actions workflow.
-
-## Patch Notes
-
-### Milestone 1 foundation
-
-- Added project configuration, development tooling, package metadata, and GitHub
-  test workflow.
-- Added core domain models for abilities, hit points, damage profiles, weapons,
-  armor, characters, inventory, resources, conditions, spells, monsters, and
+- Campaign creation, closing, party membership, party leader selection, rests,
+  and campaign activity history.
+- Party frames with HP, temporary HP, initiative, position, conditions, and
+  concentration buff icons.
+- Target selection for party members and encounter monsters.
+- Action bar with spell, ability, attack, save, and quick-roll workflows.
+- Spell slot tracking and rest recovery.
+- Inventory window with containers, item icons, quantities, currency, money log,
+  and consumable use.
+- PDF and URL character sheet import with editable confirmation.
+- JSON-backed data for campaigns, characters, monsters, spells, actions, and
   encounters.
-- Added the dice engine with parser support for common dice notation, keep/drop
-  modifiers, exploding dice, rerolls, minimums, maximums, and averages.
-- Added JSON persistence, starter seed data, examples, CLI entry points, and the
-  first unit test suite.
+- Windows EXE, guided installer, and MSI packaging.
 
-### Milestone 2 layered combat and controllers
+## Documentation
 
-- Added event-driven combat resolution, attack requests/results, initiative
-  tracking, and combat log models.
-- Added rules-engine feature plugins for Bless, Sneak Attack, Hunter's Mark, Hex,
-  Rage, Divine Smite, Sharpshooter, and Great Weapon Master.
-- Added service-layer workflows for characters, combat, dice, initiative,
-  inventory, monsters, spells, encounters, combat logs, and persistence.
-- Added UI-facing controllers and compact view models for combat, compendium,
-  dice, encounters, inventory, characters, logs, and summaries.
+- [User Guide](docs/user-guide.md)
+- [DM Workflow](docs/dm-workflow.md)
+- [Action Bar](docs/action-bar.md)
+- [Import Character Sheet](docs/import-character-sheet.md)
+- [Release Test Plan](docs/release-test-plan.md)
+- [SRD Design Guide](docs/srd-design-guide.md)
+- [Developer Notes and Patch Notes](DEVNOTES.md)
 
-### Milestone 3 GUI foundation
+## Project Status
 
-- Added optional PySide6 support, GUI dependency handling, dark theme styling, and
-  GUI session persistence.
-- Added dockable GUI shell with character sheet, combat log, dice tray, encounter,
-  initiative, attack, menus, and status bar.
-- Added pure GUI panel/table helpers plus GUI action metadata, preferences, and
-  controller-backed command dispatch.
-- Added CLI support for launching the GUI and tests that keep GUI logic verifiable
-  without requiring PySide6 at test time.
-
-### Begin milestone 4 campaign management
-
-- Added campaign domain models, status lifecycle, and JSON serialization.
-- Added campaign persistence, service operations, controller workflows, app wiring,
-  and summary view models.
-- Added starter campaign seed data and tests across models, services, controllers,
-  persistence, app wiring, and seed loading.
-
-### Expand milestone 4 campaign workspace
-
-- Added campaign GUI panel rows, a dockable campaign widget, and campaign menu
-  actions.
-- Added GUI campaign commands for loading and activating the starter campaign.
-- Added CLI campaign commands for listing, showing, and activating campaigns.
-- Added a second seed character and encounter, then linked both into the starter
-  campaign.
-
-### Begin milestone 5 packaging and installer foundation
-
-- Added install-safe runtime data path helpers with bundled seed data and writable
-  user data initialization.
-- Added `python -m dnd_combat_engine`, a GUI executable entry point, and CLI polish
-  for data initialization and missing GUI dependencies.
-- Added package-data configuration so JSON seed data is included in installed
-  wheels and executable builds.
-- Added a PyInstaller spec and Windows build script for producing
-  `dist/DnDCombatEngine/DnDCombatEngine.exe`.
-
-### Complete milestone 5 installer and release automation
-
-- Added an Inno Setup installer script that installs the executable, registers
-  uninstall support, and can create Start Menu and desktop shortcuts.
-- Added a Windows installer build script that compiles
-  `DnDCombatEngine-0.1.2-Setup.exe` from the PyInstaller output.
-- Added a GitHub Actions packaging workflow for linting, testing, building Python
-  distributions, producing the Windows executable, and uploading installer
-  artifacts.
-- Added release checklist documentation for local verification and GitHub Actions
-  artifact publishing.
-
-### Begin milestone 6 richer campaign and encounter editing
-
-- Added controller-backed GUI editor helpers for campaign references and encounter
-  participants.
-- Added campaign and encounter editor docks with inputs, action buttons, and log
-  output.
-- Added campaign reference and encounter participant panel rows for richer desktop
-  display.
-- Expanded tests across GUI editor helpers, panel rows, and controller edit methods.
-
-### Verify Windows executable and installer build
-
-- Ran the full PyInstaller build and produced
-  `dist/DnDCombatEngine/DnDCombatEngine.exe`.
-- Installed Inno Setup locally with `winget` and compiled
-  `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`.
-- Updated the installer build script to detect Inno Setup installed under the
-  current user's local programs directory.
-- Re-ran the test and lint gates after the build script update.
-
-### Verify installed app launch
-
-- Ran the generated Inno installer end-to-end into a controlled test install
-  directory.
-- Launched the installed executable and confirmed it remained running after
-  startup.
-- Verified first-run user data initialization under the local application data
-  directory.
-
-### Add MSI installer packaging
-
-- Added WiX Toolset MSI authoring for installing the complete PyInstaller
-  application folder under Program Files.
-- Added an MSI build script that harvests the full packaged runtime, Qt support
-  files, bundled seed data, and executable into `DnDCombatEngine-0.1.2-x64.msi`.
-- Added GitHub Actions packaging support for building and uploading the MSI
-  artifact.
-- Documented the local MSI build workflow and expanded packaging tests.
-
-### Add PDF character sheet import
-
-- Added a PDF character import service for text and fillable PDF sheets using
-  extracted sheet fields and text.
-- Added a reviewable character import draft model and controller workflow that
-  saves the imported character and links it to a selected campaign.
-- Added a GUI campaign editor action for importing a character PDF into the
-  active campaign.
-- Added parser, controller, app wiring, and GUI helper tests for the import flow.
-
-### Add URL character sheet import
-
-- Added public URL import for PDF, HTML, and text character sheets through the
-  character import service.
-- Added controller and GUI helper workflows that save URL-imported characters and
-  link them to a campaign.
-- Added Campaign menu entries under `Upload Character Sheet` with `PDF` and
-  `URL` submenu options.
-- Added URL parser, controller, GUI helper, and menu tests.
-
-### Fix character sheet import actions
-
-- Connected Campaign menu import actions to working PDF file and URL prompts.
-- Updated campaign editor import buttons to prompt for a PDF or URL when the
-  matching input field is blank.
-- Added regression tests for menu-triggered imports and dock import button
-  prompt behavior.
-
-### Add action bar UI foundation
-
-- Removed character sheet upload controls from the Campaign Editor dock so import
-  remains available from the Campaign menu only.
-- Added Spellbook and Abilities dock windows for placing spells and abilities on
-  a shared quick action bar.
-- Added a centered bottom action bar with mouse-click activation and keyboard
-  hotkeys for slots 1-0, -, and =.
-- Added action bar rank update behavior so highest-rank buttons update when a new
-  rank is learned while downranked or inactive-spec buttons stay unchanged.
-
-### Refresh combat workspace installer build
-
-- Updated the central GUI workspace label to display `Combat Workspace`.
-- Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
-  refreshed GUI text.
-- Verified linting, tests, and packaged executable startup after the installer
-  refresh.
-
-### Add action bar combat workspace activation
-
-- Changed the central GUI workspace into a read-only combat log for action bar
-  roll output.
-- Added Shift+click action bar d20 rolls into the combat workspace.
-- Added normal-click action bar spell and ability activation, including spell
-  damage dice rolls, slot spending, and remaining slot reporting.
-- Rebuilt the PyInstaller executable, Inno Setup installer, and WiX MSI with the
-  refreshed action bar behavior.
-
-### Add keyboard shortcuts and streamline campaign UI
-
-- Added default menu shortcuts for Spellbook (`K`), Inventory (`B`), and
-  Abilities (`N`), while preserving action bar hotkeys `1` through `=`.
-- Added Settings and Help menus, including key-bind reference and color scheme
-  preference windows.
-- Temporarily hid the Character Sheet, Dice Tray, and Encounter Editor panels
-  from the startup layout.
-- Changed the Campaign Editor party-member field to a dropdown of current
-  campaign characters for removal.
-- Updated party member right-click sheet replacement to offer PDF and URL
-  choices while overwriting the selected character instead of adding a new one.
-
-### Add utility spell workflows and inventory icons
-
-- Added Character menu inventory access with RPG-style container sections,
-  item SVG icons, quantity overlays, and right-click consumable use.
-- Added spell-specific action bar workflows for Bless, Cure Wounds, Lesser
-  Restoration, Light, Revivify, Thaumaturgy, and Beacon of Hope.
-- Added concentration-backed party frame buff icons for Beacon of Hope and Bless.
-- Improved D&D Beyond PDF imports by reading literal PDF values, sending URL
-  imports through the editable review dialog, and preserving parsed inventory.
-- Bumped the package, installer, and MSI version to `0.1.2`.
-
-### Add MMORPG-style inventory currency and action controls
-
-- Added normalized PP/GP/SP/CP character currency with editable inventory purse
-  boxes and a Deposit/Withdraw ledger input.
-- Updated inventory consumable use so right-clicked stacks refresh immediately
-  and item tooltips show sell price when purchase price data is available.
-- Added saving throw buttons beside the action bar, graphical spell slot
-  tracking, working Dice menu d20 rolls, and weapon/unarmed attack options in
-  the spellbook action source.
-- Added Guiding Bolt spell data and refreshed the Ravenisis seed sheet with
-  cleric saving throw proficiencies and prepared spell metadata.
-
-### Refine import review and popup controls
-
-- Changed inventory currency controls to a compact 2x2 PP/GP/SP/CP layout.
-- Added toggle behavior for shortcut-opened popups so Spellbook, Abilities,
-  Inventory, Key Binds, and Preferences close when their command is used again.
-- Tightened character sheet skill parsing to recognize valid D&D skill names and
-  ignore adjacent D&D Beyond footer/status text.
-- Added import support for sheet currency totals such as `2,989GP`, carrying the
-  parsed purse through the confirmation popup into the saved character.
-
-### Next milestone: MMORPG Campaign Controller
-
-- Build active target frames for party members, monsters, and encounter
-  participants.
-- Add target-aware action resolution for attacks, spells, healing, saves,
-  buffs, conditions, concentration, and resource costs.
-- Add combat-workspace feedback that behaves like an MMORPG controller: select a
-  target, press an action bar key, resolve the effect, then update frames, logs,
-  spell slots, conditions, and inventory immediately.
-
-### Begin MMORPG Campaign Controller
-
-- Added campaign-persisted activity entries for imports, rests, inventory use,
-  money changes, and action bar resolutions.
-- Added an Activity panel to the GUI so campaign history is visible in the main
-  controller workspace.
-- Improved active target frames with HP-aware labels and selected-target
-  highlighting for party members and encounter monsters.
-- Added encounter-specific monster HP tracking so selected monster targets can
-  take persistent damage from action bar attacks.
-- Added active-target healing and utility spell routing for Cure Wounds, Lesser
-  Restoration, Light, and Revivify.
-- Added visible party-frame condition summaries and an inventory Money Log popup
-  for session currency changes.
-- Fixed imported spellcasters losing spell slots by inferring spell slots and
-  hit dice from imported caster class and level, then preserving those resources
-  when saving the character.
-- Bumped the package, installer, and MSI version to `0.1.2`.
+DnDCombatEngine is still pre-1.0. The next major milestone is the MMORPG Campaign
+Controller: a dependable loop for actor selection, target selection, effect
+resolution, resources, concentration, combat log updates, and persistence.
