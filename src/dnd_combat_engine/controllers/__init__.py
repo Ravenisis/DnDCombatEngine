@@ -6,7 +6,11 @@ from dnd_combat_engine.controllers.character_import_controller import (
     CharacterImportController,
     CharacterImportResult,
 )
-from dnd_combat_engine.controllers.combat_controller import CombatController
+from dnd_combat_engine.controllers.combat_controller import (
+    CombatActionOutcome,
+    CombatActionRequest,
+    CombatController,
+)
 from dnd_combat_engine.controllers.combat_log_controller import CombatLogController
 from dnd_combat_engine.controllers.compendium_controller import CompendiumController
 from dnd_combat_engine.controllers.dice_controller import DiceController
@@ -33,6 +37,8 @@ __all__ = [
     "CharacterImportResult",
     "CharacterSummary",
     "CombatController",
+    "CombatActionOutcome",
+    "CombatActionRequest",
     "CombatLogController",
     "CompendiumController",
     "ControllerError",

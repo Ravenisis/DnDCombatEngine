@@ -1,4 +1,4 @@
-from dnd_combat_engine.controllers import CombatController
+from dnd_combat_engine.controllers import CombatActionRequest, CombatController
 from dnd_combat_engine.models import (
     ActionCost,
     Character,
@@ -86,3 +86,41 @@ def test_combat_controller_resolves_unified_combat_action() -> None:
         "Ravenisis resolves Guiding Bolt on Goblin [damage]. "
         "Total 17. Spent spell_slot_1. Dice 4d6. Attack roll hit AC 15.",
     )
+
+
+def test_combat_controller_executes_action_loop_with_log_metadata() -> None:
+    controller = CombatController(CombatService())
+    target = TargetReference("goblin", "Goblin", TargetKind.MONSTER, "goblin")
+    action = EffectDefinition(
+        effect_id="guiding-bolt-damage",
+        name="Guiding Bolt",
+        effect_kind=EffectKind.DAMAGE,
+        target_profile=TargetProfile.ONE_CREATURE,
+        action_cost=ActionCost.ACTION,
+        resource_cost="spell_slot_1",
+        dice="4d6",
+    )
+    resources = {"spell_slot_1": ResourcePool("spell_slot_1", current=1, maximum=1)}
+
+    outcome = controller.execute_action(
+        CombatActionRequest(
+            actor_id="ravenisis",
+            actor_name="Ravenisis",
+            action=action,
+            targets=(target,),
+            total=18,
+            detail="Attack roll hit.",
+            resources=resources,
+        )
+    )
+
+    assert outcome.message.startswith("Ravenisis resolves Guiding Bolt on Goblin")
+    assert resources["spell_slot_1"].current == 0
+    assert len(outcome.log_entries) == 1
+    assert outcome.log_entries[0].metadata == {
+        "actor_id": "ravenisis",
+        "action_id": "guiding-bolt-damage",
+        "target_ids": ["goblin"],
+        "resource_spent": "spell_slot_1",
+        "action_spent": False,
+    }

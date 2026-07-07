@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
+from dnd_combat_engine.controllers import CombatActionRequest
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.actions import action_specs_by_menu, default_action_specs
 from dnd_combat_engine.gui.import_dialogs import (
@@ -58,6 +59,7 @@ from dnd_combat_engine.models import (
     TargetReference,
 )
 from dnd_combat_engine.models.damage import DamageProfile
+from dnd_combat_engine.rules import EffectPlan, EffectResolver
 
 
 @dataclass(slots=True)
@@ -1243,22 +1245,22 @@ def _activate_spell_button(
         special_choice = _choose_thaumaturgy_effect(qt, window)
         if special_choice is None:
             return f"{character.name} holds {spell.name}; no effect selected."
+    runtime_effect = replace(effect, resource_cost=resource_name)
+    _resolve_gui_combat_action(
+        app,
+        character,
+        runtime_effect,
+        targets=_target_references_for_character_ids(app, selected_targets),
+        state=state,
+        concentration_effect_id=spell.spell_id if runtime_effect.starts_concentration else None,
+        concentration_target_ids=selected_targets,
+        concentration_name=spell.name,
+    )
     if spell_slot_resource is not None:
-        spell_slot_resource.expend(1)
-        app.characters.save(character)
         slot_message = (
             f"Used level {slot_level} spell slot; "
             f"{spell_slot_resource.current}/{spell_slot_resource.maximum} remain."
         )
-    if effect.starts_concentration and state is not None:
-        _set_concentration(
-            state,
-            character.character_id,
-            spell.spell_id,
-            selected_targets,
-            spell.name,
-        )
-        _persist_campaign_concentration(app, state)
     if effect.effect_id == "beacon-of-hope-buff":
         target_text = ", ".join(_character_names(app, selected_targets))
         return (
@@ -1420,6 +1422,76 @@ def _spell_resource_name(
     if effect.resource_cost.startswith("spell_slot_"):
         return f"spell_slot_{slot_level or spell.level}"
     return effect.resource_cost
+
+
+def _resolve_gui_combat_action(
+    app: DnDCombatEngineApp,
+    character: Character,
+    effect: EffectDefinition,
+    *,
+    targets: tuple[TargetReference, ...] = (),
+    total: int | None = None,
+    detail: str = "",
+    state: GuiCampaignState | None = None,
+    concentration_effect_id: str | None = None,
+    concentration_target_ids: tuple[str, ...] = (),
+    concentration_name: str | None = None,
+):
+    """Resolve one GUI action through the shared controller loop and persist side effects."""
+    request = CombatActionRequest(
+        actor_id=character.character_id,
+        actor_name=character.name,
+        action=effect,
+        targets=targets,
+        total=total,
+        detail=detail,
+        resources=character.resources,
+    )
+    combat = getattr(app, "combat", None)
+    if combat is not None and hasattr(combat, "execute_action"):
+        resolution = combat.execute_action(request).resolution
+    else:
+        resolution = EffectResolver().resolve(
+            EffectPlan(
+                actor_name=request.actor_name,
+                definition=request.action,
+                targets=request.targets,
+                total=request.total,
+                detail=request.detail,
+            ),
+            resources=request.resources,
+        )
+    if resolution.resource_spent is not None:
+        app.characters.save(character)
+    if concentration_effect_id is not None and state is not None:
+        _set_concentration(
+            state,
+            character.character_id,
+            concentration_effect_id,
+            concentration_target_ids,
+            concentration_name,
+        )
+        _persist_campaign_concentration(app, state)
+    return resolution
+
+
+def _target_references_for_character_ids(
+    app: DnDCombatEngineApp,
+    character_ids: tuple[str, ...],
+) -> tuple[TargetReference, ...]:
+    return tuple(_character_target_reference_with_name(app, item) for item in character_ids)
+
+
+def _character_target_reference_with_name(
+    app: DnDCombatEngineApp,
+    character_id: str,
+) -> TargetReference:
+    return TargetReference(
+        target_id=character_id,
+        name=_character_name(app, character_id),
+        kind=TargetKind.CHARACTER,
+        source_id=character_id,
+    )
 
 
 def _choose_spell_effect_targets(
@@ -1879,6 +1951,15 @@ def _activate_ability_button(
         target = _active_target_for_effect(app, state)
         if target is not None:
             applied = _apply_damage_to_target(app, target, damage)
+            _resolve_gui_combat_action(
+                app,
+                character,
+                _action_effect_definition("unarmed-attack", "Unarmed Strike"),
+                targets=(target,),
+                total=damage,
+                detail=f"Damage {damage} bludgeoning. {applied}",
+                state=state,
+            )
             return EffectResolution(
                 source_name=character.name,
                 effect_name="Unarmed Strike",
@@ -1898,6 +1979,15 @@ def _activate_ability_button(
     target = _active_target_for_effect(app, state)
     if target is not None:
         applied = _apply_damage_to_target(app, target, damage_total)
+        _resolve_gui_combat_action(
+            app,
+            character,
+            _action_effect_definition(button.action_id, button.name),
+            targets=(target,),
+            total=damage_total,
+            detail=f"{damage_message} {applied}",
+            state=state,
+        )
         return EffectResolution(
             source_name=character.name,
             effect_name=f"{button.name} with {weapon.name}",
@@ -1909,6 +1999,34 @@ def _activate_ability_button(
     return (
         f"{character.name} uses {button.name} with {weapon.name} "
         f"rank {button.rank}. {damage_message}"
+    )
+
+
+def _action_effect_definition(action_id: str, name: str) -> EffectDefinition:
+    return EffectDefinition.from_dict(
+        {
+            "effect_id": _action_identifier(action_id) or "action",
+            "name": name,
+            "effect_kind": "attack",
+            "target_profile": "one_creature",
+            "action_cost": "action",
+            "range_text": "",
+            "duration": {
+                "kind": "instantaneous",
+                "amount": None,
+                "text": "Instantaneous",
+            },
+            "check": {
+                "kind": "attack_roll",
+                "ability": "strength",
+                "dc": None,
+                "bonus": 0,
+                "proficiency_applies": True,
+            },
+            "resource_cost": None,
+            "dice": None,
+            "rule_source": None,
+        }
     )
 
 
