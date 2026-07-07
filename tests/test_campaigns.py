@@ -1,6 +1,13 @@
 import pytest
 
-from dnd_combat_engine.models import Campaign, CampaignActivityEntry, CampaignStatus
+from dnd_combat_engine.models import (
+    Campaign,
+    CampaignActivityEntry,
+    CampaignStatus,
+    ConcentrationState,
+    TargetKind,
+    TargetReference,
+)
 
 
 def test_campaign_round_trips_to_plain_data() -> None:
@@ -11,6 +18,14 @@ def test_campaign_round_trips_to_plain_data() -> None:
         character_ids=("vale",),
         encounter_ids=("roadside_ambush",),
         notes="Opening road encounter.",
+        active_concentration=ConcentrationState(
+            "ravenisis",
+            "bless",
+            "Bless",
+            targets=(
+                TargetReference("bran", "Bran", TargetKind.CHARACTER, "bran"),
+            ),
+        ),
     )
 
     restored = Campaign.from_dict(campaign.to_dict())

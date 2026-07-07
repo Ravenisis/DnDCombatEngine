@@ -7,7 +7,9 @@ from enum import StrEnum
 from typing import Self
 
 from dnd_combat_engine.models.damage import DamageProfile
+from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.rules import RuleSource
+from dnd_combat_engine.models.schema import CURRENT_SCHEMA_VERSION, SCHEMA_VERSION_FIELD
 
 
 class SpellSchool(StrEnum):
@@ -39,6 +41,7 @@ class Spell:
     ritual: bool = False
     damage: DamageProfile | None = None
     saving_throw: str | None = None
+    effects: tuple[EffectDefinition, ...] = field(default_factory=tuple)
     description: str = ""
     rule_source: RuleSource | None = None
 
@@ -65,6 +68,7 @@ class Spell:
     def to_dict(self) -> dict[str, object]:
         """Serialize the spell to plain JSON-compatible data."""
         return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
             "spell_id": self.spell_id,
             "name": self.name,
             "level": self.level,
@@ -77,6 +81,7 @@ class Spell:
             "ritual": self.ritual,
             "damage": self.damage.to_dict() if self.damage else None,
             "saving_throw": self.saving_throw,
+            "effects": [effect.to_dict() for effect in self.effects],
             "description": self.description,
             "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
@@ -99,6 +104,11 @@ class Spell:
             damage=DamageProfile.from_dict(damage_data) if isinstance(damage_data, list) else None,
             saving_throw=(
                 str(data["saving_throw"]) if data.get("saving_throw") is not None else None
+            ),
+            effects=tuple(
+                EffectDefinition.from_dict(effect)
+                for effect in data.get("effects", [])
+                if isinstance(effect, dict)
             ),
             description=str(data.get("description", "")),
             rule_source=_rule_source_from_data(data.get("rule_source")),

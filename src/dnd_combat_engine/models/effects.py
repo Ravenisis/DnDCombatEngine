@@ -189,6 +189,7 @@ class EffectDefinition:
     effect_kind: EffectKind
     target_profile: TargetProfile
     action_cost: ActionCost = ActionCost.ACTION
+    range_text: str = ""
     duration: DurationProfile = field(
         default_factory=lambda: DurationProfile(DurationKind.INSTANTANEOUS)
     )
@@ -224,6 +225,7 @@ class EffectDefinition:
             "effect_kind": self.effect_kind.value,
             "target_profile": self.target_profile.value,
             "action_cost": self.action_cost.value,
+            "range_text": self.range_text,
             "duration": self.duration.to_dict(),
             "check": self.check.to_dict(),
             "resource_cost": self.resource_cost,
@@ -240,6 +242,7 @@ class EffectDefinition:
             effect_kind=EffectKind(str(data["effect_kind"])),
             target_profile=TargetProfile(str(data["target_profile"])),
             action_cost=ActionCost(str(data.get("action_cost", ActionCost.ACTION.value))),
+            range_text=str(data.get("range_text", "")),
             duration=_duration_from_data(data.get("duration")),
             check=_check_from_data(data.get("check")),
             resource_cost=(

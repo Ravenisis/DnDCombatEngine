@@ -29,7 +29,7 @@ class JsonFileStore:
     def load(self, collection: str, entity_id: str) -> dict[str, Any]:
         """Load a JSON payload by collection and id."""
         path = self.root / collection / f"{entity_id}.json"
-        with path.open(encoding="utf-8") as file:
+        with path.open(encoding="utf-8-sig") as file:
             data = json.load(file)
         if not isinstance(data, dict):
             raise ValueError(f"{path} must contain a JSON object")
@@ -41,4 +41,3 @@ class JsonFileStore:
         if not directory.exists():
             return []
         return sorted(path.stem for path in directory.glob("*.json"))
-

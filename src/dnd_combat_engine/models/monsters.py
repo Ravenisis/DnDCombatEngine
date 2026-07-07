@@ -12,6 +12,7 @@ from dnd_combat_engine.models.damage import DamageType
 from dnd_combat_engine.models.equipment import Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.rules import RuleSource
+from dnd_combat_engine.models.schema import CURRENT_SCHEMA_VERSION, SCHEMA_VERSION_FIELD
 
 
 class CreatureSize(StrEnum):
@@ -81,6 +82,7 @@ class Monster:
     def to_dict(self) -> dict[str, object]:
         """Serialize the monster to plain JSON-compatible data."""
         return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
             "monster_id": self.monster_id,
             "name": self.name,
             "armor_class": self.armor_class,

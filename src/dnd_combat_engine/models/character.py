@@ -12,6 +12,7 @@ from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
 from dnd_combat_engine.models.resources import ResourcePool
+from dnd_combat_engine.models.schema import CURRENT_SCHEMA_VERSION, SCHEMA_VERSION_FIELD
 
 
 @dataclass(slots=True)
@@ -45,6 +46,7 @@ class Character:
     def to_dict(self) -> dict[str, object]:
         """Serialize the character to plain JSON-compatible data."""
         return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
             "character_id": self.character_id,
             "name": self.name,
             "hit_points": self.hit_points.to_dict(),

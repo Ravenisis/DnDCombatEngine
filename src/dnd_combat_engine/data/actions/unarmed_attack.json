@@ -1,0 +1,23 @@
+{
+  "action_cost": "action",
+  "check": {
+    "ability": "strength",
+    "bonus": 0,
+    "dc": null,
+    "kind": "attack_roll",
+    "proficiency_applies": true
+  },
+  "dice": "1+strength_modifier",
+  "duration": {
+    "amount": null,
+    "kind": "instantaneous",
+    "text": "Instantaneous"
+  },
+  "effect_id": "unarmed_attack",
+  "effect_kind": "attack",
+  "name": "Unarmed Strike",
+  "range_text": "5 feet",
+  "resource_cost": null,
+  "rule_source": null,
+  "target_profile": "one_creature"
+}

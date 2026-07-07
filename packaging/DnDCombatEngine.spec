@@ -6,6 +6,7 @@ from pathlib import Path
 
 project_root = Path(SPECPATH).parent
 src_root = project_root / "src"
+app_icon = src_root / "dnd_combat_engine" / "data" / "app_icon.ico"
 
 a = Analysis(
     [str(src_root / "dnd_combat_engine" / "gui_app.py")],
@@ -41,6 +42,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
+    icon=str(app_icon),
     disable_windowed_traceback=False,
 )
 coll = COLLECT(

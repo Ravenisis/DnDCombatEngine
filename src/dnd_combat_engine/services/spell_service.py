@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from dnd_combat_engine.models.effects import EffectKind
 from dnd_combat_engine.models.spells import Spell
 
 
@@ -27,9 +28,18 @@ class SpellService:
     def damaging_spells(self, spells: Iterable[Spell]) -> tuple[Spell, ...]:
         """Return spells that have a damage profile sorted by name."""
         return tuple(
-            sorted((spell for spell in spells if spell.damage is not None), key=_spell_name_key)
+            sorted(
+                (spell for spell in spells if _has_damage_effect(spell)),
+                key=_spell_name_key,
+            )
         )
 
 
 def _spell_name_key(spell: Spell) -> tuple[str, str]:
     return (spell.name.lower(), spell.spell_id)
+
+
+def _has_damage_effect(spell: Spell) -> bool:
+    if spell.damage is not None:
+        return True
+    return any(effect.effect_kind == EffectKind.DAMAGE for effect in spell.effects)

@@ -1,23 +1,24 @@
 {
-  "casting_time": "1 bonus action",
-  "components": [
-    "V",
-    "S"
-  ],
-  "concentration": false,
-  "damage": [
-    {
-      "damage_type": "force",
-      "dice": "1d8"
-    }
-  ],
-  "description": "Create a spectral weapon that strikes foes.",
-  "duration": "1 minute",
-  "level": 2,
-  "name": "Spiritual Weapon",
-  "range_text": "60 feet",
-  "ritual": false,
-  "saving_throw": null,
-  "school": "evocation",
-  "spell_id": "spiritual_weapon"
+    "casting_time":  "1 bonus action",
+    "components":  [
+                       "V",
+                       "S"
+                   ],
+    "concentration":  false,
+    "damage":  [
+                   {
+                       "damage_type":  "force",
+                       "dice":  "1d8"
+                   }
+               ],
+    "description":  "Create a spectral weapon that strikes foes.",
+    "duration":  "1 minute",
+    "level":  2,
+    "name":  "Spiritual Weapon",
+    "range_text":  "60 feet",
+    "ritual":  false,
+    "saving_throw":  null,
+    "school":  "evocation",
+    "spell_id":  "spiritual_weapon",
+    "schema_version":  1
 }

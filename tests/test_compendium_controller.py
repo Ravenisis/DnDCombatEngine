@@ -4,10 +4,13 @@ from dnd_combat_engine.controllers import CompendiumController
 from dnd_combat_engine.models import (
     AbilityScores,
     DamageType,
+    EffectDefinition,
+    EffectKind,
     HitPoints,
     Monster,
     Spell,
     SpellSchool,
+    TargetProfile,
 )
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import MonsterService, PersistenceService, SpellService
@@ -55,3 +58,18 @@ def test_compendium_controller_loads_and_filters_monsters(tmp_path) -> None:
     assert controller.monsters_by_challenge(maximum=1) == (monster,)
     assert controller.monsters_resistant_to(DamageType.FIRE) == (monster,)
 
+
+def test_compendium_controller_loads_action_effects(tmp_path) -> None:
+    controller = make_controller(tmp_path)
+    action = EffectDefinition(
+        effect_id="weapon_attack",
+        name="Weapon Attack",
+        effect_kind=EffectKind.ATTACK,
+        target_profile=TargetProfile.ONE_CREATURE,
+        range_text="Weapon range",
+        dice="weapon_damage",
+    )
+    controller.persistence_service.store.save("actions", "weapon_attack", action.to_dict())
+
+    assert controller.load_action_effect("weapon_attack") == action
+    assert controller.action_effects() == (action,)

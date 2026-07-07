@@ -6,6 +6,9 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import Self
 
+from dnd_combat_engine.models.concentration import ConcentrationState
+from dnd_combat_engine.models.schema import CURRENT_SCHEMA_VERSION, SCHEMA_VERSION_FIELD
+
 
 class CampaignStatus(StrEnum):
     """Lifecycle states for a campaign."""
@@ -54,6 +57,7 @@ class Campaign:
     encounter_ids: tuple[str, ...] = field(default_factory=tuple)
     notes: str = ""
     activity_log: tuple[CampaignActivityEntry, ...] = field(default_factory=tuple)
+    active_concentration: ConcentrationState | None = None
 
     def __post_init__(self) -> None:
         """Validate campaign identity and references."""
@@ -110,9 +114,14 @@ class Campaign:
             ),
         )
 
+    def with_concentration(self, concentration: ConcentrationState | None) -> Self:
+        """Return a campaign with updated active concentration state."""
+        return replace(self, active_concentration=concentration)
+
     def to_dict(self) -> dict[str, object]:
         """Serialize the campaign to plain JSON-compatible data."""
         return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
             "campaign_id": self.campaign_id,
             "name": self.name,
             "status": self.status.value,
@@ -120,6 +129,11 @@ class Campaign:
             "encounter_ids": list(self.encounter_ids),
             "notes": self.notes,
             "activity_log": [entry.to_dict() for entry in self.activity_log],
+            "active_concentration": (
+                self.active_concentration.to_dict()
+                if self.active_concentration is not None
+                else None
+            ),
         }
 
     @classmethod
@@ -136,4 +150,13 @@ class Campaign:
                 CampaignActivityEntry.from_dict(entry)
                 for entry in data.get("activity_log", [])
             ),
+            active_concentration=_concentration_from_data(
+                data.get("active_concentration")
+            ),
         )
+
+
+def _concentration_from_data(data: object) -> ConcentrationState | None:
+    if isinstance(data, dict):
+        return ConcentrationState.from_dict(data)
+    return None

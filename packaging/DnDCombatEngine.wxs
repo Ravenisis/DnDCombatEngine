@@ -8,6 +8,8 @@
     Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="A newer version of DnDCombatEngine is already installed." />
     <MediaTemplate EmbedCab="yes" />
+    <Icon Id="AppIcon.ico" SourceFile="$(var.ProjectRoot)\src\dnd_combat_engine\data\app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
 
     <Feature Id="MainFeature" Title="DnDCombatEngine" Level="1">
       <ComponentGroupRef Id="ApplicationFiles" />
@@ -25,6 +27,7 @@
             Id="StartMenuShortcut"
             Name="DnDCombatEngine"
             Target="[INSTALLFOLDER]DnDCombatEngine.exe"
+            Icon="AppIcon.ico"
             WorkingDirectory="INSTALLFOLDER" />
           <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
           <RegistryValue

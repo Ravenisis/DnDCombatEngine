@@ -8,12 +8,16 @@ from dnd_combat_engine.models import (
     ActionBar,
     ActionBarActionKind,
     ActionBarButton,
+    Campaign,
     Character,
+    ConcentrationState,
     Condition,
     ConditionName,
     DamageComponent,
     DamageProfile,
     DamageType,
+    EffectDefinition,
+    EffectKind,
     Encounter,
     EncounterParticipant,
     HitPoints,
@@ -23,6 +27,7 @@ from dnd_combat_engine.models import (
     Spell,
     SpellSchool,
     TargetKind,
+    TargetProfile,
     TargetReference,
     Weapon,
 )
@@ -128,6 +133,20 @@ class FakeEncounterStore:
         self.saved.append(encounter)
 
 
+class FakeCampaignStore:
+    def __init__(self, campaign: Campaign) -> None:
+        self.campaign = campaign
+        self.saved = []
+
+    def load(self, campaign_id: str) -> Campaign:
+        assert campaign_id == self.campaign.campaign_id
+        return self.campaign
+
+    def save(self, campaign: Campaign) -> None:
+        self.campaign = campaign
+        self.saved.append(campaign)
+
+
 def _raise_key_error(*args):
     raise KeyError
 
@@ -186,6 +205,42 @@ def test_spell_action_rolls_damage_and_spends_spell_slot() -> None:
     assert "Used level 1 spell slot; 0/1 remain." in message
     assert character.resources["spell_slot_1"].current == 0
     assert app.characters.saved == [character]
+
+
+def test_spell_action_uses_effect_definition_for_damage_and_resource() -> None:
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_1": ResourcePool("spell_slot_1", 1, 1)},
+    )
+    spell = Spell(
+        "guiding_bolt",
+        "Guiding Bolt",
+        1,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "120 feet",
+        "Instantaneous",
+        effects=(
+            EffectDefinition(
+                effect_id="guiding-bolt-damage",
+                name="Guiding Bolt",
+                effect_kind=EffectKind.DAMAGE,
+                target_profile=TargetProfile.ONE_CREATURE,
+                resource_cost="spell_slot_1",
+                dice="4d6",
+            ),
+        ),
+    )
+    app = _app(character, spell)
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "guiding_bolt", "Guiding Bolt")
+
+    message = main_window._activate_spell_button(app, character, button)
+
+    assert "Damage 7 (4d6: rolls=(7,))." in message
+    assert "Used level 1 spell slot; 0/1 remain." in message
+    assert character.resources["spell_slot_1"].current == 0
 
 
 def test_spell_action_reports_missing_slots_before_rolling() -> None:
@@ -260,6 +315,54 @@ def test_beacon_of_hope_applies_party_buff_without_damage_message(monkeypatch) -
     assert store.saved == [caster]
 
 
+def test_concentration_spell_persists_active_campaign_state(monkeypatch) -> None:
+    caster = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={"spell_slot_1": ResourcePool("spell_slot_1", 1, 1)},
+    )
+    ally = Character("ally", "Ally", HitPoints(10, 10))
+    store = FakeCharacterStore((caster, ally))
+    campaign_store = FakeCampaignStore(
+        Campaign("starter", "Starter", character_ids=("cleric", "ally"))
+    )
+    app = SimpleNamespace(
+        characters=store,
+        compendium=FakeCompendium(
+            Spell(
+                "bless",
+                "Bless",
+                1,
+                SpellSchool.ENCHANTMENT,
+                "1 action",
+                "30 feet",
+                "Concentration, up to 1 minute",
+                concentration=True,
+            )
+        ),
+        dice=FakeDice(),
+        campaigns=campaign_store,
+    )
+    state = main_window.GuiCampaignState(
+        active_campaign_id="starter",
+        selected_character_id="cleric",
+    )
+    button = ActionBarButton(1, ActionBarActionKind.SPELL, "bless", "Bless")
+    monkeypatch.setattr(main_window, "_choose_bless_targets", lambda *args: ("cleric", "ally"))
+
+    message = main_window._activate_spell_button(app, caster, button, state=state)
+
+    assert "Cleric casts Bless on Cleric, Ally." in message
+    assert state.active_concentration is not None
+    assert state.active_concentration.effect_name == "Bless"
+    assert tuple(target.target_id for target in state.active_concentration.targets) == (
+        "cleric",
+        "ally",
+    )
+    assert campaign_store.saved[-1].active_concentration == state.active_concentration
+
+
 def test_new_concentration_spell_clears_beacon_of_hope_targets() -> None:
     caster = Character(
         "cleric",
@@ -312,6 +415,47 @@ def test_break_concentration_menu_clears_beacon_of_hope_targets(monkeypatch) -> 
     assert state.concentration_character_id is None
     assert state.concentration_spell_id is None
     assert window.status.message == "Concentration broken: Beacon of Hope."
+
+
+def test_break_concentration_persists_clear_and_activity(monkeypatch) -> None:
+    character = Character("cleric", "Cleric", HitPoints(20, 20))
+    campaign_store = FakeCampaignStore(
+        Campaign(
+            "starter",
+            "Starter",
+            character_ids=("cleric",),
+            active_concentration=ConcentrationState(
+                "cleric",
+                "beacon_of_hope",
+                "Beacon of Hope",
+                targets=(
+                    TargetReference("cleric", "Cleric", TargetKind.CHARACTER, "cleric"),
+                ),
+            ),
+        )
+    )
+    app = SimpleNamespace(
+        characters=FakeCharacters(character),
+        compendium=FakeCompendium(_beacon_spell()),
+        dice=FakeDice(),
+        campaigns=campaign_store,
+    )
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    main_window._load_campaign_concentration(app, state)
+    window = FakeWindow()
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._break_concentration_from_menu(window, None, app, state)
+
+    assert state.active_concentration is None
+    assert state.beacon_of_hope_targets == ()
+    assert campaign_store.saved[-1].active_concentration is None
+    assert campaign_store.saved[-1].activity_log[-1].message == (
+        "Concentration broken: Beacon of Hope. Removed Beacon of Hope from Cleric."
+    )
+    assert window._dnd_central.messages == [
+        "Concentration broken: Beacon of Hope. Removed Beacon of Hope from Cleric."
+    ]
 
 
 def test_cantrip_action_rolls_damage_without_spending_slots() -> None:

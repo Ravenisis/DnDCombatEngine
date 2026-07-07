@@ -45,13 +45,16 @@ from dnd_combat_engine.models import (
     ActionBarButton,
     Campaign,
     Character,
+    ConcentrationState,
     ConditionName,
+    EffectDefinition,
     EffectKind,
     EffectResolution,
     InventoryItem,
     ItemCategory,
     ParticipantKind,
     TargetKind,
+    TargetProfile,
     TargetReference,
 )
 from dnd_combat_engine.models.damage import DamageProfile
@@ -67,6 +70,7 @@ class GuiCampaignState:
     party_initiative: dict[str, int] = field(default_factory=dict)
     concentration_character_id: str | None = None
     concentration_spell_id: str | None = None
+    active_concentration: ConcentrationState | None = None
     beacon_of_hope_targets: tuple[str, ...] = field(default_factory=tuple)
     bless_targets: tuple[str, ...] = field(default_factory=tuple)
     active_target: TargetReference | None = None
@@ -80,8 +84,10 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window = qt.QtWidgets.QMainWindow()
     action_bar_session = ActionBarSession()
     campaign_state = GuiCampaignState()
+    _load_campaign_concentration(application, campaign_state)
     window._dnd_campaign_state = campaign_state  # noqa: SLF001
     window.setWindowTitle("DnDCombatEngine")
+    _set_window_icon(window, qt)
     window.resize(session.window_width, session.window_height)
     window.setStyleSheet(dark_theme_stylesheet())
     if hasattr(window, "setDockNestingEnabled"):
@@ -170,6 +176,15 @@ def run_gui(data_root: Path | str = "data") -> int:
     window = create_main_window(create_app(data_root))
     window.show()
     return int(app.exec())
+
+
+def _set_window_icon(window, qt) -> None:
+    """Set the packaged Windows icon when Qt supports it."""
+    icon_path = Path(__file__).resolve().parents[1] / "data" / "app_icon.ico"
+    icon_class = getattr(qt.QtGui, "QIcon", None)
+    if not icon_path.exists() or icon_class is None or not hasattr(window, "setWindowIcon"):
+        return
+    window.setWindowIcon(icon_class(str(icon_path)))
 
 
 def _main_workspace(window, qt, workspace):
@@ -531,6 +546,7 @@ def _open_campaign(
     state.selected_character_id = campaign.character_ids[0] if campaign.character_ids else None
     state.party_leader_character_id = state.selected_character_id
     state.active_target = None
+    _apply_concentration_to_state(state, campaign.active_concentration)
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, f"Opened {campaign.name}.")
 
@@ -1128,8 +1144,12 @@ def _break_concentration_from_menu(
         _set_status(window, "No concentration spell is active.")
         return
     spell_name = _spell_name(app, state.concentration_spell_id)
+    previous = state.active_concentration
     _clear_concentration(state)
+    message = _concentration_broken_message(app, previous, spell_name)
+    _persist_campaign_concentration(app, state, message, "concentration")
     _refresh_campaign_docks(window, qt, app, state)
+    _append_workspace(window, message)
     _set_status(window, f"Concentration broken: {spell_name}.")
 
 
@@ -1188,12 +1208,12 @@ def _activate_spell_button(
         spell = app.compendium.load_spell(button.action_id)
     except KeyError:
         return f"{button.name} is not in the spell compendium."
+    effect = _primary_spell_effect(spell)
     slot_message = "No spell slot used."
-    spell_slot_resource = None
-    slot_level = 0
-    if spell.level > 0:
-        slot_level = max(spell.level, button.rank)
-        spell_slot_resource = character.resources.get(f"spell_slot_{slot_level}")
+    slot_level = max(spell.level, button.rank) if spell.level > 0 else 0
+    resource_name = _spell_resource_name(effect, spell, slot_level)
+    spell_slot_resource = character.resources.get(resource_name) if resource_name else None
+    if resource_name is not None:
         if spell_slot_resource is None:
             return f"{character.name} cannot cast {spell.name}: no level {slot_level} slots."
         if spell_slot_resource.current < 1:
@@ -1201,22 +1221,225 @@ def _activate_spell_button(
                 f"{character.name} cannot cast {spell.name}: "
                 f"no level {slot_level} slots remaining."
             )
-    beacon_targets: tuple[str, ...] = ()
-    bless_targets: tuple[str, ...] = ()
-    special_target: str | None = None
+    selected_targets = _choose_spell_effect_targets(
+        app,
+        character,
+        spell,
+        effect,
+        state,
+        window,
+        qt,
+        slot_level,
+    )
+    if effect.requires_target and not selected_targets:
+        return f"{character.name} holds {spell.name}; no target selected."
+    special_target = selected_targets[0] if selected_targets else None
     special_choice: str | None = None
-    if spell.spell_id == "beacon_of_hope":
-        beacon_targets = _choose_beacon_targets(qt, window, app, state, character)
-        if not beacon_targets:
-            return f"{character.name} holds Beacon of Hope; no targets selected."
-    elif spell.spell_id == "bless":
-        bless_targets = _choose_bless_targets(qt, window, app, state, character, slot_level)
-        if not bless_targets:
-            return f"{character.name} holds Bless; no targets selected."
-    elif spell.spell_id in {"cure_wounds", "lesser_restoration", "light", "revivify"}:
-        special_target = _active_character_target_id(app, state)
-        if special_target is None:
-            special_target = _choose_single_party_target(
+    if effect.effect_id == "lesser-restoration-condition":
+        special_choice = _choose_lesser_restoration_effect(qt, window)
+        if special_choice is None:
+            return f"{character.name} holds Lesser Restoration; no effect selected."
+    elif effect.target_profile == TargetProfile.SPECIAL:
+        special_choice = _choose_thaumaturgy_effect(qt, window)
+        if special_choice is None:
+            return f"{character.name} holds {spell.name}; no effect selected."
+    if spell_slot_resource is not None:
+        spell_slot_resource.expend(1)
+        app.characters.save(character)
+        slot_message = (
+            f"Used level {slot_level} spell slot; "
+            f"{spell_slot_resource.current}/{spell_slot_resource.maximum} remain."
+        )
+    if effect.starts_concentration and state is not None:
+        _set_concentration(
+            state,
+            character.character_id,
+            spell.spell_id,
+            selected_targets,
+            spell.name,
+        )
+        _persist_campaign_concentration(app, state)
+    if effect.effect_id == "beacon-of-hope-buff":
+        target_text = ", ".join(_character_names(app, selected_targets))
+        return (
+            f"{character.name} casts {spell.name} on {target_text}. "
+            f"Hope and Vitality applied while concentration holds. {slot_message}"
+        )
+    if effect.effect_id == "bless-buff":
+        target_text = ", ".join(_character_names(app, selected_targets))
+        return (
+            f"{character.name} casts {spell.name} on {target_text}. "
+            f"Targets add {effect.dice or '1d4'} to attack rolls and saving throws "
+            f"while concentration holds. {slot_message}"
+        )
+    if effect.effect_id == "cure-wounds-healing" and special_target is not None:
+        return _apply_cure_wounds(app, character, special_target, slot_level, slot_message)
+    if effect.effect_id == "lesser-restoration-condition" and special_target is not None:
+        return _apply_lesser_restoration(
+            app,
+            character,
+            special_target,
+            special_choice or "",
+            slot_message,
+        )
+    if effect.effect_id == "light-utility" and special_target is not None:
+        target_name = _character_name(app, special_target)
+        return (
+            f"{character.name} casts {spell.name} for {target_name}. "
+            "A touched object sheds bright light in a 20-foot radius and dim light for "
+            f"another 20 feet for 1 hour. {slot_message}"
+        )
+    if effect.effect_id == "revivify-healing" and special_target is not None:
+        return _apply_revivify(app, character, special_target, slot_message)
+    if effect.effect_id == "thaumaturgy-utility" and special_choice is not None:
+        return (
+            f"{character.name} casts {spell.name}. {special_choice} "
+            f"The divine sign lingers for {effect.duration.text or spell.duration}. {slot_message}"
+        )
+    damage_message, damage_total = _roll_spell_effect_damage(app, spell.damage, effect)
+    target = _active_target_for_effect(app, state)
+    if target is not None and damage_total > 0 and effect.effect_kind == EffectKind.DAMAGE:
+        applied = _apply_damage_to_target(app, target, damage_total)
+        resolution = EffectResolution(
+            source_name=character.name,
+            effect_name=spell.name,
+            effect_kind=effect.effect_kind,
+            target=target,
+            total=damage_total,
+            detail=f"{damage_message} {applied} {slot_message}",
+        )
+        return resolution.message()
+    return f"{character.name} casts {spell.name}. {damage_message} {slot_message}"
+
+
+def _primary_spell_effect(spell) -> EffectDefinition:
+    if spell.effects:
+        return spell.effects[0]
+    return _legacy_spell_effect(spell)
+
+
+def _legacy_spell_effect(spell) -> EffectDefinition:
+    legacy = {
+        "beacon_of_hope": (
+            "beacon-of-hope-buff",
+            EffectKind.BUFF,
+            TargetProfile.MULTIPLE_CREATURES,
+            "spell_slot_3",
+            None,
+        ),
+        "bless": (
+            "bless-buff",
+            EffectKind.BUFF,
+            TargetProfile.MULTIPLE_CREATURES,
+            "spell_slot_1",
+            "1d4",
+        ),
+        "cure_wounds": (
+            "cure-wounds-healing",
+            EffectKind.HEALING,
+            TargetProfile.ONE_CREATURE,
+            "spell_slot_1",
+            "1d8+spellcasting_modifier",
+        ),
+        "lesser_restoration": (
+            "lesser-restoration-condition",
+            EffectKind.CONDITION,
+            TargetProfile.ONE_CREATURE,
+            "spell_slot_2",
+            None,
+        ),
+        "light": (
+            "light-utility",
+            EffectKind.UTILITY,
+            TargetProfile.OBJECT,
+            None,
+            None,
+        ),
+        "revivify": (
+            "revivify-healing",
+            EffectKind.HEALING,
+            TargetProfile.ONE_CREATURE,
+            "spell_slot_3",
+            "1",
+        ),
+        "thaumaturgy": (
+            "thaumaturgy-utility",
+            EffectKind.UTILITY,
+            TargetProfile.SPECIAL,
+            None,
+            None,
+        ),
+    }
+    default = (
+        f"{spell.spell_id}-effect",
+        EffectKind.DAMAGE if spell.damage is not None else EffectKind.UTILITY,
+        TargetProfile.ONE_CREATURE if spell.damage is not None else TargetProfile.SPECIAL,
+        "spell_slot_1" if spell.level > 0 else None,
+        None,
+    )
+    effect_id, effect_kind, target_profile, resource_cost, dice = legacy.get(
+        spell.spell_id,
+        default,
+    )
+    duration_kind = "concentration" if spell.concentration else "instantaneous"
+    duration_text = "up to 1 minute" if spell.spell_id == "thaumaturgy" else spell.duration
+    return EffectDefinition.from_dict(
+        {
+            "effect_id": effect_id,
+            "name": spell.name,
+            "effect_kind": effect_kind.value,
+            "target_profile": target_profile.value,
+            "action_cost": "action",
+            "range_text": spell.range_text,
+            "duration": {
+                "kind": duration_kind,
+                "amount": None,
+                "text": duration_text,
+            },
+            "check": {
+                "kind": "saving_throw" if spell.saving_throw else "none",
+                "ability": spell.saving_throw,
+                "dc": None,
+                "bonus": 0,
+                "proficiency_applies": False,
+            },
+            "resource_cost": resource_cost,
+            "dice": dice,
+            "rule_source": None,
+        }
+    )
+
+
+def _spell_resource_name(
+    effect: EffectDefinition,
+    spell,
+    slot_level: int,
+) -> str | None:
+    if effect.resource_cost is None:
+        return None
+    if effect.resource_cost.startswith("spell_slot_"):
+        return f"spell_slot_{slot_level or spell.level}"
+    return effect.resource_cost
+
+
+def _choose_spell_effect_targets(
+    app: DnDCombatEngineApp,
+    character: Character,
+    spell,
+    effect: EffectDefinition,
+    state: GuiCampaignState | None,
+    window,
+    qt,
+    slot_level: int,
+) -> tuple[str, ...]:
+    if effect.effect_id == "beacon-of-hope-buff":
+        return _choose_beacon_targets(qt, window, app, state, character)
+    if effect.effect_id == "bless-buff":
+        return _choose_bless_targets(qt, window, app, state, character, slot_level)
+    if effect.target_profile in {TargetProfile.ONE_CREATURE, TargetProfile.OBJECT}:
+        target = _active_character_target_id(app, state)
+        if target is None:
+            target = _choose_single_party_target(
                 qt,
                 window,
                 app,
@@ -1225,78 +1448,21 @@ def _activate_spell_button(
                 f"{spell.name} Target",
                 f"Choose a target for {spell.name}:",
             )
-        if special_target is None:
-            return f"{character.name} holds {spell.name}; no target selected."
-        if spell.spell_id == "lesser_restoration":
-            special_choice = _choose_lesser_restoration_effect(qt, window)
-            if special_choice is None:
-                return f"{character.name} holds Lesser Restoration; no effect selected."
-    elif spell.spell_id == "thaumaturgy":
-        special_choice = _choose_thaumaturgy_effect(qt, window)
-        if special_choice is None:
-            return f"{character.name} holds Thaumaturgy; no effect selected."
-    if spell_slot_resource is not None:
-        spell_slot_resource.expend(1)
-        app.characters.save(character)
-        slot_message = (
-            f"Used level {slot_level} spell slot; "
-            f"{spell_slot_resource.current}/{spell_slot_resource.maximum} remain."
-        )
-    if spell.concentration and state is not None:
-        _set_concentration(state, character.character_id, spell.spell_id)
-    if spell.spell_id == "beacon_of_hope" and state is not None:
-        state.beacon_of_hope_targets = beacon_targets
-        target_text = ", ".join(_character_names(app, beacon_targets))
-        return (
-            f"{character.name} casts Beacon of Hope on {target_text}. "
-            f"Hope and Vitality applied while concentration holds. {slot_message}"
-        )
-    if spell.spell_id == "bless" and state is not None:
-        state.bless_targets = bless_targets
-        target_text = ", ".join(_character_names(app, bless_targets))
-        return (
-            f"{character.name} casts Bless on {target_text}. "
-            f"Targets add 1d4 to attack rolls and saving throws while concentration holds. "
-            f"{slot_message}"
-        )
-    if spell.spell_id == "cure_wounds" and special_target is not None:
-        return _apply_cure_wounds(app, character, special_target, slot_level, slot_message)
-    if spell.spell_id == "lesser_restoration" and special_target is not None:
-        return _apply_lesser_restoration(
-            app,
-            character,
-            special_target,
-            special_choice or "",
-            slot_message,
-        )
-    if spell.spell_id == "light" and special_target is not None:
-        target_name = _character_name(app, special_target)
-        return (
-            f"{character.name} casts Light for {target_name}. "
-            "A touched object sheds bright light in a 20-foot radius and dim light for "
-            f"another 20 feet for 1 hour. {slot_message}"
-        )
-    if spell.spell_id == "revivify" and special_target is not None:
-        return _apply_revivify(app, character, special_target, slot_message)
-    if spell.spell_id == "thaumaturgy" and special_choice is not None:
-        return (
-            f"{character.name} casts Thaumaturgy. {special_choice} "
-            f"The divine sign lingers for up to 1 minute. {slot_message}"
-        )
-    damage_message, damage_total = _roll_damage_profile(app, spell.damage)
-    target = _active_target_for_effect(app, state)
-    if target is not None and damage_total > 0:
-        applied = _apply_damage_to_target(app, target, damage_total)
-        resolution = EffectResolution(
-            source_name=character.name,
-            effect_name=spell.name,
-            effect_kind=EffectKind.DAMAGE,
-            target=target,
-            total=damage_total,
-            detail=f"{damage_message} {applied} {slot_message}",
-        )
-        return resolution.message()
-    return f"{character.name} casts {spell.name}. {damage_message} {slot_message}"
+        return (target,) if target is not None else ()
+    return ()
+
+
+def _roll_spell_effect_damage(
+    app: DnDCombatEngineApp,
+    damage: DamageProfile | None,
+    effect: EffectDefinition,
+) -> tuple[str, int]:
+    if damage is not None:
+        return _roll_damage_profile(app, damage)
+    if effect.effect_kind != EffectKind.DAMAGE or effect.dice is None:
+        return "No damage dice configured.", 0
+    result = app.dice.roll(effect.dice)
+    return f"Damage {result.total} ({result.notation}: rolls={result.rolls}).", result.total
 
 
 def _choose_beacon_targets(
@@ -1564,22 +1730,122 @@ def _dialog_accepted(dialog_class, result) -> bool:
     return result == accepted_value or result is True
 
 
-def _set_concentration(state: GuiCampaignState, character_id: str, spell_id: str) -> None:
+def _load_campaign_concentration(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    if state.active_campaign_id is None:
+        _clear_concentration(state)
+        return
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id)
+    except (AttributeError, KeyError):
+        return
+    _apply_concentration_to_state(state, campaign.active_concentration)
+
+
+def _apply_concentration_to_state(
+    state: GuiCampaignState,
+    concentration: ConcentrationState | None,
+) -> None:
+    if concentration is None:
+        _clear_concentration(state)
+        return
+    state.active_concentration = concentration
+    state.concentration_character_id = concentration.caster_id
+    state.concentration_spell_id = concentration.effect_id
+    target_ids = tuple(target.target_id for target in concentration.targets)
+    state.beacon_of_hope_targets = (
+        target_ids if concentration.effect_id == "beacon_of_hope" else ()
+    )
+    state.bless_targets = target_ids if concentration.effect_id == "bless" else ()
+
+
+def _set_concentration(
+    state: GuiCampaignState,
+    character_id: str,
+    spell_id: str,
+    target_ids: tuple[str, ...] = (),
+    spell_name: str | None = None,
+) -> None:
     if state.concentration_character_id == character_id:
         _clear_concentration(state)
     state.concentration_character_id = character_id
     state.concentration_spell_id = spell_id
+    state.active_concentration = ConcentrationState(
+        caster_id=character_id,
+        effect_id=spell_id,
+        effect_name=spell_name or _spell_display_name(spell_id),
+        targets=tuple(_character_target_reference(character_id) for character_id in target_ids),
+    )
     if spell_id != "beacon_of_hope":
         state.beacon_of_hope_targets = ()
+    else:
+        state.beacon_of_hope_targets = target_ids
     if spell_id != "bless":
         state.bless_targets = ()
+    else:
+        state.bless_targets = target_ids
 
 
 def _clear_concentration(state: GuiCampaignState) -> None:
     state.concentration_character_id = None
     state.concentration_spell_id = None
+    state.active_concentration = None
     state.beacon_of_hope_targets = ()
     state.bless_targets = ()
+
+
+def _persist_campaign_concentration(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState | None,
+    message: str | None = None,
+    category: str = "concentration",
+) -> None:
+    if state is None or state.active_campaign_id is None:
+        return
+    try:
+        campaign = app.campaigns.load(state.active_campaign_id)
+    except (AttributeError, KeyError):
+        return
+    updated = campaign.with_concentration(state.active_concentration)
+    if message:
+        updated = updated.with_activity(message, category)
+    try:
+        app.campaigns.save(updated)
+    except AttributeError:
+        return
+
+
+def _concentration_broken_message(
+    app: DnDCombatEngineApp,
+    previous: ConcentrationState | None,
+    fallback_spell_name: str,
+) -> str:
+    if previous is None:
+        return f"Concentration broken: {fallback_spell_name}."
+    target_names = tuple(
+        _character_name(app, target.target_id) for target in previous.targets
+    )
+    if not target_names:
+        return f"Concentration broken: {previous.effect_name}."
+    return (
+        f"Concentration broken: {previous.effect_name}. "
+        f"Removed {previous.effect_name} from {', '.join(target_names)}."
+    )
+
+
+def _character_target_reference(character_id: str) -> TargetReference:
+    return TargetReference(
+        target_id=character_id,
+        name=character_id,
+        kind=TargetKind.CHARACTER,
+        source_id=character_id,
+    )
+
+
+def _spell_display_name(spell_id: str) -> str:
+    return spell_id.replace("_", " ").title()
 
 
 def _character_names(app: DnDCombatEngineApp, character_ids: tuple[str, ...]) -> tuple[str, ...]:

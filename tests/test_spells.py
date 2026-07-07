@@ -4,8 +4,11 @@ from dnd_combat_engine.models import (
     DamageComponent,
     DamageProfile,
     DamageType,
+    EffectDefinition,
+    EffectKind,
     Spell,
     SpellSchool,
+    TargetProfile,
 )
 
 
@@ -20,6 +23,16 @@ def make_spell() -> Spell:
         duration="Instantaneous",
         components=("V", "S"),
         damage=DamageProfile((DamageComponent("1d10", DamageType.FIRE),)),
+        effects=(
+            EffectDefinition(
+                effect_id="fire-bolt-damage",
+                name="Fire Bolt",
+                effect_kind=EffectKind.DAMAGE,
+                target_profile=TargetProfile.ONE_CREATURE,
+                range_text="120 feet",
+                dice="1d10",
+            ),
+        ),
         description="Hurl a mote of fire.",
     )
 
@@ -31,6 +44,7 @@ def test_spell_round_trips_to_plain_data() -> None:
 
     assert restored == spell
     assert restored.is_cantrip is True
+    assert restored.effects[0].range_text == "120 feet"
 
 
 def test_spell_without_damage_round_trips() -> None:
@@ -74,4 +88,3 @@ def test_spell_rejects_invalid_values() -> None:
         Spell(**{**kwargs, "range_text": ""})
     with pytest.raises(ValueError):
         Spell(**{**kwargs, "duration": ""})
-

@@ -57,4 +57,5 @@ class CampaignService:
             encounter_ids=campaign.encounter_ids,
             notes=campaign.notes,
             activity_log=campaign.activity_log,
+            active_concentration=campaign.active_concentration,
         )

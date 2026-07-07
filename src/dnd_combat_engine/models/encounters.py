@@ -8,6 +8,7 @@ from typing import Self
 
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.monsters import Monster
+from dnd_combat_engine.models.schema import CURRENT_SCHEMA_VERSION, SCHEMA_VERSION_FIELD
 
 
 class EncounterStatus(StrEnum):
@@ -180,6 +181,7 @@ class Encounter:
     def to_dict(self) -> dict[str, object]:
         """Serialize the encounter to plain JSON-compatible data."""
         return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
             "encounter_id": self.encounter_id,
             "name": self.name,
             "participants": [participant.to_dict() for participant in self.participants],

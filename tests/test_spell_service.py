@@ -4,8 +4,11 @@ from dnd_combat_engine.models import (
     DamageComponent,
     DamageProfile,
     DamageType,
+    EffectDefinition,
+    EffectKind,
     Spell,
     SpellSchool,
+    TargetProfile,
 )
 from dnd_combat_engine.services import SpellService
 
@@ -55,7 +58,26 @@ def test_spell_service_filters_concentration_and_damage_spells() -> None:
     assert [spell.spell_id for spell in service.damaging_spells(spells)] == ["fire-bolt"]
 
 
+def test_spell_service_treats_damage_effects_as_damaging_spells() -> None:
+    spell = make_spell("guiding-bolt", "Guiding Bolt", 1)
+    spell = Spell.from_dict(
+        {
+            **spell.to_dict(),
+            "effects": [
+                EffectDefinition(
+                    effect_id="guiding-bolt-damage",
+                    name="Guiding Bolt",
+                    effect_kind=EffectKind.DAMAGE,
+                    target_profile=TargetProfile.ONE_CREATURE,
+                    dice="4d6",
+                ).to_dict()
+            ],
+        }
+    )
+
+    assert SpellService().damaging_spells([spell]) == (spell,)
+
+
 def test_spell_service_rejects_invalid_level() -> None:
     with pytest.raises(ValueError):
         SpellService().by_level([], 10)
-

@@ -1,0 +1,23 @@
+{
+  "action_cost": "action",
+  "check": {
+    "ability": "weapon",
+    "bonus": 0,
+    "dc": null,
+    "kind": "attack_roll",
+    "proficiency_applies": true
+  },
+  "dice": "weapon_damage",
+  "duration": {
+    "amount": null,
+    "kind": "instantaneous",
+    "text": "Instantaneous"
+  },
+  "effect_id": "weapon_attack",
+  "effect_kind": "attack",
+  "name": "Weapon Attack",
+  "range_text": "Weapon range",
+  "resource_cost": null,
+  "rule_source": null,
+  "target_profile": "one_creature"
+}

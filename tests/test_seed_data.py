@@ -1,6 +1,14 @@
 from pathlib import Path
 
-from dnd_combat_engine.models import Campaign, Character, Encounter, Monster, Spell, Weapon
+from dnd_combat_engine.models import (
+    Campaign,
+    Character,
+    EffectDefinition,
+    Encounter,
+    Monster,
+    Spell,
+    Weapon,
+)
 from dnd_combat_engine.persistence import JsonFileStore
 
 DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
@@ -21,3 +29,35 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert Encounter.from_dict(store.load("encounters", "roadside_ambush")).participants
     assert Encounter.from_dict(store.load("encounters", "crypt_entry")).participants
     assert Weapon.from_dict(store.load("equipment", "rapier")).name == "Rapier"
+
+
+def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:
+    store = JsonFileStore(DATA_ROOT)
+
+    expected = {
+        "beacon_of_hope": "beacon-of-hope-buff",
+        "bless": "bless-buff",
+        "cure_wounds": "cure-wounds-healing",
+        "guiding_bolt": "guiding-bolt-damage",
+        "lesser_restoration": "lesser-restoration-condition",
+        "light": "light-utility",
+        "revivify": "revivify-healing",
+        "thaumaturgy": "thaumaturgy-utility",
+    }
+
+    for spell_id, effect_id in expected.items():
+        spell = Spell.from_dict(store.load("spells", spell_id))
+        assert effect_id in {effect.effect_id for effect in spell.effects}
+        assert all(effect.range_text for effect in spell.effects)
+
+
+def test_seed_action_effects_define_weapon_and_unarmed_attacks() -> None:
+    store = JsonFileStore(DATA_ROOT)
+
+    weapon_attack = EffectDefinition.from_dict(store.load("actions", "weapon_attack"))
+    unarmed_attack = EffectDefinition.from_dict(store.load("actions", "unarmed_attack"))
+
+    assert weapon_attack.effect_id == "weapon_attack"
+    assert weapon_attack.dice == "weapon_damage"
+    assert unarmed_attack.effect_id == "unarmed_attack"
+    assert unarmed_attack.range_text == "5 feet"

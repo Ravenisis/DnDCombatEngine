@@ -1,19 +1,45 @@
 {
-  "casting_time": "1 action",
-  "components": [
-    "V",
-    "S",
-    "M"
-  ],
-  "concentration": false,
-  "damage": null,
-  "description": "Return a creature that died within the last minute to life with 1 hit point.",
-  "duration": "Instantaneous",
-  "level": 3,
-  "name": "Revivify",
-  "range_text": "Touch",
-  "ritual": false,
-  "saving_throw": null,
-  "school": "necromancy",
-  "spell_id": "revivify"
+    "casting_time":  "1 action",
+    "components":  [
+                       "V",
+                       "S",
+                       "M"
+                   ],
+    "concentration":  false,
+    "damage":  null,
+    "description":  "Return a creature that died within the last minute to life with 1 hit point.",
+    "duration":  "Instantaneous",
+    "effects":  [
+                    {
+                        "action_cost":  "action",
+                        "check":  {
+                                      "ability":  null,
+                                      "bonus":  0,
+                                      "dc":  null,
+                                      "kind":  "none",
+                                      "proficiency_applies":  false
+                                  },
+                        "dice":  "1",
+                        "duration":  {
+                                         "amount":  null,
+                                         "kind":  "instantaneous",
+                                         "text":  "Instantaneous"
+                                     },
+                        "effect_id":  "revivify-healing",
+                        "effect_kind":  "healing",
+                        "name":  "Revivify",
+                        "range_text":  "Touch",
+                        "resource_cost":  "spell_slot_3",
+                        "rule_source":  null,
+                        "target_profile":  "one_creature"
+                    }
+                ],
+    "level":  3,
+    "name":  "Revivify",
+    "range_text":  "Touch",
+    "ritual":  false,
+    "saving_throw":  null,
+    "school":  "necromancy",
+    "spell_id":  "revivify",
+    "schema_version":  1
 }

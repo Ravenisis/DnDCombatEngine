@@ -179,6 +179,7 @@ $Writer.Close()
 & $Wix --acceptEula wix7 build `
     -arch x64 `
     -define "AppSource=$AppSource" `
+    -define "ProjectRoot=$ProjectRoot" `
     -intermediatefolder $WixBuild `
     -out $MsiPath `
     "packaging\DnDCombatEngine.wxs" `

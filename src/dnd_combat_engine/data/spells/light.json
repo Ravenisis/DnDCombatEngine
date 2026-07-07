@@ -1,18 +1,44 @@
 {
-  "casting_time": "1 action",
-  "components": [
-    "V",
-    "M"
-  ],
-  "concentration": false,
-  "damage": null,
-  "description": "A touched object sheds bright light in a 20-foot radius and dim light for another 20 feet.",
-  "duration": "1 hour",
-  "level": 0,
-  "name": "Light",
-  "range_text": "Touch",
-  "ritual": false,
-  "saving_throw": null,
-  "school": "evocation",
-  "spell_id": "light"
+    "casting_time":  "1 action",
+    "components":  [
+                       "V",
+                       "M"
+                   ],
+    "concentration":  false,
+    "damage":  null,
+    "description":  "A touched object sheds bright light in a 20-foot radius and dim light for another 20 feet.",
+    "duration":  "1 hour",
+    "effects":  [
+                    {
+                        "action_cost":  "action",
+                        "check":  {
+                                      "ability":  null,
+                                      "bonus":  0,
+                                      "dc":  null,
+                                      "kind":  "none",
+                                      "proficiency_applies":  false
+                                  },
+                        "dice":  null,
+                        "duration":  {
+                                         "amount":  1,
+                                         "kind":  "hour_based",
+                                         "text":  "1 hour"
+                                     },
+                        "effect_id":  "light-utility",
+                        "effect_kind":  "utility",
+                        "name":  "Light",
+                        "range_text":  "Touch",
+                        "resource_cost":  null,
+                        "rule_source":  null,
+                        "target_profile":  "object"
+                    }
+                ],
+    "level":  0,
+    "name":  "Light",
+    "range_text":  "Touch",
+    "ritual":  false,
+    "saving_throw":  null,
+    "school":  "evocation",
+    "spell_id":  "light",
+    "schema_version":  1
 }

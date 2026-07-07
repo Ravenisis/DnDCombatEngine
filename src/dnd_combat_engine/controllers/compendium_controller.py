@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from dnd_combat_engine.models.damage import DamageType
+from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.monsters import Monster
 from dnd_combat_engine.models.spells import Spell
 from dnd_combat_engine.services.monster_service import MonsterService
@@ -24,6 +25,18 @@ class CompendiumController:
     def load_spell(self, spell_id: str) -> Spell:
         """Load a spell by id."""
         return self.persistence_service.load_spell(spell_id)
+
+    def load_action_effect(self, action_id: str) -> EffectDefinition:
+        """Load a standalone action effect definition by id."""
+        return self.persistence_service.load_action_effect(action_id)
+
+    def action_effects(self) -> tuple[EffectDefinition, ...]:
+        """Load all standalone action effect definitions sorted by name."""
+        effects = (
+            self.load_action_effect(action_id)
+            for action_id in self.persistence_service.list_action_effect_ids()
+        )
+        return tuple(sorted(effects, key=lambda effect: (effect.name.lower(), effect.effect_id)))
 
     def load_monster(self, monster_id: str) -> Monster:
         """Load a monster by id."""
