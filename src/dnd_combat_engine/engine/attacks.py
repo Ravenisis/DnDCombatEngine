@@ -77,6 +77,11 @@ class AttackResult:
         return max(self.attack_roll.kept)
 
     @property
+    def critical_miss(self) -> bool:
+        """Return whether the attack is a natural-1 critical miss."""
+        return self.natural_roll == 1 and not self.hit
+
+    @property
     def damage_total(self) -> int:
         """Return total damage before target mitigation rules."""
         return sum(damage.total for damage in self.damage_rolls) + self.damage_bonus

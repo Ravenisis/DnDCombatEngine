@@ -67,6 +67,7 @@ class AttackSummary:
     attack_total: int
     hit: bool
     critical: bool
+    critical_miss: bool
     damage_total: int
     damage_applied: int
 
@@ -80,6 +81,7 @@ class AttackSummary:
             attack_total=result.attack_total,
             hit=result.hit,
             critical=result.critical,
+            critical_miss=result.critical_miss,
             damage_total=result.damage_total,
             damage_applied=result.damage_applied,
         )

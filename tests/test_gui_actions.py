@@ -28,7 +28,14 @@ def test_default_action_specs_include_core_commands() -> None:
         "campaign.import_pdf",
         "campaign.import_url",
         "combat.quick_attack",
+        "dice.roll_d4",
+        "dice.roll_d6",
+        "dice.roll_d8",
+        "dice.roll_d10",
+        "dice.roll_d12",
         "dice.roll_d20",
+        "dice.roll_d100",
+        "dice.repeat_last",
         "settings.key_binds",
         "settings.preferences",
         "help.about",
@@ -36,7 +43,8 @@ def test_default_action_specs_include_core_commands() -> None:
     assert next(spec for spec in specs if spec.action_id == "character.inventory").shortcut == "B"
     assert next(spec for spec in specs if spec.action_id == "character.spellbook").shortcut == "K"
     assert next(spec for spec in specs if spec.action_id == "character.abilities").shortcut == "N"
-    assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut == "Ctrl+R"
+    assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut is None
+    assert next(spec for spec in specs if spec.action_id == "dice.repeat_last").shortcut == "Ctrl+R"
     assert next(spec for spec in specs if spec.action_id == "campaign.import_pdf").submenu == (
         "Upload Character Sheet"
     )
@@ -65,6 +73,16 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
     assert grouped["Campaign"][6].action_id == "campaign.long_rest"
     assert grouped["Campaign"][8].action_id == "campaign.import_pdf"
     assert grouped["Combat"][0].action_id == "combat.quick_attack"
+    assert [spec.action_id for spec in grouped["Dice"]] == [
+        "dice.roll_d4",
+        "dice.roll_d6",
+        "dice.roll_d8",
+        "dice.roll_d10",
+        "dice.roll_d12",
+        "dice.roll_d20",
+        "dice.roll_d100",
+        "dice.repeat_last",
+    ]
     assert grouped["Settings"][0].action_id == "settings.key_binds"
     assert grouped["Help"][0].action_id == "help.about"
 

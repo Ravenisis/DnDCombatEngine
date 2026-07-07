@@ -325,13 +325,13 @@ def _extract_name(text: str) -> str:
         flags=re.IGNORECASE | re.MULTILINE,
     )
     if match:
-        return _clean_name(match.group(1))
+        return _restore_name_case(_clean_name(match.group(1)), text)
     label_below = _extract_value_before_label(text, "character name")
     if label_below:
-        return _clean_name(label_below)
+        return _restore_name_case(_clean_name(label_below), text)
     match = re.search(r"^([A-Za-z][A-Za-z '\-]{1,60})$", text, flags=re.MULTILINE)
     if match:
-        return _clean_name(match.group(1))
+        return _restore_name_case(_clean_name(match.group(1)), text)
     return "Imported Character"
 
 
@@ -343,6 +343,27 @@ def _clean_name(value: str) -> str:
         value,
         flags=re.I,
     ).strip()
+
+
+def _restore_name_case(name: str, text: str) -> str:
+    """Prefer an extracted occurrence that preserves the sheet's display casing."""
+    if not name:
+        return name
+    pattern = re.compile(
+        rf"(?<![A-Za-z]){re.escape(name)}(?![A-Za-z])",
+        flags=re.IGNORECASE,
+    )
+    for match in pattern.finditer(text):
+        candidate = match.group(0).strip()
+        if _has_display_case(candidate):
+            return candidate
+    return name
+
+
+def _has_display_case(value: str) -> bool:
+    return any(character.isupper() for character in value) and any(
+        character.islower() for character in value
+    )
 
 
 def _extract_value_before_label(text: str, label: str) -> str | None:

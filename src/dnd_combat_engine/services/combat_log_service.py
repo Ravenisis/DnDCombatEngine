@@ -14,7 +14,15 @@ class CombatLogService:
         """Append a readable attack result entry."""
         attacker = result.request.attacker.name
         target = result.request.target.name
-        outcome = "critically hits" if result.critical else "hits" if result.hit else "misses"
+        outcome = (
+            "critically misses"
+            if result.critical_miss
+            else "critically hits"
+            if result.critical
+            else "hits"
+            if result.hit
+            else "misses"
+        )
         message = f"{attacker} {outcome} {target} with {result.request.weapon.name}."
         if result.hit:
             message += f" Damage: {result.damage_total}."
@@ -27,6 +35,7 @@ class CombatLogService:
                     "damage_total": result.damage_total,
                     "hit": result.hit,
                     "critical": result.critical,
+                    "critical_miss": result.critical_miss,
                 },
             )
         )
@@ -41,4 +50,3 @@ class CombatLogService:
                 metadata={"round_number": tracker.round_number},
             )
         )
-

@@ -41,3 +41,19 @@ def test_combat_log_controller_records_attack() -> None:
     assert "Bran hits Goblin" in log.entries[0].message
     assert controller.latest(log, 1) == log.entries
 
+
+def test_combat_log_records_critical_miss() -> None:
+    controller = CombatLogController(CombatLogService())
+    attacker = Character("fighter", "Bran", HitPoints(12, 12))
+    target = Character("goblin", "Goblin", HitPoints(7, 7))
+    weapon = Weapon(
+        "Longsword",
+        DamageProfile((DamageComponent("1d8", DamageType.SLASHING),)),
+    )
+    request = AttackRequest(attacker, target, weapon, target_armor_class=5, attack_bonus=99)
+    result = CombatService().resolve_attack(request, rng=SequenceRng([1]))  # type: ignore[arg-type]
+
+    log = controller.record_attack(CombatLog(), result)
+
+    assert "Bran critically misses Goblin" in log.entries[0].message
+    assert log.entries[0].metadata["critical_miss"] is True

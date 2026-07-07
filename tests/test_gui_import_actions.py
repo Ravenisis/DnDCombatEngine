@@ -33,6 +33,14 @@ class FakeWindow:
         self.closed = True
 
 
+class FakeWorkspace:
+    def __init__(self) -> None:
+        self.messages = []
+
+    def append(self, value) -> None:
+        self.messages.append(value)
+
+
 class FakeMessageBox:
     information_calls: list[tuple[object, str, str]] = []
     warning_calls: list[tuple[object, str, str]] = []
@@ -122,6 +130,32 @@ def _import_result() -> SimpleNamespace:
     character = Character("lyra", "Lyra", HitPoints(10, 10))
     campaign = Campaign("starter", "Starter", character_ids=("lyra",))
     return SimpleNamespace(character=character, campaign=campaign)
+
+
+def test_dice_menu_rolls_standard_die_and_ctrl_r_repeats_previous() -> None:
+    class FakeDice:
+        def __init__(self) -> None:
+            self.notations = []
+
+        def roll(self, notation: str):
+            self.notations.append(notation)
+            return SimpleNamespace(total=len(self.notations), rolls=(len(self.notations),))
+
+    window = FakeWindow()
+    window._dnd_central = FakeWorkspace()
+    state = main_window.GuiCampaignState()
+    app = SimpleNamespace(dice=FakeDice())
+
+    main_window._run_menu_action(window, FakeQt, app, state, "dice.roll_d8")
+    main_window._run_menu_action(window, FakeQt, app, state, "dice.repeat_last")
+
+    assert app.dice.notations == ["1d8", "1d8"]
+    assert state.last_dice_notation == "1d8"
+    assert window._dnd_central.messages == [
+        "d8 roll: 1 rolls=(1,)",
+        "d8 roll: 2 rolls=(2,)",
+    ]
+    assert window.status.message == "d8 roll: 2 rolls=(2,)"
 
 
 def test_pdf_menu_action_runs_import_and_reports_status(monkeypatch) -> None:
@@ -409,6 +443,44 @@ def test_long_rest_restores_imported_spell_slots(monkeypatch) -> None:
     assert character.resources["spell_slot_1"].current == 4
     assert character.resources["spell_slot_2"].current == 3
     assert character.resources["spell_slot_3"].current == 3
+
+
+def test_long_rest_repairs_missing_spell_slots_for_legacy_import(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(3, 20, temporary=4),
+        level=6,
+        features=(
+            "Cleric 6",
+            "Cantrips: Light, Sacred Flame, Thaumaturgy",
+            "Domain Spells: Bless, Cure Wounds, Revivify",
+        ),
+    )
+    saved_characters = []
+    app = SimpleNamespace(
+        campaigns=SimpleNamespace(
+            load=lambda campaign_id: Campaign(
+                campaign_id,
+                "Starter",
+                character_ids=("ravenisis",),
+            )
+        ),
+        characters=SimpleNamespace(
+            load=lambda character_id: character,
+            save=saved_characters.append,
+        ),
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "campaign.long_rest")
+
+    assert character.resources["spell_slot_1"].current == 4
+    assert character.resources["spell_slot_2"].current == 3
+    assert character.resources["spell_slot_3"].current == 3
+    assert saved_characters == [character]
 
 
 def test_short_rest_heals_and_keeps_spell_slots_spent(monkeypatch) -> None:

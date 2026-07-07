@@ -49,7 +49,15 @@ def campaign_reference_rows(campaign: Campaign) -> list[tuple[str, str]]:
 def attack_summary_text(result: AttackResult) -> str:
     """Return a one-line attack summary."""
     summary = AttackSummary.from_result(result)
-    outcome = "CRIT" if summary.critical else "HIT" if summary.hit else "MISS"
+    outcome = (
+        "CRITICAL MISS"
+        if summary.critical_miss
+        else "CRIT"
+        if summary.critical
+        else "HIT"
+        if summary.hit
+        else "MISS"
+    )
     return (
         f"{summary.attacker} -> {summary.target} [{outcome}] "
         f"attack={summary.attack_total} damage={summary.damage_total}"

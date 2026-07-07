@@ -57,6 +57,7 @@ from dnd_combat_engine.models import (
     TargetKind,
     TargetProfile,
     TargetReference,
+    ensure_spell_slot_resources,
 )
 from dnd_combat_engine.models.damage import DamageProfile
 from dnd_combat_engine.rules import EffectPlan, EffectResolver
@@ -76,6 +77,7 @@ class GuiCampaignState:
     beacon_of_hope_targets: tuple[str, ...] = field(default_factory=tuple)
     bless_targets: tuple[str, ...] = field(default_factory=tuple)
     active_target: TargetReference | None = None
+    last_dice_notation: str = "1d20"
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
@@ -377,11 +379,15 @@ def _run_menu_action(
     if action_id == "character.break_concentration":
         _break_concentration_from_menu(window, qt, app, state)
         return
-    if action_id == "dice.roll_d20":
-        result = app.dice.roll("1d20")
-        message = f"d20 roll: {result.total} rolls={result.rolls}"
-        _append_workspace(window, message)
-        _set_status(window, message)
+    if action_id.startswith("dice.roll_d"):
+        notation = _dice_notation_from_action(action_id)
+        if notation is None:
+            _set_status(window, f"{action_id} selected.")
+            return
+        _roll_menu_die(window, app, state, notation)
+        return
+    if action_id == "dice.repeat_last":
+        _roll_menu_die(window, app, state, state.last_dice_notation)
         return
     if action_id == "campaign.load_starter":
         _open_campaign(window, qt, app, state, "starter_campaign")
@@ -730,6 +736,7 @@ def _rest_campaign(
             character = app.characters.load(character_id)
         except KeyError:
             continue
+        ensure_spell_slot_resources(character)
         _rest_character(character, long_rest=long_rest)
         app.characters.save(character)
         rested_count += 1
@@ -747,6 +754,7 @@ def _rest_campaign(
 
 
 def _rest_character(character: Character, *, long_rest: bool) -> None:
+    ensure_spell_slot_resources(character)
     if long_rest:
         character.hit_points.heal(character.hit_points.maximum)
         character.hit_points.temporary = 0
@@ -1033,10 +1041,32 @@ def _key_bind_rows() -> tuple[tuple[str, str], ...]:
         ("Inventory", "B"),
         ("Spellbook", "K"),
         ("Abilities", "N"),
-        ("Roll d20", "Ctrl+R"),
+        ("Roll Previous Die", "Ctrl+R"),
         ("Exit", "Ctrl+Q"),
     ]
     return tuple(rows)
+
+
+def _dice_notation_from_action(action_id: str) -> str | None:
+    die = action_id.removeprefix("dice.roll_")
+    if die in {"d4", "d6", "d8", "d10", "d12", "d20", "d100"}:
+        return f"1{die}"
+    return None
+
+
+def _roll_menu_die(
+    window,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    notation: str,
+) -> str:
+    result = app.dice.roll(notation)
+    state.last_dice_notation = notation
+    die = notation.removeprefix("1")
+    message = f"{die} roll: {result.total} rolls={result.rolls}"
+    _append_workspace(window, message)
+    _set_status(window, message)
+    return message
 
 
 def _consume_inventory_item(
@@ -1210,6 +1240,8 @@ def _activate_spell_button(
         spell = app.compendium.load_spell(button.action_id)
     except KeyError:
         return f"{button.name} is not in the spell compendium."
+    if ensure_spell_slot_resources(character):
+        app.characters.save(character)
     effect = _primary_spell_effect(spell)
     slot_message = "No spell slot used."
     slot_level = max(spell.level, button.rank) if spell.level > 0 else 0
@@ -2469,7 +2501,11 @@ def _action_bar_widget(
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(widget)
     _layout_add_widget(layout, SpellSlotTrackerWidget.create(app, qt, _active_character_id(state)))
-    _layout_add_widget(layout, ActionBarWidget.create(qt, session, on_activate=on_activate), 1)
+    _layout_add_widget(
+        layout,
+        ActionBarWidget.create(qt, session, on_activate=on_activate, app=app),
+        1,
+    )
     saving_throw_widget = SavingThrowWidget.create(
         app,
         qt,

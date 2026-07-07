@@ -245,6 +245,53 @@ def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
     assert _action_bar_tooltip("2", 2, None) == "Slot 2 (2) is empty."
 
 
+def test_action_bar_spell_tooltip_uses_spell_metadata() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui.widgets import _action_bar_tooltip
+    from dnd_combat_engine.models import (
+        ActionBarActionKind,
+        ActionBarButton,
+        DamageComponent,
+        DamageProfile,
+        DamageType,
+        Spell,
+        SpellSchool,
+    )
+
+    spell = Spell(
+        "guiding_bolt",
+        "Guiding Bolt",
+        1,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "120 feet",
+        "1 round",
+        components=("V", "S"),
+        damage=DamageProfile((DamageComponent("4d6", DamageType.RADIANT),)),
+        description="A flash of light streaks toward a creature of your choice.",
+    )
+    app = SimpleNamespace(
+        compendium=SimpleNamespace(load_spell=lambda spell_id: spell),
+    )
+    button = ActionBarButton(
+        slot=1,
+        kind=ActionBarActionKind.SPELL,
+        action_id="guiding_bolt",
+        name="Guiding Bolt",
+        rank=2,
+    )
+
+    tooltip = _action_bar_tooltip("1", 1, button, app)
+
+    assert "Guiding Bolt" in tooltip
+    assert "Cast using level 2 slot" in tooltip
+    assert "Range: 120 feet" in tooltip
+    assert "Damage: 4d6 radiant" in tooltip
+    assert "Shortcut: 1" in tooltip
+    assert "Shift+right-click to remove." in tooltip
+
+
 def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
     from dnd_combat_engine.gui import widgets
     from dnd_combat_engine.models import (

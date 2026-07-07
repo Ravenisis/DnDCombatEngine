@@ -34,6 +34,7 @@ from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.effects import TargetKind, TargetReference
 from dnd_combat_engine.models.encounters import ParticipantKind
 from dnd_combat_engine.models.inventory import InventoryItem
+from dnd_combat_engine.models.spell_slots import ensure_spell_slot_resources
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
 PARTY_FRAME_FEATURES = (
@@ -397,7 +398,12 @@ class ActionBarWidget:
     """Factory for the bottom quick action bar."""
 
     @staticmethod
-    def create(qt, session: ActionBarSession, on_activate=None):
+    def create(
+        qt,
+        session: ActionBarSession,
+        on_activate=None,
+        app: DnDCombatEngineApp | None = None,
+    ):
         """Create a centered action bar widget."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QHBoxLayout(widget)
@@ -435,7 +441,7 @@ class ActionBarWidget:
                 if hasattr(button, "setEnabled"):
                     button.setEnabled(action is not None)
                 if hasattr(button, "setToolTip"):
-                    button.setToolTip(_action_bar_tooltip(hotkey, slot, action))
+                    button.setToolTip(_action_bar_tooltip(hotkey, slot, action, app))
 
         session.subscribe(refresh)
         return widget
@@ -458,6 +464,8 @@ class SpellSlotTrackerWidget:
         except KeyError:
             layout.addWidget(qt.QtWidgets.QLabel("Missing leader"))
             return widget
+        if ensure_spell_slot_resources(character) and hasattr(app.characters, "save"):
+            app.characters.save(character)
         slot_rows = _spell_slot_rows(character.resources)
         if not slot_rows:
             layout.addWidget(qt.QtWidgets.QLabel("None"))
@@ -1204,10 +1212,26 @@ def _action_button_text(hotkey: str, action: ActionBarButton | None) -> str:
     return f"{hotkey}\n{_wrap_action_label(f'{action.name}{rank}')}"
 
 
-def _action_bar_tooltip(hotkey: str, slot: int, action: ActionBarButton | None) -> str:
+def _action_bar_tooltip(
+    hotkey: str,
+    slot: int,
+    action: ActionBarButton | None,
+    app: DnDCombatEngineApp | None = None,
+) -> str:
     """Return a concise tooltip for an action bar slot."""
     if action is None:
         return f"Slot {slot} ({hotkey}) is empty."
+    if action.kind == ActionBarActionKind.SPELL and app is not None:
+        spell_tooltip = _action_bar_spell_tooltip(app, action)
+        if spell_tooltip:
+            return "\n".join(
+                (
+                    spell_tooltip,
+                    f"Shortcut: {hotkey}",
+                    "Click to cast; Shift+click rolls 1d20.",
+                    "Shift+right-click to remove.",
+                )
+            )
     lines = [
         f"{action.name} rank {action.rank}",
         f"Type: {action.kind.value.title()}",
@@ -1219,6 +1243,15 @@ def _action_bar_tooltip(hotkey: str, slot: int, action: ActionBarButton | None) 
         lines.append("Click to use; Shift+click rolls 1d20.")
     lines.append("Shift+right-click to remove.")
     return "\n".join(lines)
+
+
+def _action_bar_spell_tooltip(app: DnDCombatEngineApp, action: ActionBarButton) -> str:
+    """Return rich spell metadata for a spell placed on the action bar."""
+    try:
+        spell = app.compendium.load_spell(action.action_id)
+    except (AttributeError, KeyError):
+        return ""
+    return _spell_tooltip(spell, action.rank)
 
 
 def _wrap_action_label(label: str, width: int = 10, max_lines: int = 3) -> str:

@@ -104,6 +104,7 @@ def test_natural_twenty_hits_and_doubles_damage_dice() -> None:
 
     assert result.hit is True
     assert result.critical is True
+    assert result.critical_miss is False
     assert result.damage_total == 7
     assert result.damage_rolls[0].roll.notation == "2d8"
 
@@ -121,6 +122,7 @@ def test_natural_one_misses_even_with_high_bonus() -> None:
     result = CombatService().resolve_attack(request, rng=SequenceRng([1]))  # type: ignore[arg-type]
 
     assert result.hit is False
+    assert result.critical_miss is True
     assert result.attack_total == 100
 
 
@@ -135,4 +137,3 @@ def test_feature_engine_can_modify_attack_before_roll_and_observe_finish() -> No
     assert result.hit is True
     assert result.attack_total == 12
     assert recorder.finished[0].payload["result"] == result
-

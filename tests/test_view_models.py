@@ -71,6 +71,7 @@ def test_attack_summary_from_result() -> None:
 
     assert summary.attacker == "Bran"
     assert summary.hit is True
+    assert summary.critical_miss is False
     assert summary.damage_applied == 4
 
 

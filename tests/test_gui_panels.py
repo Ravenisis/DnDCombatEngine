@@ -76,6 +76,19 @@ def test_attack_summary_text_describes_result() -> None:
     assert "Bran -> Goblin [HIT]" in attack_summary_text(result)
 
 
+def test_attack_summary_text_marks_critical_miss() -> None:
+    attacker = Character("fighter", "Bran", HitPoints(12, 12))
+    target = Character("goblin", "Goblin", HitPoints(7, 7))
+    weapon = Weapon(
+        "Longsword",
+        DamageProfile((DamageComponent("1d8", DamageType.SLASHING),)),
+    )
+    request = AttackRequest(attacker, target, weapon, target_armor_class=5, attack_bonus=99)
+    result = CombatService().resolve_attack(request, rng=SequenceRng([1]))  # type: ignore[arg-type]
+
+    assert "Bran -> Goblin [CRITICAL MISS]" in attack_summary_text(result)
+
+
 def test_quick_attack_uses_first_campaign_character() -> None:
     ravenisis = Character(
         "ravenisis",

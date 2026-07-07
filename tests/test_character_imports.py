@@ -114,6 +114,31 @@ def test_character_import_service_reads_dnd_beyond_label_below_name() -> None:
     assert draft.name == "Ravenisis"
 
 
+def test_character_import_service_preserves_display_case_for_imported_name(tmp_path) -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: fluxor
+        Fluxor
+        CHARACTER NAME
+        Class & Level: Fighter 4
+        """,
+        source="test",
+    )
+    persistence = PersistenceService(JsonFileStore(tmp_path))
+    persistence.save_campaign(Campaign("starter", "Starter"))
+    controller = CharacterImportController(
+        CharacterImportService(),
+        CampaignService(),
+        persistence,
+    )
+
+    result = controller.import_draft_to_campaign(draft, "starter")
+
+    assert draft.name == "Fluxor"
+    assert result.character.character_id == "fluxor"
+    assert persistence.load_character("fluxor").name == "Fluxor"
+
+
 def test_character_import_service_adds_spell_slots_for_cleric_sheet() -> None:
     draft = CharacterImportService().parse_text(
         """
