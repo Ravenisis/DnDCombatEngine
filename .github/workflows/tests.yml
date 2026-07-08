@@ -60,3 +60,33 @@ jobs:
 
       - name: Test
         run: python -m pytest
+
+  gui-smoke:
+    name: GUI smoke / Ubuntu / Python 3.11
+    runs-on: ubuntu-latest
+    env:
+      DND_COMBAT_ENGINE_GUI_SMOKE: "1"
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade packaging tools
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install Qt runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon-x11-0 libxcb-cursor0
+
+      - name: Install GUI smoke test dependencies
+        run: python -m pip install -e ".[dev,gui-test]"
+
+      - name: Run GUI smoke tests
+        run: python -m pytest -m gui --no-cov
