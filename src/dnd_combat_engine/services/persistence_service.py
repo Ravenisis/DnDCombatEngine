@@ -16,6 +16,7 @@ from dnd_combat_engine.persistence.migrations import (
     migrate_monster,
     migrate_spell,
 )
+from dnd_combat_engine.srd_spells import get_srd_spell_data, list_srd_spell_ids
 
 
 class PersistenceService:
@@ -54,12 +55,18 @@ class PersistenceService:
         self.store.save("spells", spell.spell_id, spell.to_dict())
 
     def load_spell(self, spell_id: str) -> Spell:
-        """Load a spell from a JSON document."""
-        return Spell.from_dict(migrate_spell(self.store.load("spells", spell_id)))
+        """Load a saved spell or built-in SRD spell by id."""
+        try:
+            data = self.store.load("spells", spell_id)
+        except FileNotFoundError:
+            data = get_srd_spell_data(spell_id)
+            if data is None:
+                raise
+        return Spell.from_dict(migrate_spell(data))
 
     def list_spell_ids(self) -> list[str]:
-        """List saved spell ids."""
-        return self.store.list_ids("spells")
+        """List saved spell ids plus built-in SRD spell ids."""
+        return sorted({*self.store.list_ids("spells"), *list_srd_spell_ids()})
 
     def load_action_effect(self, action_id: str) -> EffectDefinition:
         """Load a standalone action effect definition from a JSON document."""
