@@ -22,7 +22,7 @@ def test_dice_service_treats_spellcasting_modifier_placeholder_as_zero() -> None
     result = DiceService().roll("1d8+spellcasting_modifier", rng=SequenceRng([7]))
 
     assert result.total == 7
-    assert result.notation == "1d8+0"
+    assert result.notation == "1d8"
 
 
 def test_dice_service_accepts_flat_srd_damage_values() -> None:
