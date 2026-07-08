@@ -15,6 +15,27 @@ If local coverage is below the configured release gate, note the exact coverage
 result and decide whether the release is a development preview or a gated
 release.
 
+## Automated GUI Smoke Tests
+
+Run the pytest-qt smoke coverage before relying on the manual GUI checklist:
+
+```powershell
+$env:DND_COMBAT_ENGINE_GUI_SMOKE = "1"
+$env:QT_QPA_PLATFORM = "offscreen"
+python -m pip install -e ".[dev,gui-test]"
+python -m pytest -m gui --no-cov
+```
+
+The automated smoke tests cover the core release-risk path:
+
+- Starter campaign GUI boot with isolated writable seed data.
+- Action bar slot activation against a selected monster target.
+- Combat Workspace action output.
+- Encounter-specific monster HP persistence.
+- Campaign activity recording for action-bar resolution.
+- Concentration spell activation, campaign persistence, and cleanup when
+  concentration is broken.
+
 ## Import Smoke Tests
 
 Test both import paths:
@@ -28,7 +49,7 @@ Test both import paths:
 
 ## GUI Smoke Tests
 
-Launch the app and verify:
+Launch the app and verify the manual behaviors not yet covered by pytest-qt:
 
 - Campaign menu opens.
 - Character menu opens Spellbook, Abilities, and Inventory.
@@ -41,7 +62,7 @@ Launch the app and verify:
 
 ## Combat Smoke Tests
 
-Run a starter combat:
+Run a starter combat for remaining manual coverage:
 
 1. Open the starter campaign.
 2. Set Ravenisis as party leader.
@@ -52,6 +73,10 @@ Run a starter combat:
 7. Cast Cure Wounds and confirm HP changes.
 8. Cast Bless or Beacon of Hope and confirm party-frame buff icons appear.
 9. Break concentration and confirm dependent icons are removed.
+
+The automated GUI smoke tests already cover a representative action-bar target
+attack and Bless concentration persistence/cleanup. Keep the manual pass for
+visual confirmation and behaviors not yet automated.
 
 ## Inventory Smoke Tests
 
