@@ -41,13 +41,24 @@ class DiceService:
 
 
 def _normalized_notation(notation: str) -> str:
-    return notation.strip().lower().replace(" ", "").replace("spellcasting_modifier", "0")
+    return (
+        notation.strip()
+        .lower()
+        .replace(" ", "")
+        .replace("spellcasting_modifier", "0")
+    )
 
 
 def _roll_compound(notation: str, rng: random.Random | None = None) -> DiceRollResult | None:
     if re.fullmatch(r"[+-]?\d+", notation):
         value = int(notation)
-        return DiceRollResult(notation=notation, total=value, rolls=(), kept=(), modifier=value)
+        return DiceRollResult(
+            notation=notation,
+            total=value,
+            rolls=(),
+            kept=(),
+            modifier=value,
+        )
     terms = _compound_terms(notation)
     if terms is None:
         return None
