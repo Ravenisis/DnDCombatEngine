@@ -45,6 +45,11 @@ addopts = "-q --cov=dnd_combat_engine --cov-report=term-missing --cov-fail-under
 testpaths = ["tests"]
 pythonpath = ["src"]
 
+[tool.coverage.run]
+omit = [
+  "src/dnd_combat_engine/srd_spells.py",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
