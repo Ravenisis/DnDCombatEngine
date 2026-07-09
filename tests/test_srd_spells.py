@@ -20,6 +20,16 @@ def test_srd_spell_compendium_covers_levels_zero_through_five() -> None:
     assert {"fireball", "raise_dead", "wall_of_force", "revivify"}.issubset(spell_ids)
 
 
+def test_srd_spell_helpers_filter_and_reject_unknown_ids() -> None:
+    low_level_ids = list_srd_spell_ids(max_spell_level=1)
+    counts = srd_spell_level_counts(max_spell_level=1)
+
+    assert "fireball" not in low_level_ids
+    assert "bless" in low_level_ids
+    assert counts.keys() == {0, 1}
+    assert get_srd_spell_data("not_a_spell") is None
+
+
 def test_persistence_lists_and_loads_builtin_srd_spells(tmp_path) -> None:
     service = PersistenceService(JsonFileStore(tmp_path))
 
@@ -38,6 +48,17 @@ def test_persistence_lists_and_loads_builtin_srd_spells(tmp_path) -> None:
     assert fireball.effects[0].dice == "8d6"
     assert raise_dead.level == 5
     assert raise_dead.effects[0].effect_kind.value == "healing"
+
+
+def test_persistence_reraises_unknown_spell_ids(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+
+    try:
+        service.load_spell("not_a_spell")
+    except FileNotFoundError:
+        pass
+    else:
+        raise AssertionError("expected FileNotFoundError")
 
 
 def test_saved_spell_overrides_builtin_srd_spell(tmp_path) -> None:
