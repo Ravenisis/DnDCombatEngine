@@ -56,4 +56,5 @@ def test_srd_spell_entries_include_rule_source_metadata() -> None:
     assert data is not None
     assert data["ritual"] is True
     assert data["rule_source"]["version"] == "5.2.1"
-    assert data["effects"][0]["rule_source"]["license_name"].startswith("Creative Commons")
+    license_name = data["effects"][0]["rule_source"]["license_name"]
+    assert license_name.startswith("Creative Commons")
