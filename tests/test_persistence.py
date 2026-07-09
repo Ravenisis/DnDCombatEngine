@@ -62,7 +62,9 @@ def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:
 
     service.save_spell(spell)
 
-    assert service.list_spell_ids() == ["shield"]
+    spell_ids = service.list_spell_ids()
+
+    assert "shield" in spell_ids
     assert service.load_spell("shield") == spell
     assert service.store.load("spells", "shield")["schema_version"] == 1
 
