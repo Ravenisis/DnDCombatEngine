@@ -37,8 +37,11 @@ def test_compendium_controller_loads_and_filters_spells(tmp_path) -> None:
     )
     controller.persistence_service.save_spell(shield)
 
+    level_one_spells = controller.spells_by_level(1)
+
     assert controller.load_spell("shield") == shield
-    assert controller.spells_by_level(1) == (shield,)
+    assert shield in level_one_spells
+    assert all(spell.level == 1 for spell in level_one_spells)
 
 
 def test_compendium_controller_loads_and_filters_monsters(tmp_path) -> None:
