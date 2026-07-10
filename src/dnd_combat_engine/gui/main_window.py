@@ -425,6 +425,9 @@ def _run_menu_action(
     if action_id == "campaign.import_url":
         _import_url_from_menu(window, qt, app, state)
         return
+    if action_id == "combat.clear_workspace":
+        _clear_combat_workspace(window)
+        return
     if action_id == "settings.key_binds":
         _open_key_binds_window(window, qt)
         return
@@ -445,13 +448,21 @@ def _run_menu_action(
     _set_status(window, f"{action_id} selected.")
 
 
+def _clear_combat_workspace(window) -> None:
+    workspace = getattr(window, "_dnd_central", None)
+    if workspace is not None and hasattr(workspace, "clear"):
+        workspace.clear()
+        workspace.append("Combat Workspace")
+    _set_status(window, "Combat workspace cleared.")
+
+
 def _report_bug_from_menu(window, qt, app: DnDCombatEngineApp) -> None:
     report = _ask_bug_report(qt, window)
     if report is None:
         _set_status(window, "Bug report canceled.")
         return
     try:
-        path = app.beta_reports.submit_bug_report(report)
+        location = app.beta_reports.submit_bug_report(report)
     except (OSError, ValueError) as exc:
         _show_message(window, qt, "Report Bug Failed", str(exc), error=True)
         _set_status(window, str(exc))
@@ -459,10 +470,10 @@ def _report_bug_from_menu(window, qt, app: DnDCombatEngineApp) -> None:
     _show_message(
         window,
         qt,
-        "Bug Report Saved",
-        f"Saved beta tester report to:\n{path}",
+        "Bug Report Submitted",
+        f"Submitted beta tester report to:\n{location}",
     )
-    _set_status(window, f"Saved bug report to {path}.")
+    _set_status(window, f"Submitted bug report to {location}.")
 
 
 def _ask_bug_report(qt, parent) -> BetaBugReport | None:
@@ -1084,6 +1095,14 @@ def _open_inventory_window(
                 character_id,
                 item_id,
             ),
+            on_sell=lambda item_id: _sell_inventory_item(
+                window,
+                qt,
+                app,
+                state,
+                character_id,
+                item_id,
+            ),
             on_currency_change=lambda delta_cp: _change_character_currency(
                 window,
                 app,
@@ -1126,11 +1145,19 @@ def _add_inventory_item_from_dialog(
         return
     try:
         character = app.characters.load(character_id)
+        purchase_total = item.purchase_price_cp * item.quantity
+        if purchase_total:
+            character.currency = character.currency.add_cp(-purchase_total)
         app.inventory.add_item(character, item, autosave=True)
     except (KeyError, ValueError) as exc:
         _show_message(window, qt, "Add Item Failed", str(exc), error=True)
         return
     message = f"Added {item.quantity} x {item.name} to {character.name}."
+    if purchase_total:
+        message = (
+            f"Bought {item.quantity} x {item.name} for "
+            f"{_currency_change_text(purchase_total)}."
+        )
     _record_campaign_activity(app, state, message, "inventory")
     refresh_inventory()
     _refresh_campaign_docks(window, qt, app, state)
@@ -1268,9 +1295,27 @@ def _srd_inventory_item_tooltip(item: InventoryItem) -> str:
     if item.purchase_price_cp:
         lines.append(f"Purchase Price: {_inventory_price_text(item.purchase_price_cp)}")
         lines.append(f"Sell Price: {_inventory_price_text(item.purchase_price_cp // 2)}")
+    if item.tags:
+        lines.append(f"Tags: {', '.join(item.tags)}")
     if item.notes:
-        lines.append(item.notes)
+        lines.append(_wrap_inventory_tooltip_text(item.notes))
     return "\n".join(lines)
+
+
+def _wrap_inventory_tooltip_text(value: str, width: int = 72) -> str:
+    words = value.split()
+    lines: list[str] = []
+    current: list[str] = []
+    for word in words:
+        next_line = " ".join((*current, word))
+        if current and len(next_line) > width:
+            lines.append(" ".join(current))
+            current = [word]
+        else:
+            current.append(word)
+    if current:
+        lines.append(" ".join(current))
+    return "\n".join(lines) if lines else value
 
 
 def _inventory_price_text(amount_cp: int) -> str:
@@ -1454,6 +1499,7 @@ def _key_bind_rows() -> tuple[tuple[str, str], ...]:
         ("Spellbook", "K"),
         ("Abilities", "N"),
         ("Roll Previous Die", "Ctrl+R"),
+        ("Clear Combat Workspace", "Ctrl+L"),
         ("Exit", "Ctrl+Q"),
     ]
     return tuple(rows)
@@ -1512,6 +1558,58 @@ def _consume_inventory_item(
     except KeyError:
         return 0
     return app.inventory.quantity(updated, item_id)
+
+
+def _sell_inventory_item(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    item_id: str,
+) -> int | str:
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        message = f"Selected character {character_id} could not be loaded."
+        _set_status(window, message)
+        return message
+    item = next((carried for carried in character.inventory if carried.item_id == item_id), None)
+    if item is None:
+        message = f"{character.name} does not have {item_id}."
+    else:
+        sell_price = _inventory_item_sell_price_cp(item)
+        removed = app.inventory.remove_item(character, item.item_id, 1, autosave=False)
+        if not removed:
+            message = f"Could not sell {item.name}."
+        else:
+            character.currency = character.currency.add_cp(sell_price)
+            app.characters.save(character)
+            message = (
+                f"Sold 1 x {item.name} for {_currency_change_text(sell_price)}. "
+                f"Balance {_currency_change_text(character.currency.total_cp)}."
+            )
+    _append_workspace(window, message)
+    _record_campaign_activity(app, state, str(message), "inventory")
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, message)
+    try:
+        updated = app.characters.load(character_id)
+    except KeyError:
+        return 0
+    return app.inventory.quantity(updated, item_id)
+
+
+def _inventory_item_sell_price_cp(item: InventoryItem) -> int:
+    return max((item.purchase_price_cp or _default_inventory_item_price_cp(item)) // 2, 0)
+
+
+def _default_inventory_item_price_cp(item: InventoryItem) -> int:
+    defaults = {
+        "potion_of_greater_healing": 50_000,
+        "potion_of_healing_greater": 50_000,
+    }
+    return defaults.get(item.item_id, 0)
 
 
 def _change_character_currency(

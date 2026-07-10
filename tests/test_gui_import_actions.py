@@ -217,8 +217,8 @@ def test_report_bug_menu_writes_beta_report(monkeypatch, tmp_path) -> None:
     main_window._run_menu_action(window, FakeQt, app, state, "help.report_bug")
 
     assert report_file.read_text(encoding="utf-8") == "Crash on launch"
-    assert FakeMessageBox.information_calls[-1][1] == "Bug Report Saved"
-    assert window.status.message == f"Saved bug report to {report_file}."
+    assert FakeMessageBox.information_calls[-1][1] == "Bug Report Submitted"
+    assert window.status.message == f"Submitted bug report to {report_file}."
 
 
 def test_report_bug_menu_handles_cancel(monkeypatch) -> None:

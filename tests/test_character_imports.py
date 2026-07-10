@@ -202,8 +202,10 @@ def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
     assert draft.armor.armor_class == 20
     assert [item.name for item in draft.inventory] == [
         "Bag of Holding",
-        "Potion of Healing (Greater",
+        "Potion of Healing (Greater)",
     ]
+    assert [item.quantity for item in draft.inventory] == [1, 1]
+    assert [item.weight for item in draft.inventory] == [5.0, 0.5]
     assert draft.currency.pp == 298
     assert draft.currency.gp == 9
 

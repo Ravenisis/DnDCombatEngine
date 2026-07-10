@@ -125,6 +125,13 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             submenu="Upload Character Sheet",
         ),
         GuiActionSpec("combat.quick_attack", "Combat", "Quick Attack", "Run a sample attack"),
+        GuiActionSpec(
+            "combat.clear_workspace",
+            "Combat",
+            "Clear Combat Workspace",
+            "Clear the visible combat workspace log",
+            "Ctrl+L",
+        ),
         GuiActionSpec("dice.roll_d4", "Dice", "Roll d4", "Roll a four-sided die"),
         GuiActionSpec("dice.roll_d6", "Dice", "Roll d6", "Roll a six-sided die"),
         GuiActionSpec("dice.roll_d8", "Dice", "Roll d8", "Roll an eight-sided die"),

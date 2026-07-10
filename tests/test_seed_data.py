@@ -33,8 +33,11 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert Weapon.from_dict(store.load("equipment", "rapier")).name == "Rapier"
     assert store.load("srd_catalog", "srd_spells_level_0_5")["entries"]
     srd_items = json.loads((DATA_ROOT / "equipment" / "srd_equipment.json").read_text())
+    assert len(srd_items) >= 200
     assert InventoryItem.from_dict(srd_items[0]).name
     assert any(item["name"] == "Potion of Healing" for item in srd_items)
+    assert any(item["name"] == "Playing Card Set" for item in srd_items)
+    assert any(item["name"] == "Airship" for item in srd_items)
 
 
 def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:

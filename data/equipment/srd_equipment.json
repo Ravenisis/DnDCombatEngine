@@ -1,227 +1,1172 @@
 [
   {
-    "item_id": "backpack",
-    "name": "Backpack",
+    "item_id": "amulet_worn_or_held",
+    "name": "Amulet (worn or held)",
     "category": "adventuring_gear",
-    "weight": 5,
-    "purchase_price_cp": 200,
-    "notes": "SRD adventuring gear. Holds carried equipment."
-  },
-  {
-    "item_id": "bedroll",
-    "name": "Bedroll",
-    "category": "adventuring_gear",
-    "weight": 7,
-    "purchase_price_cp": 100,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "crowbar",
-    "name": "Crowbar",
-    "category": "adventuring_gear",
-    "weight": 5,
-    "purchase_price_cp": 200,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "healers_kit",
-    "name": "Healer's Kit",
-    "category": "consumable",
-    "weight": 3,
+    "weight": 1.0,
     "purchase_price_cp": 500,
-    "notes": "SRD adventuring gear. Contains 10 uses."
-  },
-  {
-    "item_id": "holy_symbol",
-    "name": "Holy Symbol",
-    "category": "adventuring_gear",
-    "weight": 1,
-    "purchase_price_cp": 500,
-    "notes": "SRD spellcasting focus."
-  },
-  {
-    "item_id": "pouch",
-    "name": "Pouch",
-    "category": "adventuring_gear",
-    "weight": 1,
-    "purchase_price_cp": 50,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "rations_1_day",
-    "name": "Rations (1 day)",
-    "category": "consumable",
-    "weight": 2,
-    "purchase_price_cp": 50,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "rope_hempen_50_feet",
-    "name": "Rope, Hempen (50 feet)",
-    "category": "adventuring_gear",
-    "weight": 10,
-    "purchase_price_cp": 100,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "tinderbox",
-    "name": "Tinderbox",
-    "category": "adventuring_gear",
-    "weight": 1,
-    "purchase_price_cp": 50,
-    "notes": "SRD adventuring gear."
-  },
-  {
-    "item_id": "torch",
-    "name": "Torch",
-    "category": "consumable",
-    "weight": 1,
-    "purchase_price_cp": 1,
-    "notes": "SRD adventuring gear. Burns for 1 hour."
-  },
-  {
-    "item_id": "waterskin",
-    "name": "Waterskin",
-    "category": "adventuring_gear",
-    "weight": 5,
-    "purchase_price_cp": 20,
-    "notes": "SRD adventuring gear. Weight assumes it is full."
-  },
-  {
-    "item_id": "shield",
-    "name": "Shield",
-    "category": "armor",
-    "weight": 6,
-    "purchase_price_cp": 1000,
-    "notes": "SRD armor. Grants +2 AC when equipped."
-  },
-  {
-    "item_id": "leather_armor",
-    "name": "Leather Armor",
-    "category": "armor",
-    "weight": 10,
-    "purchase_price_cp": 1000,
-    "notes": "SRD light armor."
-  },
-  {
-    "item_id": "chain_mail",
-    "name": "Chain Mail",
-    "category": "armor",
-    "weight": 55,
-    "purchase_price_cp": 7500,
-    "notes": "SRD heavy armor."
-  },
-  {
-    "item_id": "plate_armor",
-    "name": "Plate Armor",
-    "category": "armor",
-    "weight": 65,
-    "purchase_price_cp": 150000,
-    "notes": "SRD heavy armor."
-  },
-  {
-    "item_id": "club",
-    "name": "Club",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 10,
-    "notes": "SRD weapon. 1d4 bludgeoning; light."
-  },
-  {
-    "item_id": "dagger",
-    "name": "Dagger",
-    "category": "weapon",
-    "weight": 1,
-    "purchase_price_cp": 200,
-    "notes": "SRD weapon. 1d4 piercing; finesse, light, thrown."
-  },
-  {
-    "item_id": "handaxe",
-    "name": "Handaxe",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 500,
-    "notes": "SRD weapon. 1d6 slashing; light, thrown."
-  },
-  {
-    "item_id": "mace",
-    "name": "Mace",
-    "category": "weapon",
-    "weight": 4,
-    "purchase_price_cp": 500,
-    "notes": "SRD weapon. 1d6 bludgeoning."
-  },
-  {
-    "item_id": "quarterstaff",
-    "name": "Quarterstaff",
-    "category": "weapon",
-    "weight": 4,
-    "purchase_price_cp": 20,
-    "notes": "SRD weapon. 1d6 bludgeoning; versatile 1d8."
-  },
-  {
-    "item_id": "spear",
-    "name": "Spear",
-    "category": "weapon",
-    "weight": 3,
-    "purchase_price_cp": 100,
-    "notes": "SRD weapon. 1d6 piercing; thrown, versatile 1d8."
-  },
-  {
-    "item_id": "light_crossbow",
-    "name": "Light Crossbow",
-    "category": "weapon",
-    "weight": 5,
-    "purchase_price_cp": 2500,
-    "notes": "SRD weapon. 1d8 piercing; ammunition, loading, two-handed."
-  },
-  {
-    "item_id": "shortbow",
-    "name": "Shortbow",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 2500,
-    "notes": "SRD weapon. 1d6 piercing; ammunition, two-handed."
-  },
-  {
-    "item_id": "longbow",
-    "name": "Longbow",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 5000,
-    "notes": "SRD weapon. 1d8 piercing; ammunition, heavy, two-handed."
-  },
-  {
-    "item_id": "rapier",
-    "name": "Rapier",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 2500,
-    "notes": "SRD weapon. 1d8 piercing; finesse."
-  },
-  {
-    "item_id": "warhammer",
-    "name": "Warhammer",
-    "category": "weapon",
-    "weight": 2,
-    "purchase_price_cp": 1500,
-    "notes": "SRD weapon. 1d8 bludgeoning; versatile 1d10."
+    "notes": "SRD holy symbol. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "holy symbol"
+    ]
   },
   {
     "item_id": "arrows_20",
     "name": "Arrows (20)",
     "category": "adventuring_gear",
-    "weight": 1,
+    "weight": 1.0,
     "purchase_price_cp": 100,
-    "notes": "SRD ammunition."
+    "notes": "SRD ammunition. Amount: 20. Typical storage: Quiver.",
+    "tags": [
+      "ammunition"
+    ]
   },
   {
-    "item_id": "crossbow_bolts_20",
-    "name": "Crossbow Bolts (20)",
+    "item_id": "backpack",
+    "name": "Backpack",
     "category": "adventuring_gear",
-    "weight": 1.5,
+    "weight": 5.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. A Backpack holds up to 30 pounds within 1 cubic foot. It can also serve as a saddlebag.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bag_of_holding",
+    "name": "Bag of Holding",
+    "category": "adventuring_gear",
+    "weight": 15.0,
+    "purchase_price_cp": 400000,
+    "notes": "Wondrous item. Stores far more than its outside dimensions suggest while keeping a fixed carried weight.",
+    "tags": [
+      "container",
+      "wondrous item"
+    ]
+  },
+  {
+    "item_id": "ball_bearings",
+    "name": "Ball Bearings",
+    "category": "adventuring_gear",
+    "weight": 2.0,
     "purchase_price_cp": 100,
-    "notes": "SRD ammunition."
+    "notes": "SRD adventuring gear. As a Utilize action, you can spill Ball Bearings from their pouch. They spread to cover a level, 10-foot-square area within 10 feet of yourself.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "barrel",
+    "name": "Barrel",
+    "category": "adventuring_gear",
+    "weight": 70.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. A Barrel holds up to 40 gallons of liquid or up to 4 cubic feet of dry goods.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "basket",
+    "name": "Basket",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 40,
+    "notes": "SRD adventuring gear. A Basket holds up to 40 pounds within 2 cubic feet.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bedroll",
+    "name": "Bedroll",
+    "category": "adventuring_gear",
+    "weight": 7.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Bedroll sleeps one Small or Medium creature. While in a Bedroll, you automatically succeed on saving throws against extreme cold (see \"Gameplay Toolbox\").",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bell",
+    "name": "Bell",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. When rung as a Utilize action, a Bell produces a sound that can be heard up to 60 feet away.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "blanket",
+    "name": "Blanket",
+    "category": "adventuring_gear",
+    "weight": 3.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear. While wrapped in a blanket, you have Advantage on saving throws against extreme cold (see \"Gameplay Toolbox\").",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "block_and_tackle",
+    "name": "Block and Tackle",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Block and Tackle allows you to hoist up to four times the weight you can normally lift.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bolts_20",
+    "name": "Bolts (20)",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD ammunition. Amount: 20. Typical storage: Case.",
+    "tags": [
+      "ammunition"
+    ]
+  },
+  {
+    "item_id": "book",
+    "name": "Book",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD adventuring gear. A Book contains fiction or nonfiction. If you consult an accurate nonfiction Book about its topic, you gain a +5 bonus to Intelligence (Arcana, History, Nature, or Religion) checks you make about that topic.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bottle_glass",
+    "name": "Bottle, Glass",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. A Glass Bottle holds up to 1\u00bd pints.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bucket",
+    "name": "Bucket",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 5,
+    "notes": "SRD adventuring gear. A Bucket holds up to half a cubic foot of contents.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "bullets_firearm_10",
+    "name": "Bullets, Firearm (10)",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 300,
+    "notes": "SRD ammunition. Amount: 10. Typical storage: Pouch.",
+    "tags": [
+      "ammunition"
+    ]
+  },
+  {
+    "item_id": "bullets_sling_20",
+    "name": "Bullets, Sling (20)",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 4,
+    "notes": "SRD ammunition. Amount: 20. Typical storage: Pouch.",
+    "tags": [
+      "ammunition"
+    ]
+  },
+  {
+    "item_id": "burglar_s_pack",
+    "name": "Burglar's Pack",
+    "category": "adventuring_gear",
+    "weight": 42.0,
+    "purchase_price_cp": 1600,
+    "notes": "SRD adventuring gear. A Burglar's Pack contains the following items: Backpack, Ball Bearings, Bell, 10 Candles, Crowbar, Hooded Lantern, 7 flasks of Oil, 5 days of Rations, Rope, Tinderbox, and Waterskin.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "caltrops",
+    "name": "Caltrops",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. As a Utilize action, you can spread Caltrops from their bag to cover a 5-foot-square area within 5 feet of yourself. A creature that enters this area for the first time on a turn must succeed on a DC 15 Dexterity saving throw or take 1 Piercing damage and have its Speed reduced to 0 until the start of its next turn.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "case_crossbow_bolt",
+    "name": "Case, Crossbow Bolt",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Crossbow Bolt Case holds up to 20 Bolts.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "case_map_or_scroll",
+    "name": "Case, Map or Scroll",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Map or Scroll Case holds up to 10 sheets of paper or 5 sheets of parchment.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "chain",
+    "name": "Chain",
+    "category": "adventuring_gear",
+    "weight": 10.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. As a Utilize action, you can wrap a Chain around an unwilling creature within 5 feet of yourself that has the Grappled, Incapacitated, or Restrained condition if you succeed on a DC 13 Strength (Athletics) check. If the creature's legs are bound, the creature has the Restrained condition until it escapes.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "chest",
+    "name": "Chest",
+    "category": "adventuring_gear",
+    "weight": 25.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. A Chest holds up to 12 cubic feet of contents.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "climber_s_kit",
+    "name": "Climber's Kit",
+    "category": "adventuring_gear",
+    "weight": 12.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD adventuring gear. A Climber's Kit includes boot tips, gloves, pitons, and a harness. As a Utilize action, you can use the Climber's Kit to anchor yourself; when you do, you can't fall more than 25 feet from the anchor point, and you can't move more than 25 feet from there without undoing the anchor as a Bonus Action.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "clothes_fine",
+    "name": "Clothes, Fine",
+    "category": "adventuring_gear",
+    "weight": 6.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD adventuring gear. Fine Clothes are made of expensive fabrics and adorned with expertly crafted details. Some events and locations admit only people wearing these clothes.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "clothes_traveler_s",
+    "name": "Clothes, Traveler's",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. Traveler's Clothes are resilient garments designed for travel in various environments.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "component_pouch",
+    "name": "Component Pouch",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD adventuring gear. A Component Pouch is watertight and filled with compartments that hold all the free Material components of your spells.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "costume",
+    "name": "Costume",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. While wearing a Costume, you have Advantage on any ability check you make to impersonate the person or type of person it represents.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "crowbar",
+    "name": "Crowbar",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. Using a Crowbar gives you Advantage on Strength checks where the Crowbar's leverage can be applied.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "crystal",
+    "name": "Crystal",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD arcane focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "arcane focus"
+    ]
+  },
+  {
+    "item_id": "diplomat_s_pack",
+    "name": "Diplomat's Pack",
+    "category": "adventuring_gear",
+    "weight": 39.0,
+    "purchase_price_cp": 3900,
+    "notes": "SRD adventuring gear. A Diplomat's Pack contains the following items: Chest, Fine Clothes, Ink, 5 Ink Pens, Lamp, 2 Map or Scroll Cases, 4 flasks of Oil, 5 sheets of Paper, 5 sheets of Parchment, Perfume, and Tinderbox.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "dungeoneer_s_pack",
+    "name": "Dungeoneer's Pack",
+    "category": "adventuring_gear",
+    "weight": 55.0,
+    "purchase_price_cp": 1200,
+    "notes": "SRD adventuring gear. A Dungeoneer's Pack contains the following items: Backpack, Caltrops, Crowbar, 2 flasks of Oil, 10 days of Rations, Rope, Tinderbox, 10 Torches, and Waterskin.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "emblem_borne_on_fabric_or_a_shield",
+    "name": "Emblem (borne on fabric or a Shield)",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD holy symbol. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "holy symbol"
+    ]
+  },
+  {
+    "item_id": "entertainer_s_pack",
+    "name": "Entertainer's Pack",
+    "category": "adventuring_gear",
+    "weight": 58.0,
+    "purchase_price_cp": 4000,
+    "notes": "SRD adventuring gear. An Entertainer's Pack contains the following items: Backpack, Bedroll, Bell, Bullseye Lantern, 3 Costumes, Mirror, 8 flasks of Oil, 9 days of Rations, Tinderbox, and Waterskin.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "explorer_s_pack",
+    "name": "Explorer's Pack",
+    "category": "adventuring_gear",
+    "weight": 55.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD adventuring gear. An Explorer's Pack contains the following items: Backpack, Bedroll, 2 flasks of Oil, 10 days of Rations, Rope, Tinderbox, 10 Torches, and Waterskin.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "feed_per_day",
+    "name": "Feed per day",
+    "category": "adventuring_gear",
+    "weight": 10.0,
+    "purchase_price_cp": 5,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "service"
+    ]
+  },
+  {
+    "item_id": "grappling_hook",
+    "name": "Grappling Hook",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. As a Utilize action, you can throw the Grappling Hook at a railing, a ledge, or another catch within 50 feet of yourself, and the hook catches on if you succeed on a DC 13 Dexterity (Acrobatics) check. If you tied a Rope to the hook, you can then climb it.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "healer_s_kit",
+    "name": "Healer's Kit",
+    "category": "adventuring_gear",
+    "weight": 3.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. A Healer's Kit has ten uses. As a Utilize action, you can expend one of its uses to stabilize an Unconscious creature that has 0 Hit Points without needing to make a Wisdom (Medicine) check.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "hunting_trap",
+    "name": "Hunting Trap",
+    "category": "adventuring_gear",
+    "weight": 25.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. As a Utilize action, you can set a Hunting Trap, which is a sawtooth steel ring that snaps shut when a creature steps on a pressure plate in the center. The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the ground.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "ink",
+    "name": "Ink",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD adventuring gear. Ink comes in a 1-ounce bottle, which provides enough ink to write about 500 pages.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "ink_pen",
+    "name": "Ink Pen",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 2,
+    "notes": "SRD adventuring gear. Using Ink, an Ink Pen is used to write or draw.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "jug",
+    "name": "Jug",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 2,
+    "notes": "SRD adventuring gear. A Jug holds up to 1 gallon.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "ladder",
+    "name": "Ladder",
+    "category": "adventuring_gear",
+    "weight": 25.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD adventuring gear. A Ladder is 10 feet tall. You must climb to move up or down it.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "lamp",
+    "name": "Lamp",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear. A Lamp burns Oil as fuel to cast Bright Light in a 15-foot radius and Dim Light for an additional 30 feet.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "lantern_bullseye",
+    "name": "Lantern, Bullseye",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD adventuring gear. A Bullseye Lantern burns Oil as fuel to cast Bright Light in a 60-foot Cone and Dim Light for an additional 60 feet.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "lantern_hooded",
+    "name": "Lantern, Hooded",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. A Hooded Lantern burns Oil as fuel to cast Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. As a Bonus Action, you can lower the hood, reducing the light to Dim Light in a 5-foot radius, or raise it again.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "lock",
+    "name": "Lock",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD adventuring gear. A Lock comes with a key. Without the key, a creature can use Thieves' Tools to pick this Lock with a successful DC 15 Dexterity (Sleight of Hand) check.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "magnifying_glass",
+    "name": "Magnifying Glass",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 10000,
+    "notes": "SRD adventuring gear. A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item. Lighting a fire with a Magnifying Glass requires light as bright as sunlight to focus, tinder to ignite, and about 5 minutes for the fire to ignite.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "manacles",
+    "name": "Manacles",
+    "category": "adventuring_gear",
+    "weight": 6.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. As a Utilize action, you can use Manacles to bind an unwilling Small or Medium creature within 5 feet of yourself that has the Grappled, Incapacitated, or Restrained condition if you succeed on a DC 13 Dexterity (Sleight of Hand) check. While bound, a creature has Disadvantage on attack rolls, and the creature is Restrained if the Manacles are attached to a chain or hook that is fixed in place.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "map",
+    "name": "Map",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. If you consult an accurate Map, you gain a +5 bonus to Wisdom (Survival) checks you make to find your way in the place represented on it.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "mirror",
+    "name": "Mirror",
+    "category": "adventuring_gear",
+    "weight": 0.5,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. A handheld steel Mirror is useful for personal cosmetics but also for peeking around corners and reflecting light as a signal.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "needles_50",
+    "name": "Needles (50)",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD ammunition. Amount: 50. Typical storage: Pouch.",
+    "tags": [
+      "ammunition"
+    ]
+  },
+  {
+    "item_id": "net",
+    "name": "Net",
+    "category": "adventuring_gear",
+    "weight": 3.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a Net. Target a creature you can see within 15 feet of yourself.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "orb",
+    "name": "Orb",
+    "category": "adventuring_gear",
+    "weight": 3.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD arcane focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "arcane focus"
+    ]
+  },
+  {
+    "item_id": "paper",
+    "name": "Paper",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 20,
+    "notes": "SRD adventuring gear. One sheet of Paper can hold about 250 handwritten words.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "parchment",
+    "name": "Parchment",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD adventuring gear. One sheet of Parchment can hold about 250 handwritten words.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "perfume",
+    "name": "Perfume",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. Perfume comes in a 4-ounce vial. For 1 hour after applying Perfume to yourself, you have Advantage on Charisma (Persuasion) checks made to influence an Indifferent Humanoid within 5 feet of yourself.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "pole",
+    "name": "Pole",
+    "category": "adventuring_gear",
+    "weight": 7.0,
+    "purchase_price_cp": 5,
+    "notes": "SRD adventuring gear. A Pole is 10 feet long. You can use it to touch something up to 10 feet away.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "pot_iron",
+    "name": "Pot, Iron",
+    "category": "adventuring_gear",
+    "weight": 10.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. An Iron Pot holds up to 1 gallon.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "pouch",
+    "name": "Pouch",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear. A Pouch holds up to 6 pounds within one-fifth of a cubic foot.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "priest_s_pack",
+    "name": "Priest's Pack",
+    "category": "adventuring_gear",
+    "weight": 29.0,
+    "purchase_price_cp": 3300,
+    "notes": "SRD adventuring gear. A Priest's Pack contains the following items: Backpack, Blanket, Holy Water, Lamp, 7 days of Rations, Robe, and Tinderbox.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "quiver",
+    "name": "Quiver",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Quiver holds up to 20 Arrows.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "ram_portable",
+    "name": "Ram, Portable",
+    "category": "adventuring_gear",
+    "weight": 35.0,
+    "purchase_price_cp": 400,
+    "notes": "SRD adventuring gear. You can use a Portable Ram to break down doors. When doing so, you gain a +4 bonus to the Strength check.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "reliquary_held",
+    "name": "Reliquary (held)",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD holy symbol. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "holy symbol"
+    ]
+  },
+  {
+    "item_id": "robe",
+    "name": "Robe",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Robe has vocational or ceremonial significance. Some events and locations admit only people wearing a Robe bearing certain colors or symbols.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "rod",
+    "name": "Rod",
+    "category": "adventuring_gear",
+    "weight": 2.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD arcane focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "arcane focus"
+    ]
+  },
+  {
+    "item_id": "rope",
+    "name": "Rope",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. As a Utilize action, you can tie a knot with Rope if you succeed on a DC 10 Dexterity (Sleight of Hand) check. The Rope can be burst with a successful DC 20 Strength (Athletics) check.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "sack",
+    "name": "Sack",
+    "category": "adventuring_gear",
+    "weight": 0.5,
+    "purchase_price_cp": 1,
+    "notes": "SRD adventuring gear. A Sack holds up to 30 pounds within 1 cubic foot.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "scholar_s_pack",
+    "name": "Scholar's Pack",
+    "category": "adventuring_gear",
+    "weight": 22.0,
+    "purchase_price_cp": 4000,
+    "notes": "SRD adventuring gear. A Scholar's Pack contains the following items: Backpack, Book, Ink, Ink Pen, Lamp, 10 flasks of Oil, 10 sheets of Parchment, and Tinderbox.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "shovel",
+    "name": "Shovel",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. Working for 1 hour, you can use a Shovel to dig a hole that is 5 feet on each side in soil or similar material.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "signal_whistle",
+    "name": "Signal Whistle",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 5,
+    "notes": "SRD adventuring gear. When blown as a Utilize action, a Signal Whistle produces a sound that can be heard up to 600 feet away.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "spikes_iron",
+    "name": "Spikes, Iron",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. Iron Spikes come in bundles of ten. As a Utilize action, you can use a blunt object, such as a Light Hammer, to hammer a spike into wood, earth, or a similar material.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "sprig_of_mistletoe",
+    "name": "Sprig of mistletoe",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD druidic focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "druidic focus"
+    ]
+  },
+  {
+    "item_id": "spyglass",
+    "name": "Spyglass",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 100000,
+    "notes": "SRD adventuring gear. Objects viewed through a Spyglass are magnified to twice their size.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "stabling_per_day",
+    "name": "Stabling per day",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "service"
+    ]
+  },
+  {
+    "item_id": "staff_also_a_quarterstaff",
+    "name": "Staff (also a Quarterstaff)",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD arcane focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "arcane focus"
+    ]
+  },
+  {
+    "item_id": "string",
+    "name": "String",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD adventuring gear. String is 10 feet long. You can tie a knot in it as a Utilize action.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "tent",
+    "name": "Tent",
+    "category": "adventuring_gear",
+    "weight": 20.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. A Tent sleeps up to two Small or Medium creatures.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "tinderbox",
+    "name": "Tinderbox",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear. A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch\u2014or anything else with exposed fuel\u2014takes a Bonus Action.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "vial",
+    "name": "Vial",
+    "category": "adventuring_gear",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear. A Vial holds up to 4 ounces.",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "wand",
+    "name": "Wand",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD arcane focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "arcane focus"
+    ]
+  },
+  {
+    "item_id": "waterskin",
+    "name": "Waterskin",
+    "category": "adventuring_gear",
+    "weight": 5.0,
+    "purchase_price_cp": 20,
+    "notes": "SRD adventuring gear. A Waterskin holds up to 4 pints. If you don't drink sufficient water, you risk dehydration (see \"Rules Glossary\").",
+    "tags": [
+      "adventuring_gear"
+    ]
+  },
+  {
+    "item_id": "wooden_staff_also_a_quarterstaff",
+    "name": "Wooden staff (also a Quarterstaff)",
+    "category": "adventuring_gear",
+    "weight": 4.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD druidic focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "druidic focus"
+    ]
+  },
+  {
+    "item_id": "yew_wand",
+    "name": "Yew wand",
+    "category": "adventuring_gear",
+    "weight": 1.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD druidic focus. Used as a spellcasting focus when your class permits it.",
+    "tags": [
+      "druidic focus"
+    ]
+  },
+  {
+    "item_id": "breastplate",
+    "name": "Breastplate",
+    "category": "armor",
+    "weight": 20.0,
+    "purchase_price_cp": 40000,
+    "notes": "SRD armor. Armor Class: 14 + Dex modifier (max 2). Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:14 + Dex modifier (max 2)"
+    ]
+  },
+  {
+    "item_id": "chain_mail",
+    "name": "Chain Mail",
+    "category": "armor",
+    "weight": 55.0,
+    "purchase_price_cp": 7500,
+    "notes": "SRD armor. Armor Class: 16. Strength: Str 13. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:16"
+    ]
+  },
+  {
+    "item_id": "chain_shirt",
+    "name": "Chain Shirt",
+    "category": "armor",
+    "weight": 20.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD armor. Armor Class: 13 + Dex modifier (max 2). Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:13 + Dex modifier (max 2)"
+    ]
+  },
+  {
+    "item_id": "half_plate_armor",
+    "name": "Half Plate Armor",
+    "category": "armor",
+    "weight": 40.0,
+    "purchase_price_cp": 75000,
+    "notes": "SRD armor. Armor Class: 15 + Dex modifier (max 2). Strength: \u2014. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:15 + Dex modifier (max 2)"
+    ]
+  },
+  {
+    "item_id": "hide_armor",
+    "name": "Hide Armor",
+    "category": "armor",
+    "weight": 12.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD armor. Armor Class: 12 + Dex modifier (max 2). Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:12 + Dex modifier (max 2)"
+    ]
+  },
+  {
+    "item_id": "leather_armor",
+    "name": "Leather Armor",
+    "category": "armor",
+    "weight": 10.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD armor. Armor Class: 11 + Dex modifier. Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:11 + Dex modifier"
+    ]
+  },
+  {
+    "item_id": "padded_armor",
+    "name": "Padded Armor",
+    "category": "armor",
+    "weight": 8.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD armor. Armor Class: 11 + Dex modifier. Strength: \u2014. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:11 + Dex modifier"
+    ]
+  },
+  {
+    "item_id": "plate_armor",
+    "name": "Plate Armor",
+    "category": "armor",
+    "weight": 65.0,
+    "purchase_price_cp": 150000,
+    "notes": "SRD armor. Armor Class: 18. Strength: Str 15. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:18"
+    ]
+  },
+  {
+    "item_id": "ring_mail",
+    "name": "Ring Mail",
+    "category": "armor",
+    "weight": 40.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD armor. Armor Class: 14. Strength: \u2014. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:14"
+    ]
+  },
+  {
+    "item_id": "scale_mail",
+    "name": "Scale Mail",
+    "category": "armor",
+    "weight": 45.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD armor. Armor Class: 14 + Dex modifier (max 2). Strength: \u2014. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:14 + Dex modifier (max 2)"
+    ]
+  },
+  {
+    "item_id": "shield",
+    "name": "Shield",
+    "category": "armor",
+    "weight": 6.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD armor. Armor Class: +2. Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:+2"
+    ]
+  },
+  {
+    "item_id": "splint_armor",
+    "name": "Splint Armor",
+    "category": "armor",
+    "weight": 60.0,
+    "purchase_price_cp": 20000,
+    "notes": "SRD armor. Armor Class: 17. Strength: Str 15. Stealth: Disadvantage.",
+    "tags": [
+      "armor",
+      "ac:17"
+    ]
+  },
+  {
+    "item_id": "studded_leather_armor",
+    "name": "Studded Leather Armor",
+    "category": "armor",
+    "weight": 13.0,
+    "purchase_price_cp": 4500,
+    "notes": "SRD armor. Armor Class: 12 + Dex modifier. Strength: \u2014. Stealth: \u2014.",
+    "tags": [
+      "armor",
+      "ac:12 + Dex modifier"
+    ]
+  },
+  {
+    "item_id": "acid",
+    "name": "Acid",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a vial of Acid. Target one creature or object you can see within 20 feet of yourself.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "alchemist_s_fire",
+    "name": "Alchemist's Fire",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a flask of Alchemist's Fire. Target one creature or object you can see within 20 feet of yourself.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "antitoxin",
+    "name": "Antitoxin",
+    "category": "consumable",
+    "weight": 0.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD adventuring gear. As a Bonus Action, you can drink a vial of Antitoxin to gain Advantage on saving throws to avoid or end the Poisoned condition for 1 hour.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "candle",
+    "name": "Candle",
+    "category": "consumable",
+    "weight": 0.0,
+    "purchase_price_cp": 1,
+    "notes": "SRD adventuring gear. For 1 hour, a lit Candle sheds Bright Light in a 5-foot radius and Dim Light for an additional 5 feet.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "flask",
+    "name": "Flask",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 2,
+    "notes": "SRD adventuring gear. A Flask holds up to 1 pint.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "holy_water",
+    "name": "Holy Water",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a flask of Holy Water. Target one creature you can see within 20 feet of yourself.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "oil",
+    "name": "Oil",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD adventuring gear. You can douse a creature, object, or space with Oil or use it as fuel, as detailed below. Dousing a Creature or an Object.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "poison_basic",
+    "name": "Poison, Basic",
+    "category": "consumable",
+    "weight": 0.0,
+    "purchase_price_cp": 10000,
+    "notes": "SRD adventuring gear. As a Bonus Action, you can use a vial of Basic Poison to coat one weapon or up to three pieces of ammunition. A creature that takes Piercing or Slashing damage from the poisoned weapon or ammunition takes an extra 1d4 Poison damage.",
+    "tags": [
+      "consumable"
+    ]
   },
   {
     "item_id": "potion_of_healing",
@@ -229,6 +1174,1240 @@
     "category": "consumable",
     "weight": 0.5,
     "purchase_price_cp": 5000,
-    "notes": "SRD consumable. Regain 2d4 + 2 hit points when consumed."
+    "notes": "SRD adventuring gear. Drink or administer it to restore 2d4 + 2 hit points.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "potion_of_healing_greater",
+    "name": "Potion of Healing (Greater)",
+    "category": "consumable",
+    "weight": 0.5,
+    "purchase_price_cp": 50000,
+    "notes": "Magic potion. Drink or administer it to restore 4d4 + 4 hit points.",
+    "tags": [
+      "potion",
+      "healing"
+    ]
+  },
+  {
+    "item_id": "rations",
+    "name": "Rations",
+    "category": "consumable",
+    "weight": 2.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear. Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See \"Malnutrition\" in \"Rules Glossary\" for the risks of not eating.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "spell_scroll_cantrip",
+    "name": "Spell Scroll (Cantrip)",
+    "category": "consumable",
+    "weight": 0.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD adventuring gear.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "spell_scroll_level_1",
+    "name": "Spell Scroll (Level 1)",
+    "category": "consumable",
+    "weight": 0.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD adventuring gear.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "torch",
+    "name": "Torch",
+    "category": "consumable",
+    "weight": 1.0,
+    "purchase_price_cp": 1,
+    "notes": "SRD adventuring gear. A Torch burns for 1 hour, casting Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. When you take the Attack action, you can attack with the Torch, using it as a Simple Melee weapon.",
+    "tags": [
+      "consumable"
+    ]
+  },
+  {
+    "item_id": "airship",
+    "name": "Airship",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 4000000,
+    "notes": "SRD large vehicle. Speed: 8 mph. Crew: 10. Passengers: 20. Cargo: 1 tons. AC 13; HP 300; Damage Threshold \u2014.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "camel",
+    "name": "Camel",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD mount or animal. Carrying capacity: 450 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "carriage",
+    "name": "Carriage",
+    "category": "other",
+    "weight": 600.0,
+    "purchase_price_cp": 10000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "cart",
+    "name": "Cart",
+    "category": "other",
+    "weight": 200.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "chariot",
+    "name": "Chariot",
+    "category": "other",
+    "weight": 100.0,
+    "purchase_price_cp": 25000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "elephant",
+    "name": "Elephant",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 20000,
+    "notes": "SRD mount or animal. Carrying capacity: 1,320 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "exotic",
+    "name": "Exotic",
+    "category": "other",
+    "weight": 40.0,
+    "purchase_price_cp": 6000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "galley",
+    "name": "Galley",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 3000000,
+    "notes": "SRD large vehicle. Speed: 4 mph. Crew: 80. Passengers: \u2014. Cargo: 150 tons. AC 15; HP 500; Damage Threshold 20.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "horse_draft",
+    "name": "Horse, Draft",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD mount or animal. Carrying capacity: 540 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "horse_riding",
+    "name": "Horse, Riding",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 7500,
+    "notes": "SRD mount or animal. Carrying capacity: 480 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "keelboat",
+    "name": "Keelboat",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 300000,
+    "notes": "SRD large vehicle. Speed: 1 mph. Crew: 1. Passengers: 6. Cargo: 1/2 tons. AC 15; HP 100; Damage Threshold 10.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "longship",
+    "name": "Longship",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 1000000,
+    "notes": "SRD large vehicle. Speed: 3 mph. Crew: 40. Passengers: 150. Cargo: 10 tons. AC 15; HP 300; Damage Threshold 15.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "mastiff",
+    "name": "Mastiff",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD mount or animal. Carrying capacity: 195 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "military",
+    "name": "Military",
+    "category": "other",
+    "weight": 30.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "mule",
+    "name": "Mule",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 800,
+    "notes": "SRD mount or animal. Carrying capacity: 420 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "pony",
+    "name": "Pony",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD mount or animal. Carrying capacity: 225 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "riding",
+    "name": "Riding",
+    "category": "other",
+    "weight": 25.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "rowboat",
+    "name": "Rowboat",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD large vehicle. Speed: 1\u00bd mph. Crew: 1. Passengers: 3. Cargo: \u2014 tons. AC 11; HP 50; Damage Threshold \u2014.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "sailing_ship",
+    "name": "Sailing Ship",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 1000000,
+    "notes": "SRD large vehicle. Speed: 2 mph. Crew: 20. Passengers: 20. Cargo: 100 tons. AC 15; HP 300; Damage Threshold 15.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "sled",
+    "name": "Sled",
+    "category": "other",
+    "weight": 300.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "wagon",
+    "name": "Wagon",
+    "category": "other",
+    "weight": 400.0,
+    "purchase_price_cp": 3500,
+    "notes": "SRD tack, harness, or drawn vehicle.",
+    "tags": [
+      "vehicle"
+    ]
+  },
+  {
+    "item_id": "warhorse",
+    "name": "Warhorse",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 40000,
+    "notes": "SRD mount or animal. Carrying capacity: 540 lb..",
+    "tags": [
+      "mount"
+    ]
+  },
+  {
+    "item_id": "warship",
+    "name": "Warship",
+    "category": "other",
+    "weight": 0.0,
+    "purchase_price_cp": 2500000,
+    "notes": "SRD large vehicle. Speed: 2\u00bd mph. Crew: 60. Passengers: 60. Cargo: 200 tons. AC 15; HP 500; Damage Threshold 20.",
+    "tags": [
+      "vehicle",
+      "large vehicle"
+    ]
+  },
+  {
+    "item_id": "alchemist_s_supplies",
+    "name": "Alchemist's Supplies",
+    "category": "tool",
+    "weight": 8.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Identify a substance (DC 15), or start a fire (DC 15). Craft: Acid, Alchemist's Fire, Component Pouch, Oil, Paper, Perfume.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "bagpipes",
+    "name": "Bagpipes",
+    "category": "tool",
+    "weight": 6.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "brewer_s_supplies",
+    "name": "Brewer's Supplies",
+    "category": "tool",
+    "weight": 9.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Detect poisoned drink (DC 15), or identify alcohol (DC 10). Craft: Antitoxin.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "calligrapher_s_supplies",
+    "name": "Calligrapher's Supplies",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Write text with impressive flourishes that guard against forgery (DC 15). Craft: Ink, _Spell Scroll_.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "carpenter_s_tools",
+    "name": "Carpenter's Tools",
+    "category": "tool",
+    "weight": 6.0,
+    "purchase_price_cp": 800,
+    "notes": "SRD tool. Ability: Strength. Utilize: Seal or pry open a door or container (DC 20). Craft: Club, Greatclub, Quarterstaff, Barrel, Chest, Ladder, Pole, Portable Ram, Torch.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "cartographer_s_tools",
+    "name": "Cartographer's Tools",
+    "category": "tool",
+    "weight": 6.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD tool. Ability: Wisdom. Utilize: Draft a map of a small area (DC 15). Craft: Map.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "cobbler_s_tools",
+    "name": "Cobbler's Tools",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Modify footwear to give Advantage on the wearer's next Dexterity (Acrobatics) check (DC 10). Craft: Climber's Kit.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "cook_s_utensils",
+    "name": "Cook's Utensils",
+    "category": "tool",
+    "weight": 8.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD tool. Ability: Wisdom. Utilize: Improve food's flavor (DC 10), or detect spoiled or poisoned food (DC 15). Craft: Rations.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "dice_set",
+    "name": "Dice Set",
+    "category": "tool",
+    "weight": 0.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD gaming set variant. Proficiency applies to checks made with this tool.",
+    "tags": [
+      "tool",
+      "gaming set"
+    ]
+  },
+  {
+    "item_id": "disguise_kit",
+    "name": "Disguise Kit",
+    "category": "tool",
+    "weight": 3.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD tool. Ability: Charisma. Utilize: Apply makeup (DC 10). Craft: Costume.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "dragonchess_set",
+    "name": "Dragonchess Set",
+    "category": "tool",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD gaming set variant. Proficiency applies to checks made with this tool.",
+    "tags": [
+      "tool",
+      "gaming set"
+    ]
+  },
+  {
+    "item_id": "drum",
+    "name": "Drum",
+    "category": "tool",
+    "weight": 3.0,
+    "purchase_price_cp": 600,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "dulcimer",
+    "name": "Dulcimer",
+    "category": "tool",
+    "weight": 10.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "flute",
+    "name": "Flute",
+    "category": "tool",
+    "weight": 1.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "forgery_kit",
+    "name": "Forgery Kit",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Mimic 10 or fewer words of someone else's handwriting (DC 15), or duplicate a wax seal (DC 20).",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "glassblower_s_tools",
+    "name": "Glassblower's Tools",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Discern what a glass object held in the past 24 hours (DC 15). Craft: Glass Bottle, Magnifying Glass, Spyglass, Vial.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "herbalism_kit",
+    "name": "Herbalism Kit",
+    "category": "tool",
+    "weight": 3.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Identify a plant (DC 10). Craft: Antitoxin, Candle, Healer's Kit, _Potion of Healing_.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "horn",
+    "name": "Horn",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 300,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "jeweler_s_tools",
+    "name": "Jeweler's Tools",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Discern a gem's value (DC 15). Craft: Arcane Focus, Holy Symbol.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "leatherworker_s_tools",
+    "name": "Leatherworker's Tools",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Add a design to a leather item (DC 10). Craft: Sling, Whip, Hide Armor, Leather Armor, Studded Leather Armor, Backpack, Crossbow Bolt Case, Map or Scroll Case, Parchment, Pouch, Quiver, Waterskin.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "lute",
+    "name": "Lute",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 3500,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "lyre",
+    "name": "Lyre",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "mason_s_tools",
+    "name": "Mason's Tools",
+    "category": "tool",
+    "weight": 8.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD tool. Ability: Strength. Utilize: Chisel a symbol or hole in stone (DC 10). Craft: Block and Tackle.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "navigator_s_tools",
+    "name": "Navigator's Tools",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD tool. Ability: Wisdom. Utilize: Plot a course (DC 10), or determine position by stargazing (DC 15).",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "painter_s_supplies",
+    "name": "Painter's Supplies",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD tool. Ability: Wisdom. Utilize: Paint a recognizable image of something you've seen (DC 10). Craft: Druidic Focus, Holy Symbol.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "pan_flute",
+    "name": "Pan Flute",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 1200,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "playing_card_set",
+    "name": "Playing Card Set",
+    "category": "tool",
+    "weight": 0.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD gaming set variant. Proficiency applies to checks made with this tool.",
+    "tags": [
+      "tool",
+      "gaming set"
+    ]
+  },
+  {
+    "item_id": "poisoner_s_kit",
+    "name": "Poisoner's Kit",
+    "category": "tool",
+    "weight": 2.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Detect a poisoned object (DC 10). Craft: Basic Poison.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "potter_s_tools",
+    "name": "Potter's Tools",
+    "category": "tool",
+    "weight": 3.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD tool. Ability: Intelligence. Utilize: Discern what a ceramic object held in the past 24 hours (DC 15). Craft: Jug, Lamp.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "shawm",
+    "name": "Shawm",
+    "category": "tool",
+    "weight": 1.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "smith_s_tools",
+    "name": "Smith's Tools",
+    "category": "tool",
+    "weight": 8.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD tool. Ability: Strength. Utilize: Pry open a door or container (DC 20). Craft: Any Melee weapon (except Club, Greatclub, Quarterstaff, and Whip), Medium armor (except Hide), Heavy armor, Ball Bearings, Bucket, Caltrops, Chain, Crowbar, Firearm Bullets, Grappling Hook, Iron Pot, Iron Spikes, Sling Bullets.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "thieves_tools",
+    "name": "Thieves' Tools",
+    "category": "tool",
+    "weight": 1.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Pick a lock (DC 15), or disarm a trap (DC 15).",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "three_dragon_ante_set",
+    "name": "Three-Dragon Ante Set",
+    "category": "tool",
+    "weight": 0.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD gaming set variant. Proficiency applies to checks made with this tool.",
+    "tags": [
+      "tool",
+      "gaming set"
+    ]
+  },
+  {
+    "item_id": "tinker_s_tools",
+    "name": "Tinker's Tools",
+    "category": "tool",
+    "weight": 10.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Assemble a Tiny item composed of scrap, which falls apart in 1 minute (DC 20). Craft: Musket, Pistol, Bell, Bullseye Lantern, Flask, Hooded Lantern, Hunting Trap, Lock, Manacles, Mirror, Shovel, Signal Whistle, Tinderbox.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "viol",
+    "name": "Viol",
+    "category": "tool",
+    "weight": 1.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD musical instrument. Proficiency applies to checks made with this instrument.",
+    "tags": [
+      "tool",
+      "musical instrument"
+    ]
+  },
+  {
+    "item_id": "weaver_s_tools",
+    "name": "Weaver's Tools",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Mend a tear in clothing (DC 10), or sew a Tiny design (DC 10). Craft: Padded Armor, Basket, Bedroll, Blanket, Fine Clothes, Net, Robe, Rope, Sack, String, Tent, Traveler's Clothes.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "woodcarver_s_tools",
+    "name": "Woodcarver's Tools",
+    "category": "tool",
+    "weight": 5.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD tool. Ability: Dexterity. Utilize: Carve a pattern in wood (DC 10). Craft: Club, Greatclub, Quarterstaff, Ranged weapons (except Pistol, Musket, and Sling), Arcane Focus, Arrows, Bolts, Druidic Focus, Ink Pen, Needles.",
+    "tags": [
+      "tool"
+    ]
+  },
+  {
+    "item_id": "battleaxe",
+    "name": "Battleaxe",
+    "category": "weapon",
+    "weight": 4.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 1d8 Slashing. Properties: Versatile (1d10). Mastery: Topple.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Slashing",
+      "mastery:Topple"
+    ]
+  },
+  {
+    "item_id": "blowgun",
+    "name": "Blowgun",
+    "category": "weapon",
+    "weight": 1.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 1 Piercing. Properties: Ammunition (Range 25/100; Needle), Loading. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "club",
+    "name": "Club",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD weapon. Damage: 1d4 Bludgeoning. Properties: Light. Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Bludgeoning",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "dagger",
+    "name": "Dagger",
+    "category": "weapon",
+    "weight": 1.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD weapon. Damage: 1d4 Piercing. Properties: Finesse, Light, Thrown (Range 20/60). Mastery: Nick.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Piercing",
+      "mastery:Nick"
+    ]
+  },
+  {
+    "item_id": "dart",
+    "name": "Dart",
+    "category": "weapon",
+    "weight": 0.25,
+    "purchase_price_cp": 5,
+    "notes": "SRD weapon. Damage: 1d4 Piercing. Properties: Finesse, Thrown (Range 20/60). Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "flail",
+    "name": "Flail",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 1d8 Bludgeoning. Properties: \u2014. Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Bludgeoning",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "glaive",
+    "name": "Glaive",
+    "category": "weapon",
+    "weight": 6.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD weapon. Damage: 1d10 Slashing. Properties: Heavy, Reach, Two-Handed. Mastery: Graze.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Slashing",
+      "mastery:Graze"
+    ]
+  },
+  {
+    "item_id": "greataxe",
+    "name": "Greataxe",
+    "category": "weapon",
+    "weight": 7.0,
+    "purchase_price_cp": 3000,
+    "notes": "SRD weapon. Damage: 1d12 Slashing. Properties: Heavy, Two-Handed. Mastery: Cleave.",
+    "tags": [
+      "weapon",
+      "damage:1d12 Slashing",
+      "mastery:Cleave"
+    ]
+  },
+  {
+    "item_id": "greatclub",
+    "name": "Greatclub",
+    "category": "weapon",
+    "weight": 10.0,
+    "purchase_price_cp": 20,
+    "notes": "SRD weapon. Damage: 1d8 Bludgeoning. Properties: Two-Handed. Mastery: Push.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Bludgeoning",
+      "mastery:Push"
+    ]
+  },
+  {
+    "item_id": "greatsword",
+    "name": "Greatsword",
+    "category": "weapon",
+    "weight": 6.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD weapon. Damage: 2d6 Slashing. Properties: Heavy, Two-Handed. Mastery: Graze.",
+    "tags": [
+      "weapon",
+      "damage:2d6 Slashing",
+      "mastery:Graze"
+    ]
+  },
+  {
+    "item_id": "halberd",
+    "name": "Halberd",
+    "category": "weapon",
+    "weight": 6.0,
+    "purchase_price_cp": 2000,
+    "notes": "SRD weapon. Damage: 1d10 Slashing. Properties: Heavy, Reach, Two-Handed. Mastery: Cleave.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Slashing",
+      "mastery:Cleave"
+    ]
+  },
+  {
+    "item_id": "hand_crossbow",
+    "name": "Hand Crossbow",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 7500,
+    "notes": "SRD weapon. Damage: 1d6 Piercing. Properties: Ammunition (Range 30/120; Bolt), Light, Loading. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "handaxe",
+    "name": "Handaxe",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. Damage: 1d6 Slashing. Properties: Light, Thrown (Range 20/60). Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Slashing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "heavy_crossbow",
+    "name": "Heavy Crossbow",
+    "category": "weapon",
+    "weight": 18.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD weapon. Damage: 1d10 Piercing. Properties: Ammunition (Range 100/400; Bolt), Heavy, Loading, Two-Handed. Mastery: Push.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Piercing",
+      "mastery:Push"
+    ]
+  },
+  {
+    "item_id": "javelin",
+    "name": "Javelin",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 50,
+    "notes": "SRD weapon. Damage: 1d6 Piercing. Properties: Thrown (Range 30/120). Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Piercing",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "lance",
+    "name": "Lance",
+    "category": "weapon",
+    "weight": 6.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 1d10 Piercing. Properties: Heavy, Reach, Two-Handed (unless mounted). Mastery: Topple.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Piercing",
+      "mastery:Topple"
+    ]
+  },
+  {
+    "item_id": "light_crossbow",
+    "name": "Light Crossbow",
+    "category": "weapon",
+    "weight": 5.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Ammunition (Range 80/320; Bolt), Loading, Two-Handed. Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "light_hammer",
+    "name": "Light Hammer",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD weapon. Damage: 1d4 Bludgeoning. Properties: Light, Thrown (Range 20/60). Mastery: Nick.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Bludgeoning",
+      "mastery:Nick"
+    ]
+  },
+  {
+    "item_id": "longbow",
+    "name": "Longbow",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 5000,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Ammunition (Range 150/600; Arrow), Heavy, Two-Handed. Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "longsword",
+    "name": "Longsword",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD weapon. Damage: 1d8 Slashing. Properties: Versatile (1d10). Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Slashing",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "mace",
+    "name": "Mace",
+    "category": "weapon",
+    "weight": 4.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. Damage: 1d6 Bludgeoning. Properties: \u2014. Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Bludgeoning",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "maul",
+    "name": "Maul",
+    "category": "weapon",
+    "weight": 10.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 2d6 Bludgeoning. Properties: Heavy, Two-Handed. Mastery: Topple.",
+    "tags": [
+      "weapon",
+      "damage:2d6 Bludgeoning",
+      "mastery:Topple"
+    ]
+  },
+  {
+    "item_id": "morningstar",
+    "name": "Morningstar",
+    "category": "weapon",
+    "weight": 4.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: \u2014. Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "musket",
+    "name": "Musket",
+    "category": "weapon",
+    "weight": 10.0,
+    "purchase_price_cp": 50000,
+    "notes": "SRD weapon. Damage: 1d12 Piercing. Properties: Ammunition (Range 40/120; Bullet), Loading, Two-Handed. Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d12 Piercing",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "pike",
+    "name": "Pike",
+    "category": "weapon",
+    "weight": 18.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. Damage: 1d10 Piercing. Properties: Heavy, Reach, Two-Handed. Mastery: Push.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Piercing",
+      "mastery:Push"
+    ]
+  },
+  {
+    "item_id": "pistol",
+    "name": "Pistol",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 25000,
+    "notes": "SRD weapon. Damage: 1d10 Piercing. Properties: Ammunition (Range 30/90; Bullet), Loading. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d10 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "quarterstaff",
+    "name": "Quarterstaff",
+    "category": "weapon",
+    "weight": 4.0,
+    "purchase_price_cp": 20,
+    "notes": "SRD weapon. Damage: 1d6 Bludgeoning. Properties: Versatile (1d8). Mastery: Topple.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Bludgeoning",
+      "mastery:Topple"
+    ]
+  },
+  {
+    "item_id": "rapier",
+    "name": "Rapier",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Finesse. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "scimitar",
+    "name": "Scimitar",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. Damage: 1d6 Slashing. Properties: Finesse, Light. Mastery: Nick.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Slashing",
+      "mastery:Nick"
+    ]
+  },
+  {
+    "item_id": "shortbow",
+    "name": "Shortbow",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. Damage: 1d6 Piercing. Properties: Ammunition (Range 80/320; Arrow), Two-Handed. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "shortsword",
+    "name": "Shortsword",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 1000,
+    "notes": "SRD weapon. Damage: 1d6 Piercing. Properties: Finesse, Light. Mastery: Vex.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Piercing",
+      "mastery:Vex"
+    ]
+  },
+  {
+    "item_id": "sickle",
+    "name": "Sickle",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD weapon. Damage: 1d4 Slashing. Properties: Light. Mastery: Nick.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Slashing",
+      "mastery:Nick"
+    ]
+  },
+  {
+    "item_id": "sling",
+    "name": "Sling",
+    "category": "weapon",
+    "weight": 0.0,
+    "purchase_price_cp": 10,
+    "notes": "SRD weapon. Damage: 1d4 Bludgeoning. Properties: Ammunition (Range 30/120; Bullet). Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Bludgeoning",
+      "mastery:Slow"
+    ]
+  },
+  {
+    "item_id": "spear",
+    "name": "Spear",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 100,
+    "notes": "SRD weapon. Damage: 1d6 Piercing. Properties: Thrown (Range 20/60), Versatile (1d8). Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d6 Piercing",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "trident",
+    "name": "Trident",
+    "category": "weapon",
+    "weight": 4.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Thrown (Range 20/60), Versatile (1d10). Mastery: Topple.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Topple"
+    ]
+  },
+  {
+    "item_id": "war_pick",
+    "name": "War Pick",
+    "category": "weapon",
+    "weight": 2.0,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Versatile (1d10). Mastery: Sap.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Piercing",
+      "mastery:Sap"
+    ]
+  },
+  {
+    "item_id": "warhammer",
+    "name": "Warhammer",
+    "category": "weapon",
+    "weight": 5.0,
+    "purchase_price_cp": 1500,
+    "notes": "SRD weapon. Damage: 1d8 Bludgeoning. Properties: Versatile (1d10). Mastery: Push.",
+    "tags": [
+      "weapon",
+      "damage:1d8 Bludgeoning",
+      "mastery:Push"
+    ]
+  },
+  {
+    "item_id": "whip",
+    "name": "Whip",
+    "category": "weapon",
+    "weight": 3.0,
+    "purchase_price_cp": 200,
+    "notes": "SRD weapon. Damage: 1d4 Slashing. Properties: Finesse, Reach. Mastery: Slow.",
+    "tags": [
+      "weapon",
+      "damage:1d4 Slashing",
+      "mastery:Slow"
+    ]
   }
 ]

@@ -285,11 +285,28 @@ def _dndbeyond_inventory_items(values: list[str]) -> tuple[str, ...]:
         if index > start and name == values[0]:
             break
         if _looks_like_inventory_name(name):
-            items.append(name)
+            quantity = values[index + 1] if index + 1 < len(values) else "1"
+            weight = values[index + 2] if index + 2 < len(values) else "0"
+            items.append(_inventory_entry_text(name, quantity, weight))
             index += 3
             continue
         index += 1
     return tuple(items)
+
+
+def _inventory_entry_text(name: str, quantity: str, weight: str) -> str:
+    clean_name = _repair_inventory_name(name)
+    clean_quantity = quantity if re.fullmatch(r"\d+", quantity.strip()) else "1"
+    weight_match = re.search(r"\d+(?:\.\d+)?", weight)
+    clean_weight = weight_match.group(0) if weight_match else "0"
+    return f"{clean_quantity} x {clean_name} ({clean_weight} lb)"
+
+
+def _repair_inventory_name(name: str) -> str:
+    clean_name = name.strip()
+    if clean_name.count("(") > clean_name.count(")"):
+        clean_name += ")"
+    return clean_name
 
 
 def _dndbeyond_currency(values: list[str]) -> str | None:
@@ -549,11 +566,35 @@ def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
 
 def _inventory_items_from_names(names: list[str]) -> tuple[InventoryItem, ...]:
     items = []
-    for name in names:
+    for raw_name in names:
+        name, quantity, weight = _parse_inventory_entry(raw_name)
         item_id = _slug(name)
         if item_id:
-            items.append(InventoryItem(item_id=item_id, name=name, category=ItemCategory.OTHER))
+            items.append(
+                InventoryItem(
+                    item_id=item_id,
+                    name=name,
+                    quantity=quantity,
+                    weight=weight,
+                    category=ItemCategory.OTHER,
+                )
+            )
     return tuple(items)
+
+
+def _parse_inventory_entry(value: str) -> tuple[str, int, float]:
+    text = value.strip()
+    quantity = 1
+    weight = 0.0
+    quantity_match = re.match(r"(?P<quantity>\d+)\s*x\s+(?P<name>.+)", text, flags=re.I)
+    if quantity_match:
+        quantity = max(int(quantity_match.group("quantity")), 1)
+        text = quantity_match.group("name").strip()
+    weight_match = re.search(r"\((?P<weight>\d+(?:\.\d+)?)\s*lb\.?\)$", text, flags=re.I)
+    if weight_match:
+        weight = float(weight_match.group("weight"))
+        text = text[: weight_match.start()].strip()
+    return _repair_inventory_name(text.strip(" .:-")), quantity, weight
 
 
 def _split_inventory_line(value: str) -> list[str]:

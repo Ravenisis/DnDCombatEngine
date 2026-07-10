@@ -371,6 +371,24 @@ def test_srd_inventory_dialog_tooltip_includes_item_details() -> None:
     assert "2d4 + 2" in tooltip
 
 
+def test_inventory_sell_price_uses_half_purchase_price() -> None:
+    from dnd_combat_engine.gui import main_window
+    from dnd_combat_engine.models import InventoryItem
+
+    assert (
+        main_window._inventory_item_sell_price_cp(
+            InventoryItem("playing_card_set", "Playing Card Set", purchase_price_cp=50)
+        )
+        == 25
+    )
+    assert (
+        main_window._inventory_item_sell_price_cp(
+            InventoryItem("potion_of_greater_healing", "Potion of Healing (Greater)")
+        )
+        == 25_000
+    )
+
+
 def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     from types import SimpleNamespace
 

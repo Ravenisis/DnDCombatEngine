@@ -33,7 +33,7 @@ from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, 
 from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.effects import TargetKind, TargetReference
 from dnd_combat_engine.models.encounters import ParticipantKind
-from dnd_combat_engine.models.inventory import InventoryItem
+from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.spell_slots import (
     ensure_spell_slot_resources,
     ensure_spell_slot_resources_for_level,
@@ -791,6 +791,7 @@ class InventoryWidget:
         qt,
         character_id: str,
         on_consume=None,
+        on_sell=None,
         on_currency_change=None,
         on_add_item=None,
     ):
@@ -809,7 +810,7 @@ class InventoryWidget:
         )
         sections = _inventory_sections(character.inventory)
         for section_name, items in sections:
-            section = _inventory_section(qt, section_name, items, on_consume)
+            section = _inventory_section(qt, section_name, items, on_consume, on_sell)
             layout.addWidget(section)
         if hasattr(layout, "addStretch"):
             layout.addStretch(1)
@@ -1009,7 +1010,13 @@ def _set_currency_boxes(boxes, purse: CurrencyPurse) -> None:
             box.setText(str(values[label]))
 
 
-def _inventory_section(qt, section_name: str, items: tuple[InventoryItem, ...], on_consume):
+def _inventory_section(
+    qt,
+    section_name: str,
+    items: tuple[InventoryItem, ...],
+    on_consume,
+    on_sell,
+):
     group_class = getattr(qt.QtWidgets, "QGroupBox", qt.QtWidgets.QWidget)
     try:
         group = group_class(section_name)
@@ -1020,7 +1027,7 @@ def _inventory_section(qt, section_name: str, items: tuple[InventoryItem, ...], 
     grid_class = getattr(qt.QtWidgets, "QGridLayout", qt.QtWidgets.QVBoxLayout)
     layout = grid_class(group)
     for index, item in enumerate(items):
-        button = _inventory_item_button(qt, item, on_consume)
+        button = _inventory_item_button(qt, item, on_consume, on_sell)
         row, column = divmod(index, 6)
         if hasattr(layout, "addWidget"):
             try:
@@ -1032,8 +1039,8 @@ def _inventory_section(qt, section_name: str, items: tuple[InventoryItem, ...], 
     return group
 
 
-def _inventory_item_button(qt, item: InventoryItem, on_consume):
-    button_class = _inventory_button_class(qt, item, on_consume)
+def _inventory_item_button(qt, item: InventoryItem, on_consume, on_sell):
+    button_class = _inventory_button_class(qt, item, on_consume, on_sell)
     button = button_class(_inventory_quantity_text(item))
     if hasattr(button, "setToolTip"):
         button.setToolTip(_inventory_item_tooltip(item))
@@ -1053,24 +1060,78 @@ def _inventory_item_button(qt, item: InventoryItem, on_consume):
     return button
 
 
-def _inventory_button_class(qt, item: InventoryItem, on_consume):
+def _inventory_button_class(qt, item: InventoryItem, on_consume, on_sell):
     base_class = qt.QtWidgets.QPushButton
 
     class ConsumableInventoryButton(base_class):
         def mousePressEvent(self, event) -> None:  # noqa: N802
-            if _is_right_click(qt, event) and on_consume is not None:
-                remaining = on_consume(item.item_id)
-                if isinstance(remaining, int):
-                    if remaining <= 0 and hasattr(self, "setEnabled"):
-                        self.setEnabled(False)
-                    if hasattr(self, "setText"):
-                        self.setText(str(remaining) if remaining > 1 else "")
+            if _is_right_click(qt, event) and any((on_consume, on_sell)):
+                _show_inventory_item_menu(qt, self, item, on_consume, on_sell, event)
                 if hasattr(event, "accept"):
                     event.accept()
                 return
             super().mousePressEvent(event)
 
     return ConsumableInventoryButton
+
+
+def _show_inventory_item_menu(qt, button, item: InventoryItem, on_consume, on_sell, event) -> None:
+    menu_class = getattr(qt.QtWidgets, "QMenu", None)
+    if menu_class is None:
+        _consume_inventory_button_item(button, item, on_consume)
+        return
+    menu = menu_class(button)
+    if on_consume is not None:
+        consume_action = menu.addAction("Consume")
+        if item.category != ItemCategory.CONSUMABLE and hasattr(consume_action, "setEnabled"):
+            consume_action.setEnabled(False)
+        if hasattr(consume_action, "triggered"):
+            consume_action.triggered.connect(
+                lambda checked=False: _consume_inventory_button_item(button, item, on_consume)
+            )
+    if on_sell is not None:
+        sell_action = menu.addAction(f"Sell ({_currency_price_text(_sell_price_cp(item))})")
+        if hasattr(sell_action, "triggered"):
+            sell_action.triggered.connect(
+                lambda checked=False: _sell_inventory_button_item(button, item, on_sell)
+            )
+    position = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else None
+    if position is None:
+        position = event.globalPos() if hasattr(event, "globalPos") else None
+    if position is None and hasattr(button, "mapToGlobal"):
+        position = button.mapToGlobal(event.pos())
+    if hasattr(menu, "exec"):
+        menu.exec(position)
+    elif hasattr(menu, "exec_"):
+        menu.exec_(position)
+
+
+def _consume_inventory_button_item(button, item: InventoryItem, on_consume) -> None:
+    if on_consume is None:
+        return
+    remaining = on_consume(item.item_id)
+    _set_inventory_button_remaining(button, remaining)
+
+
+def _sell_inventory_button_item(button, item: InventoryItem, on_sell) -> None:
+    if on_sell is None:
+        return
+    remaining = on_sell(item.item_id)
+    _set_inventory_button_remaining(button, remaining)
+
+
+def _set_inventory_button_remaining(button, remaining) -> None:
+    if not isinstance(remaining, int):
+        return
+    if remaining <= 0 and hasattr(button, "setEnabled"):
+        button.setEnabled(False)
+    if hasattr(button, "setText"):
+        button.setText(str(remaining) if remaining > 1 else "")
+
+
+def _sell_price_cp(item: InventoryItem) -> int:
+    price_cp = item.purchase_price_cp or _default_purchase_price_cp(item)
+    return max(price_cp // 2, 0)
 
 
 def _inventory_quantity_text(item: InventoryItem) -> str:
@@ -1108,22 +1169,122 @@ def _inventory_icon_path(item: InventoryItem) -> Path | None:
 def _inventory_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
     names = [item.item_id, _action_id(item.name)]
     aliases = {
+        "acid": "consumable",
+        "alchemists_fire": "consumable",
+        "antitoxin": "potion",
+        "arcane_focus": "focus",
+        "arrows_20": "arrows",
         "bag_of_holding": "bag_of_holding",
+        "bagpipes": "instrument",
+        "ball_bearings": "adventuring_gear",
+        "barrel": "container",
+        "basket": "container",
+        "bedroll": "adventuring_gear",
+        "bell": "tool",
+        "blanket": "clothing",
+        "bolts_20": "arrows",
+        "book": "book",
+        "bottle_glass": "potion",
         "bullseye_lantern": "bullseye_lantern",
+        "bullets_firearm_10": "ammunition",
+        "bullets_sling_20": "ammunition",
+        "burglar_s_pack": "backpack",
+        "caltrops": "trap",
+        "candle": "light_source",
+        "case_crossbow_bolt": "container",
+        "case_map_or_scroll": "scroll",
+        "chest": "container",
+        "climber_s_kit": "tool",
         "clothes_common": "common_clothes",
+        "clothes_fine": "clothing",
+        "clothes_traveler_s": "clothing",
+        "component_pouch": "pouch",
+        "costume": "clothing",
+        "crystal": "focus",
+        "dice_set": "game",
+        "diplomat_s_pack": "backpack",
+        "dragonchess_set": "game",
+        "druidic_focus": "focus",
+        "dungeoneer_s_pack": "backpack",
+        "emblem_borne_on_fabric_or_a_shield": "holy_symbol",
+        "entertainer_s_pack": "backpack",
+        "explorer_s_pack": "backpack",
+        "flask": "potion",
+        "flute": "instrument",
+        "forgery_kit": "tool",
+        "grappling_hook": "adventuring_gear",
         "healers_kit": "healers_kit",
+        "herbalism_kit": "tool",
         "holy_symbol": "holy_symbol",
+        "holy_water": "potion",
+        "horn": "instrument",
+        "hunting_trap": "trap",
+        "ink": "adventuring_gear",
+        "ink_pen": "tool",
+        "lantern_bullseye": "bullseye_lantern",
+        "lantern_hooded": "light_source",
+        "lock": "lock",
+        "lute": "instrument",
+        "lyre": "instrument",
+        "manacles": "lock",
         "masons_tools": "mason_tools",
+        "needles_50": "ammunition",
+        "oil": "potion",
+        "orb": "focus",
+        "pan_flute": "instrument",
+        "playing_card_set": "game",
         "piton": "pitons",
+        "poison_basic": "potion",
         "plate": "plate_armour",
+        "potion_of_healing": "potion",
         "potion_of_healing_greater": "potion_of_greater_healing",
+        "priest_s_pack": "backpack",
+        "ram_portable": "adventuring_gear",
         "rope": "hempen_rope",
         "rations_1_day": "rations_1_day",
+        "rations": "rations_1_day",
+        "reliquary_held": "holy_symbol",
+        "robe": "clothing",
+        "rod": "focus",
+        "scholar_s_pack": "backpack",
+        "scroll": "scroll",
         "shield": "shield_round",
+        "spell_scroll_cantrip": "scroll",
+        "spell_scroll_level_1": "scroll",
+        "sprig_of_mistletoe": "focus",
+        "staff_also_a_quarterstaff": "focus",
+        "tent": "adventuring_gear",
+        "three_dragon_ante_set": "game",
+        "vial": "potion",
+        "viol": "instrument",
+        "wand": "focus",
+        "wooden_staff_also_a_quarterstaff": "focus",
+        "yew_wand": "focus",
     }
     if item.item_id in aliases:
         names.insert(0, aliases[item.item_id])
+    names.extend(_inventory_tag_icon_candidates(item))
     return tuple(dict.fromkeys(names))
+
+
+def _inventory_tag_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
+    tag_icons = {
+        "ammunition": "ammunition",
+        "arcane focus": "focus",
+        "container": "container",
+        "druidic focus": "focus",
+        "gaming set": "game",
+        "healing": "potion",
+        "holy symbol": "holy_symbol",
+        "large vehicle": "vehicle",
+        "mount": "mount",
+        "musical instrument": "instrument",
+        "potion": "potion",
+        "scroll": "scroll",
+        "service": "treasure",
+        "vehicle": "vehicle",
+    }
+    return tuple(tag_icons[tag] for tag in item.tags if tag in tag_icons)
 
 
 def _is_right_click(qt, event) -> bool:

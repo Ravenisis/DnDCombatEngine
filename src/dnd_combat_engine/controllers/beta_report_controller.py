@@ -16,6 +16,6 @@ class BetaReportController:
     report_service: BetaReportService
     report_file: Path
 
-    def submit_bug_report(self, report: BetaBugReport) -> Path:
-        """Append a bug report to the configured beta reports file."""
-        return self.report_service.append_report(self.report_file, report)
+    def submit_bug_report(self, report: BetaBugReport) -> str:
+        """Submit a bug report online when configured, otherwise save locally."""
+        return self.report_service.submit_report(self.report_file, report)
