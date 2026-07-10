@@ -28,6 +28,12 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 - Added generated SRD support catalogs for spells through spell level 5, class
   and subclass abilities through character level 10, and SRD species traits.
 
+### In Progress
+
+- Began the hosted campaign milestone with JSON-backed hosted session models,
+  join-code lifecycle operations, player roles, connected-player tracking, and
+  campaign hosting documentation.
+
 ## Patch History
 
 ### Milestone 1 foundation

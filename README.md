@@ -50,6 +50,16 @@ The intended combat loop is:
 See [DM Workflow](docs/dm-workflow.md) and
 [Action Bar](docs/action-bar.md) for a fuller walkthrough.
 
+## Campaign Hosting
+
+The next major milestone is internet campaign hosting. The foundation now models
+hosted campaign sessions with shareable join codes, connected players, player
+roles, session status, and JSON persistence. The upcoming slices will add GUI
+commands for hosting and joining, then a relay-backed lobby so other players can
+connect over the internet.
+
+See [Campaign Hosting](docs/campaign-hosting.md).
+
 ## Character Sheets
 
 Character sheets can be imported from:
@@ -83,6 +93,7 @@ See [Import Character Sheet](docs/import-character-sheet.md).
 - [User Guide](docs/user-guide.md)
 - [DM Workflow](docs/dm-workflow.md)
 - [Action Bar](docs/action-bar.md)
+- [Campaign Hosting](docs/campaign-hosting.md)
 - [Import Character Sheet](docs/import-character-sheet.md)
 - [Release Test Plan](docs/release-test-plan.md)
 - [Beta Feedback](docs/beta-feedback.md)
@@ -93,6 +104,6 @@ See [Import Character Sheet](docs/import-character-sheet.md).
 
 ## Project Status
 
-DnDCombatEngine is still pre-1.0. The next major milestone is the MMORPG Campaign
-Controller: a dependable loop for actor selection, target selection, effect
-resolution, resources, concentration, combat log updates, and persistence.
+DnDCombatEngine is in public beta. The next major milestone is hosted campaign
+play: a DM can host a campaign, share a join code, and bring remote players into
+the same campaign controller over the internet.

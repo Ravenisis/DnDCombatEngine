@@ -15,6 +15,7 @@ from dnd_combat_engine.services.encounter_service import EncounterService
 from dnd_combat_engine.services.initiative_service import InitiativeService
 from dnd_combat_engine.services.inventory_service import InventoryService
 from dnd_combat_engine.services.monster_service import MonsterService
+from dnd_combat_engine.services.multiplayer_service import MultiplayerService
 from dnd_combat_engine.services.persistence_service import PersistenceService
 from dnd_combat_engine.services.spell_service import SpellService
 from dnd_combat_engine.services.srd_catalog_service import SrdCatalogService
@@ -33,6 +34,7 @@ __all__ = [
     "InitiativeService",
     "InventoryService",
     "MonsterService",
+    "MultiplayerService",
     "PersistenceService",
     "SpellService",
     "SrdCatalogService",

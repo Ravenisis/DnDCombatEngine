@@ -39,6 +39,12 @@ from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.imports import CharacterImportDraft
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.monsters import CreatureSize, CreatureType, Monster
+from dnd_combat_engine.models.multiplayer import (
+    HostedCampaignSession,
+    HostedCampaignStatus,
+    HostedPlayer,
+    PlayerRole,
+)
 from dnd_combat_engine.models.resources import ResourcePool
 from dnd_combat_engine.models.rules import RuleSource
 from dnd_combat_engine.models.spell_slots import (
@@ -86,10 +92,14 @@ __all__ = [
     "EncounterParticipant",
     "EncounterStatus",
     "HitPoints",
+    "HostedCampaignSession",
+    "HostedCampaignStatus",
+    "HostedPlayer",
     "InventoryItem",
     "ItemCategory",
     "Monster",
     "ParticipantKind",
+    "PlayerRole",
     "ResourcePool",
     "RuleSource",
     "Spell",

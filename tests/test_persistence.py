@@ -7,8 +7,11 @@ from dnd_combat_engine.models import (
     Encounter,
     EncounterParticipant,
     HitPoints,
+    HostedCampaignSession,
+    HostedPlayer,
     Monster,
     ParticipantKind,
+    PlayerRole,
     Spell,
     SpellSchool,
 )
@@ -46,6 +49,23 @@ def test_persistence_service_saves_and_loads_campaign(tmp_path) -> None:
     assert service.list_campaign_ids() == ["starter"]
     assert service.load_campaign("starter") == campaign
     assert service.store.load("campaigns", "starter")["schema_version"] == 1
+
+
+def test_persistence_service_saves_and_loads_hosted_session(tmp_path) -> None:
+    service = PersistenceService(JsonFileStore(tmp_path))
+    session = HostedCampaignSession(
+        session_id="starter-ABC123",
+        campaign_id="starter",
+        join_code="ABC123",
+        host_player_id="host",
+        players=(HostedPlayer("host", "DM", PlayerRole.HOST),),
+    )
+
+    service.save_hosted_session(session)
+
+    assert service.list_hosted_session_ids() == ["starter-ABC123"]
+    assert service.load_hosted_session("starter-ABC123") == session
+    assert service.store.load("hosted_sessions", "starter-ABC123")["schema_version"] == 1
 
 
 def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:

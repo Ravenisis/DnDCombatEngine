@@ -7,6 +7,7 @@ from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.encounters import Encounter
 from dnd_combat_engine.models.monsters import Monster
+from dnd_combat_engine.models.multiplayer import HostedCampaignSession
 from dnd_combat_engine.models.spells import Spell
 from dnd_combat_engine.models.srd_catalog import SrdCatalog
 from dnd_combat_engine.persistence.json_store import JsonFileStore
@@ -49,6 +50,18 @@ class PersistenceService:
     def list_campaign_ids(self) -> list[str]:
         """List saved campaign ids."""
         return self.store.list_ids("campaigns")
+
+    def save_hosted_session(self, session: HostedCampaignSession) -> None:
+        """Save a hosted campaign session as a JSON document."""
+        self.store.save("hosted_sessions", session.session_id, session.to_dict())
+
+    def load_hosted_session(self, session_id: str) -> HostedCampaignSession:
+        """Load a hosted campaign session from a JSON document."""
+        return HostedCampaignSession.from_dict(self.store.load("hosted_sessions", session_id))
+
+    def list_hosted_session_ids(self) -> list[str]:
+        """List saved hosted campaign session ids."""
+        return self.store.list_ids("hosted_sessions")
 
     def save_spell(self, spell: Spell) -> None:
         """Save a spell as a JSON document."""
