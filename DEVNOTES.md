@@ -133,8 +133,9 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.3-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.3-x64.msi`
+- `dist/DnDCombatEngine-1.0.0-windows.zip`
+- `dist/installer/DnDCombatEngine-1.0.0-Setup.exe`
+- `dist/msi/DnDCombatEngine-1.0.0-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -144,12 +145,14 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,308,698 bytes
-- `dist/installer/DnDCombatEngine-0.1.3-Setup.exe` - 51,228,715 bytes
-- `dist/msi/DnDCombatEngine-0.1.3-x64.msi` - 60,236,029 bytes
-- Verified with `python -m ruff check src tests`,
-  `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
-  an Inno Setup rebuild, and a WiX MSI rebuild.
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,310,389 bytes
+- `dist/DnDCombatEngine-1.0.0-windows.zip` - 72,838,723 bytes
+- `dist/installer/DnDCombatEngine-1.0.0-Setup.exe` - 51,229,535 bytes
+- `dist/msi/DnDCombatEngine-1.0.0-x64.msi` - 60,236,029 bytes
+- `dist/dnd_combat_engine-1.0.0b1.tar.gz` - 2,457,665 bytes
+- `dist/dnd_combat_engine-1.0.0b1-py3-none-any.whl` - 2,458,020 bytes
+- Verified with `python -m ruff check .`, `python -m pytest`, `python -m build`,
+  a PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
 
 Latest verified local install smoke test:
 
@@ -157,8 +160,9 @@ Latest verified local install smoke test:
   install into a controlled test directory, installed app launch, startup
   stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `0.1.3` executable, Inno installer, and MSI were rebuilt locally
-  after the version bump.
+- The rebuilt `1.0.0-beta.1` executable, zipped Windows app folder, Inno
+  installer, MSI, wheel, and source distribution were produced locally for the
+  beta release candidate.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:
@@ -176,8 +180,8 @@ dnd-combat-engine init-user-data
 - Build the Windows installer with `.\scripts\build_installer.ps1 -SkipExecutableBuild`.
 - Build the Windows MSI with `.\scripts\build_msi.ps1 -SkipExecutableBuild`.
 - Confirm the installer launches `DnDCombatEngine.exe` and creates uninstall entries.
-- Upload the wheel, source distribution, executable folder artifact, and installer
-  artifact from the `Package` GitHub Actions workflow.
+- Upload the wheel, source distribution, zipped executable folder, installer,
+  and MSI artifacts from the `Package` GitHub Actions workflow.
 
 ## Release History
 

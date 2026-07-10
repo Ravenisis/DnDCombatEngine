@@ -436,7 +436,7 @@ def _run_menu_action(
             window,
             qt,
             "About DnDCombatEngine",
-            "DnDCombatEngine 0.1.1\nLayered Dungeons & Dragons combat workspace.",
+            "DnDCombatEngine 1.0.0 Beta\nLayered Dungeons & Dragons combat workspace.",
         )
         return
     _set_status(window, f"{action_id} selected.")
@@ -504,8 +504,9 @@ def _ask_bug_report(qt, parent) -> BetaBugReport | None:
     _add_labeled_text(qt, layout, "Expected Result", expected)
     _add_labeled_text(qt, layout, "Actual Result", actual)
 
-    buttons = _dialog_buttons(qt, dialog)
+    buttons = _bug_report_dialog_buttons(qt, dialog)
     if buttons is not None:
+        _connect_bug_report_dialog_buttons(qt, dialog, buttons, summary, description)
         layout.addWidget(buttons)
 
     if not _bug_report_dialog_accepted(qt, dialog):
@@ -546,19 +547,40 @@ def _add_labeled_text(qt, layout, label: str, widget) -> None:
     layout.addWidget(widget)
 
 
-def _dialog_buttons(qt, dialog):
+def _bug_report_dialog_buttons(qt, dialog):
     button_box = getattr(qt.QtWidgets, "QDialogButtonBox", None)
     if button_box is None:
         return None
-    standard_button = getattr(button_box, "StandardButton", button_box)
-    buttons = button_box(
-        getattr(standard_button, "Ok", 0) | getattr(standard_button, "Cancel", 0)
-    )
-    if hasattr(buttons, "accepted"):
-        buttons.accepted.connect(dialog.accept)
+    button_mask = _dialog_buttons(button_box)
+    buttons = button_box(button_mask) if button_mask is not None else button_box()
     if hasattr(buttons, "rejected"):
         buttons.rejected.connect(dialog.reject)
     return buttons
+
+
+def _connect_bug_report_dialog_buttons(qt, dialog, buttons, summary, description) -> None:
+    if not hasattr(buttons, "accepted"):
+        return
+
+    def accept_if_valid() -> None:
+        if not _line_edit_text(summary):
+            _show_dialog_warning(qt, dialog, "Report Bug", "Summary is required.")
+            return
+        if not _text_edit_text(description):
+            _show_dialog_warning(qt, dialog, "Report Bug", "Description is required.")
+            return
+        dialog.accept()
+
+    buttons.accepted.connect(accept_if_valid)
+
+
+def _show_dialog_warning(qt, parent, title: str, message: str) -> None:
+    message_box = getattr(qt.QtWidgets, "QMessageBox", None)
+    if message_box is None:
+        return
+    warning = getattr(message_box, "warning", None)
+    if warning is not None:
+        warning(parent, title, message)
 
 
 def _bug_report_dialog_accepted(qt, dialog) -> bool:

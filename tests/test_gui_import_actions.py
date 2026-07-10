@@ -231,6 +231,94 @@ def test_report_bug_menu_handles_cancel(monkeypatch) -> None:
     assert window.status.message == "Bug report canceled."
 
 
+def test_report_bug_dialog_requires_summary_before_accepting() -> None:
+    class Dialog:
+        class DialogCode:
+            Accepted = 1
+
+        def __init__(self, parent) -> None:
+            self.accepted = False
+            self.rejected = False
+
+        def setWindowTitle(self, title) -> None:  # noqa: N802
+            self.title = title
+
+        def resize(self, width, height) -> None:
+            self.size = (width, height)
+
+        def accept(self) -> None:
+            self.accepted = True
+
+        def reject(self) -> None:
+            self.rejected = True
+
+        def exec(self) -> int:
+            ButtonBox.last.accepted.callback()
+            return self.DialogCode.Accepted if self.accepted else 0
+
+    class LineEdit:
+        def text(self) -> str:
+            return ""
+
+    class TextEdit:
+        def toPlainText(self) -> str:  # noqa: N802
+            return "The report description."
+
+    class ComboBox:
+        def __init__(self) -> None:
+            self.items = []
+
+        def addItem(self, value) -> None:  # noqa: N802
+            self.items.append(value)
+
+        def currentText(self) -> str:  # noqa: N802
+            return self.items[0]
+
+    class Layout:
+        def __init__(self, parent=None) -> None:
+            self.parent = parent
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widget = widget
+
+    class ButtonBox:
+        class StandardButton:
+            Ok = 1
+            Cancel = 2
+
+        last = None
+
+        def __init__(self, buttons) -> None:
+            self.buttons = buttons
+            self.accepted = FakeSignal()
+            self.rejected = FakeSignal()
+            ButtonBox.last = self
+
+    class MessageBox:
+        warning_calls = []
+
+        @classmethod
+        def warning(cls, parent, title, message) -> None:
+            cls.warning_calls.append((parent, title, message))
+
+    class QtWidgets:
+        QComboBox = ComboBox
+        QDialog = Dialog
+        QDialogButtonBox = ButtonBox
+        QHBoxLayout = Layout
+        QLabel = FakeWidget
+        QLineEdit = LineEdit
+        QMessageBox = MessageBox
+        QTextEdit = TextEdit
+        QVBoxLayout = Layout
+        QWidget = FakeWidget
+
+    report = main_window._ask_bug_report(SimpleNamespace(QtWidgets=QtWidgets), object())
+
+    assert report is None
+    assert MessageBox.warning_calls[-1][1:] == ("Report Bug", "Summary is required.")
+
+
 def test_close_campaign_clears_active_state(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState(

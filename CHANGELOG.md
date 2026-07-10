@@ -3,11 +3,20 @@
 This changelog keeps tester-facing release notes and milestone patch history.
 For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
-## Unreleased
+## 1.0.0-beta.1 - 2026-07-10
 
 ### Release
 
-- Bumped the package, executable, Inno installer, and MSI version to `0.1.3`.
+- Marked the first public beta release as `1.0.0-beta.1`.
+- Bumped the Python package version to `1.0.0b1`.
+- Bumped the Windows executable, Inno installer, and MSI release version to
+  `1.0.0`.
+- Added release packaging support for GitHub Releases on `v*` tags.
+
+### Fixed
+
+- Fixed Help > Report Bug by removing a dialog helper collision and validating
+  required summary/description fields before accepting the report.
 
 ### Documentation
 
