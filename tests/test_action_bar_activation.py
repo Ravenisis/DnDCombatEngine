@@ -243,6 +243,53 @@ def test_spell_action_uses_effect_definition_for_damage_and_resource() -> None:
     assert character.resources["spell_slot_1"].current == 0
 
 
+def test_guiding_bolt_upcasts_damage_dice_by_slot_level() -> None:
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 4, 4),
+            "spell_slot_2": ResourcePool("spell_slot_2", 3, 3),
+            "spell_slot_3": ResourcePool("spell_slot_3", 2, 2),
+        },
+    )
+    spell = Spell(
+        "guiding_bolt",
+        "Guiding Bolt",
+        1,
+        SpellSchool.EVOCATION,
+        "1 action",
+        "120 feet",
+        "Instantaneous",
+        effects=(
+            EffectDefinition(
+                effect_id="guiding-bolt-damage",
+                name="Guiding Bolt",
+                effect_kind=EffectKind.DAMAGE,
+                target_profile=TargetProfile.ONE_CREATURE,
+                resource_cost="spell_slot_1",
+                dice="4d6",
+            ),
+        ),
+    )
+    app = _app(character, spell)
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.SPELL,
+        "guiding_bolt",
+        "Guiding Bolt",
+        rank=3,
+    )
+
+    message = main_window._activate_spell_button(app, character, button)
+
+    assert "Damage 7 (6d6: rolls=(7,))." in message
+    assert "Used level 3 spell slot; 1/2 remain." in message
+    assert app.dice.notations == ["6d6"]
+    assert character.resources["spell_slot_3"].current == 1
+
+
 def test_spell_action_reports_missing_slots_before_rolling() -> None:
     character = Character("cleric", "Cleric", HitPoints(20, 20))
     app = _app(character, _spell())

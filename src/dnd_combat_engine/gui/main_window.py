@@ -1691,7 +1691,11 @@ def _activate_spell_button(
         special_choice = _choose_thaumaturgy_effect(qt, window)
         if special_choice is None:
             return f"{character.name} holds {spell.name}; no effect selected."
-    runtime_effect = replace(effect, resource_cost=resource_name)
+    runtime_effect = replace(
+        effect,
+        resource_cost=resource_name,
+        dice=_upcast_spell_effect_dice(spell, effect, slot_level),
+    )
     _resolve_gui_combat_action(
         app,
         character,
@@ -1744,14 +1748,14 @@ def _activate_spell_button(
             f"{character.name} casts {spell.name}. {special_choice} "
             f"The divine sign lingers for {effect.duration.text or spell.duration}. {slot_message}"
         )
-    damage_message, damage_total = _roll_spell_effect_damage(app, spell.damage, effect)
+    damage_message, damage_total = _roll_spell_effect_damage(app, spell.damage, runtime_effect)
     target = _active_target_for_effect(app, state)
-    if target is not None and damage_total > 0 and effect.effect_kind == EffectKind.DAMAGE:
+    if target is not None and damage_total > 0 and runtime_effect.effect_kind == EffectKind.DAMAGE:
         applied = _apply_damage_to_target(app, target, damage_total)
         resolution = EffectResolution(
             source_name=character.name,
             effect_name=spell.name,
-            effect_kind=effect.effect_kind,
+            effect_kind=runtime_effect.effect_kind,
             target=target,
             total=damage_total,
             detail=f"{damage_message} {applied} {slot_message}",
@@ -1868,6 +1872,25 @@ def _spell_resource_name(
     if effect.resource_cost.startswith("spell_slot_"):
         return f"spell_slot_{slot_level or spell.level}"
     return effect.resource_cost
+
+
+def _upcast_spell_effect_dice(spell, effect: EffectDefinition, slot_level: int) -> str | None:
+    """Return damage dice adjusted for known at-higher-level spell scaling."""
+    if effect.dice is None or slot_level <= spell.level:
+        return effect.dice
+    extra_levels = slot_level - spell.level
+    if spell.spell_id == "guiding_bolt" and effect.effect_id == "guiding-bolt-damage":
+        return _add_same_die_count(effect.dice, extra_levels)
+    return effect.dice
+
+
+def _add_same_die_count(notation: str, additional_dice: int) -> str:
+    match = re.fullmatch(r"(?P<count>\d+)d(?P<sides>\d+)(?P<modifier>[+-]\d+)?", notation)
+    if match is None:
+        return notation
+    count = int(match.group("count")) + additional_dice
+    modifier = match.group("modifier") or ""
+    return f"{count}d{match.group('sides')}{modifier}"
 
 
 def _resolve_gui_combat_action(
