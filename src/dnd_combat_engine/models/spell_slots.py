@@ -10,7 +10,29 @@ from dnd_combat_engine.models.resources import ResourcePool
 
 def ensure_spell_slot_resources(character: Character) -> bool:
     """Add missing spell slot resources inferred from class-like sheet text."""
+    return _ensure_spell_slots(character, inferred_spell_slots(character))
+
+
+def ensure_spell_slot_resources_for_level(character: Character, slot_level: int) -> bool:
+    """Add spell slot resources needed to support an explicit casting level."""
+    if slot_level < 1:
+        return False
     slots = inferred_spell_slots(character)
+    if not slots:
+        minimum_level = _minimum_full_caster_level_for_slot(slot_level)
+        if slot_level == 1 or character.level < minimum_level:
+            return False
+        slots = _full_caster_spell_slots(character.level)
+    if max(slots, default=0) < slot_level:
+        effective_level = max(
+            character.level,
+            _minimum_full_caster_level_for_slot(slot_level),
+        )
+        slots = _full_caster_spell_slots(effective_level)
+    return _ensure_spell_slots(character, slots)
+
+
+def _ensure_spell_slots(character: Character, slots: dict[int, int]) -> bool:
     changed = False
     for slot_level, maximum in slots.items():
         name = f"spell_slot_{slot_level}"
@@ -78,3 +100,10 @@ def _full_caster_spell_slots(level: int) -> dict[int, int]:
     }
     slots = slots_by_level[min(max(level, 1), 20)]
     return dict(enumerate(slots, start=1))
+
+
+def _minimum_full_caster_level_for_slot(slot_level: int) -> int:
+    for level in range(1, 21):
+        if slot_level in _full_caster_spell_slots(level):
+            return level
+    return 20

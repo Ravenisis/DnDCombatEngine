@@ -1,0 +1,234 @@
+[
+  {
+    "item_id": "backpack",
+    "name": "Backpack",
+    "category": "adventuring_gear",
+    "weight": 5,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear. Holds carried equipment."
+  },
+  {
+    "item_id": "bedroll",
+    "name": "Bedroll",
+    "category": "adventuring_gear",
+    "weight": 7,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "crowbar",
+    "name": "Crowbar",
+    "category": "adventuring_gear",
+    "weight": 5,
+    "purchase_price_cp": 200,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "healers_kit",
+    "name": "Healer's Kit",
+    "category": "consumable",
+    "weight": 3,
+    "purchase_price_cp": 500,
+    "notes": "SRD adventuring gear. Contains 10 uses."
+  },
+  {
+    "item_id": "holy_symbol",
+    "name": "Holy Symbol",
+    "category": "adventuring_gear",
+    "weight": 1,
+    "purchase_price_cp": 500,
+    "notes": "SRD spellcasting focus."
+  },
+  {
+    "item_id": "pouch",
+    "name": "Pouch",
+    "category": "adventuring_gear",
+    "weight": 1,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "rations_1_day",
+    "name": "Rations (1 day)",
+    "category": "consumable",
+    "weight": 2,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "rope_hempen_50_feet",
+    "name": "Rope, Hempen (50 feet)",
+    "category": "adventuring_gear",
+    "weight": 10,
+    "purchase_price_cp": 100,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "tinderbox",
+    "name": "Tinderbox",
+    "category": "adventuring_gear",
+    "weight": 1,
+    "purchase_price_cp": 50,
+    "notes": "SRD adventuring gear."
+  },
+  {
+    "item_id": "torch",
+    "name": "Torch",
+    "category": "consumable",
+    "weight": 1,
+    "purchase_price_cp": 1,
+    "notes": "SRD adventuring gear. Burns for 1 hour."
+  },
+  {
+    "item_id": "waterskin",
+    "name": "Waterskin",
+    "category": "adventuring_gear",
+    "weight": 5,
+    "purchase_price_cp": 20,
+    "notes": "SRD adventuring gear. Weight assumes it is full."
+  },
+  {
+    "item_id": "shield",
+    "name": "Shield",
+    "category": "armor",
+    "weight": 6,
+    "purchase_price_cp": 1000,
+    "notes": "SRD armor. Grants +2 AC when equipped."
+  },
+  {
+    "item_id": "leather_armor",
+    "name": "Leather Armor",
+    "category": "armor",
+    "weight": 10,
+    "purchase_price_cp": 1000,
+    "notes": "SRD light armor."
+  },
+  {
+    "item_id": "chain_mail",
+    "name": "Chain Mail",
+    "category": "armor",
+    "weight": 55,
+    "purchase_price_cp": 7500,
+    "notes": "SRD heavy armor."
+  },
+  {
+    "item_id": "plate_armor",
+    "name": "Plate Armor",
+    "category": "armor",
+    "weight": 65,
+    "purchase_price_cp": 150000,
+    "notes": "SRD heavy armor."
+  },
+  {
+    "item_id": "club",
+    "name": "Club",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 10,
+    "notes": "SRD weapon. 1d4 bludgeoning; light."
+  },
+  {
+    "item_id": "dagger",
+    "name": "Dagger",
+    "category": "weapon",
+    "weight": 1,
+    "purchase_price_cp": 200,
+    "notes": "SRD weapon. 1d4 piercing; finesse, light, thrown."
+  },
+  {
+    "item_id": "handaxe",
+    "name": "Handaxe",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. 1d6 slashing; light, thrown."
+  },
+  {
+    "item_id": "mace",
+    "name": "Mace",
+    "category": "weapon",
+    "weight": 4,
+    "purchase_price_cp": 500,
+    "notes": "SRD weapon. 1d6 bludgeoning."
+  },
+  {
+    "item_id": "quarterstaff",
+    "name": "Quarterstaff",
+    "category": "weapon",
+    "weight": 4,
+    "purchase_price_cp": 20,
+    "notes": "SRD weapon. 1d6 bludgeoning; versatile 1d8."
+  },
+  {
+    "item_id": "spear",
+    "name": "Spear",
+    "category": "weapon",
+    "weight": 3,
+    "purchase_price_cp": 100,
+    "notes": "SRD weapon. 1d6 piercing; thrown, versatile 1d8."
+  },
+  {
+    "item_id": "light_crossbow",
+    "name": "Light Crossbow",
+    "category": "weapon",
+    "weight": 5,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. 1d8 piercing; ammunition, loading, two-handed."
+  },
+  {
+    "item_id": "shortbow",
+    "name": "Shortbow",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. 1d6 piercing; ammunition, two-handed."
+  },
+  {
+    "item_id": "longbow",
+    "name": "Longbow",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 5000,
+    "notes": "SRD weapon. 1d8 piercing; ammunition, heavy, two-handed."
+  },
+  {
+    "item_id": "rapier",
+    "name": "Rapier",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 2500,
+    "notes": "SRD weapon. 1d8 piercing; finesse."
+  },
+  {
+    "item_id": "warhammer",
+    "name": "Warhammer",
+    "category": "weapon",
+    "weight": 2,
+    "purchase_price_cp": 1500,
+    "notes": "SRD weapon. 1d8 bludgeoning; versatile 1d10."
+  },
+  {
+    "item_id": "arrows_20",
+    "name": "Arrows (20)",
+    "category": "adventuring_gear",
+    "weight": 1,
+    "purchase_price_cp": 100,
+    "notes": "SRD ammunition."
+  },
+  {
+    "item_id": "crossbow_bolts_20",
+    "name": "Crossbow Bolts (20)",
+    "category": "adventuring_gear",
+    "weight": 1.5,
+    "purchase_price_cp": 100,
+    "notes": "SRD ammunition."
+  },
+  {
+    "item_id": "potion_of_healing",
+    "name": "Potion of Healing",
+    "category": "consumable",
+    "weight": 0.5,
+    "purchase_price_cp": 5000,
+    "notes": "SRD consumable. Regain 2d4 + 2 hit points when consumed."
+  }
+]

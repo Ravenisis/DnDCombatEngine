@@ -254,6 +254,42 @@ def test_spell_action_reports_missing_slots_before_rolling() -> None:
     assert app.dice.notations == []
 
 
+def test_spell_action_repairs_missing_action_bar_slot_resources() -> None:
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(63, 63),
+        level=6,
+        features=("Cleric 6",),
+    )
+    spell = Spell(
+        "spiritual_weapon",
+        "Spiritual Weapon",
+        2,
+        SpellSchool.EVOCATION,
+        "1 bonus action",
+        "60 feet",
+        "1 minute",
+        damage=DamageProfile((DamageComponent("1d8+2", DamageType.FORCE),)),
+    )
+    app = _app(character, spell)
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.SPELL,
+        "spiritual_weapon",
+        "Spiritual Weapon",
+        rank=2,
+    )
+
+    message = main_window._activate_spell_button(app, character, button)
+
+    assert "Ravenisis casts Spiritual Weapon" in message
+    assert "Used level 2 spell slot; 2/3 remain." in message
+    assert character.resources["spell_slot_2"].current == 2
+    assert character.resources["spell_slot_2"].maximum == 3
+    assert app.characters.saved
+
+
 def test_spell_action_reports_depleted_slots_and_non_damage_spells() -> None:
     character = Character(
         "cleric",

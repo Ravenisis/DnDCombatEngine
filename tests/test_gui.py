@@ -348,6 +348,29 @@ def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
     assert "Right-click to consume one." in item_tooltip
 
 
+def test_srd_inventory_dialog_tooltip_includes_item_details() -> None:
+    from dnd_combat_engine.gui import main_window
+    from dnd_combat_engine.models import InventoryItem, ItemCategory
+
+    tooltip = main_window._srd_inventory_item_tooltip(
+        InventoryItem(
+            "potion_of_healing",
+            "Potion of Healing",
+            category=ItemCategory.CONSUMABLE,
+            weight=0.5,
+            purchase_price_cp=5000,
+            notes="SRD consumable. Regain 2d4 + 2 hit points when consumed.",
+        )
+    )
+
+    assert "Potion of Healing" in tooltip
+    assert "Category: Consumable" in tooltip
+    assert "Weight: 0.5 lb" in tooltip
+    assert "Purchase Price: 5PP" in tooltip
+    assert "Sell Price: 2PP 5GP" in tooltip
+    assert "2d4 + 2" in tooltip
+
+
 def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     from types import SimpleNamespace
 
@@ -807,6 +830,58 @@ def test_spellbook_rank_options_include_available_spell_slot_levels() -> None:
     assert widgets._spell_rank_options(app, "cleric", cantrip) == (1,)
     assert widgets._spell_rank_button_text("Bless", 3) == "Bless (Level 3)"
     assert widgets._spell_rank_button_text("Light", 1, 0) == "Light (Cantrip)"
+
+
+def test_spellbook_rank_options_fill_available_levels_without_gaps() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import Character, HitPoints, ResourcePool, Spell, SpellSchool
+
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(10, 10),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
+            "spell_slot_3": ResourcePool("spell_slot_3", 2, 2),
+        },
+    )
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
+    spell = Spell("bless", "Bless", 1, SpellSchool.ENCHANTMENT, "1 action", "30 feet", "1 minute")
+
+    assert widgets._spell_rank_options(app, "cleric", spell) == (1, 2, 3)
+
+
+def test_spellbook_attack_names_filter_imported_table_fragments() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import (
+        Character,
+        DamageComponent,
+        DamageProfile,
+        DamageType,
+        HitPoints,
+        Weapon,
+    )
+
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(10, 10),
+        weapons=(
+            Weapon("Handaxe", DamageProfile((DamageComponent("1d6", DamageType.SLASHING),))),
+            Weapon("instead", DamageProfile((DamageComponent("1d6", DamageType.SLASHING),))),
+            Weapon("Range", DamageProfile((DamageComponent("1d6", DamageType.SLASHING),))),
+        ),
+    )
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
+
+    assert widgets._attack_names_for_character(app, "ravenisis") == (
+        "Handaxe",
+        "Unarmed Strike",
+    )
 
 
 def test_spell_slot_rows_are_sorted_by_slot_level() -> None:

@@ -49,6 +49,7 @@ from dnd_combat_engine.models.resources import ResourcePool
 from dnd_combat_engine.models.rules import RuleSource
 from dnd_combat_engine.models.spell_slots import (
     ensure_spell_slot_resources,
+    ensure_spell_slot_resources_for_level,
     inferred_spell_slots,
 )
 from dnd_combat_engine.models.spells import Spell, SpellSchool
@@ -113,5 +114,6 @@ __all__ = [
     "Weapon",
     "concentration_save_dc",
     "ensure_spell_slot_resources",
+    "ensure_spell_slot_resources_for_level",
     "inferred_spell_slots",
 ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -59,9 +60,11 @@ from dnd_combat_engine.models import (
     TargetProfile,
     TargetReference,
     ensure_spell_slot_resources,
+    ensure_spell_slot_resources_for_level,
 )
 from dnd_combat_engine.models.damage import DamageProfile
 from dnd_combat_engine.rules import EffectPlan, EffectResolver
+from dnd_combat_engine.utils.paths import bundled_data_root
 
 
 @dataclass(slots=True)
@@ -436,7 +439,7 @@ def _run_menu_action(
             window,
             qt,
             "About DnDCombatEngine",
-            "DnDCombatEngine 1.0.1\nLayered Dungeons & Dragons combat workspace.",
+            "DnDCombatEngine 1.0.2\nLayered Dungeons & Dragons combat workspace.",
         )
         return
     _set_status(window, f"{action_id} selected.")
@@ -1142,18 +1145,24 @@ def _ask_inventory_item(qt, parent) -> InventoryItem | None:
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle("Add Inventory Item")
     layout = qt.QtWidgets.QVBoxLayout(dialog)
+    catalog_items = _srd_inventory_items()
+    item_by_name = {item.name: item for item in catalog_items}
+    srd_item = _combo_box(qt, ("Custom Item", *(item.name for item in catalog_items)))
+    _populate_srd_item_tooltips(qt, srd_item, item_by_name)
     name = qt.QtWidgets.QLineEdit()
     quantity = qt.QtWidgets.QLineEdit("1")
     weight = qt.QtWidgets.QLineEdit("0")
     price = qt.QtWidgets.QLineEdit("0")
     category = _combo_box(qt, tuple(item.value for item in ItemCategory))
     notes = qt.QtWidgets.QTextEdit()
+    _add_form_row(qt, layout, "SRD Item", srd_item)
     _add_form_row(qt, layout, "Name", name)
     _add_form_row(qt, layout, "Quantity", quantity)
     _add_form_row(qt, layout, "Category", category)
     _add_form_row(qt, layout, "Weight", weight)
     _add_form_row(qt, layout, "Price CP", price)
     _add_labeled_text(qt, layout, "Notes", notes)
+    _connect_srd_inventory_selection(srd_item, item_by_name, name, category, weight, price, notes)
     buttons = _standard_dialog_buttons(qt, dialog)
     if buttons is not None:
         layout.addWidget(buttons)
@@ -1172,6 +1181,137 @@ def _ask_inventory_item(qt, parent) -> InventoryItem | None:
         notes=_text_edit_text(notes) or None,
         purchase_price_cp=int(_line_edit_text(price) or "0"),
     )
+
+
+def _srd_inventory_items() -> tuple[InventoryItem, ...]:
+    catalog_path = bundled_data_root() / "equipment" / "srd_equipment.json"
+    if not catalog_path.exists():
+        return ()
+    try:
+        data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ()
+    items: list[InventoryItem] = []
+    for raw_item in data:
+        if not isinstance(raw_item, dict):
+            continue
+        try:
+            item = InventoryItem.from_dict({**raw_item, "quantity": 1})
+        except (KeyError, TypeError, ValueError):
+            continue
+        items.append(item)
+    return tuple(sorted(items, key=lambda item: (item.category.value, item.name)))
+
+
+def _connect_srd_inventory_selection(
+    selector,
+    item_by_name: dict[str, InventoryItem],
+    name,
+    category,
+    weight,
+    price,
+    notes,
+) -> None:
+    signal = getattr(selector, "currentTextChanged", None)
+    if signal is None:
+        return
+
+    def apply_item(item_name: str) -> None:
+        item = item_by_name.get(str(item_name))
+        if item is None:
+            return
+        if hasattr(selector, "setToolTip"):
+            selector.setToolTip(_srd_inventory_item_tooltip(item))
+        _set_line_edit_text(name, item.name)
+        _set_combo_text(category, item.category.value)
+        _set_line_edit_text(weight, _format_inventory_number(item.weight))
+        _set_line_edit_text(price, str(item.purchase_price_cp))
+        _set_text_edit_text(notes, item.notes or "")
+
+    signal.connect(apply_item)
+
+
+def _populate_srd_item_tooltips(qt, selector, item_by_name: dict[str, InventoryItem]) -> None:
+    if hasattr(selector, "setToolTip"):
+        selector.setToolTip("Choose an SRD item to auto-fill the inventory fields.")
+    if not hasattr(selector, "setItemData"):
+        return
+    tooltip_role = _qt_tooltip_role(qt)
+    if tooltip_role is None:
+        return
+    for index, item_name in enumerate(("Custom Item", *item_by_name.keys())):
+        item = item_by_name.get(item_name)
+        tooltip = (
+            "Create a custom inventory item."
+            if item is None
+            else _srd_inventory_item_tooltip(item)
+        )
+        selector.setItemData(index, tooltip, tooltip_role)
+
+
+def _qt_tooltip_role(qt):
+    qt_core = getattr(qt, "QtCore", None)
+    qt_namespace = getattr(qt_core, "Qt", None)
+    item_data_role = getattr(getattr(qt_namespace, "ItemDataRole", None), "ToolTipRole", None)
+    if item_data_role is not None:
+        return item_data_role
+    return getattr(qt_namespace, "ToolTipRole", None)
+
+
+def _srd_inventory_item_tooltip(item: InventoryItem) -> str:
+    lines = [
+        item.name,
+        f"Category: {item.category.value.replace('_', ' ').title()}",
+    ]
+    if item.weight:
+        lines.append(f"Weight: {item.weight:g} lb")
+    if item.purchase_price_cp:
+        lines.append(f"Purchase Price: {_inventory_price_text(item.purchase_price_cp)}")
+        lines.append(f"Sell Price: {_inventory_price_text(item.purchase_price_cp // 2)}")
+    if item.notes:
+        lines.append(item.notes)
+    return "\n".join(lines)
+
+
+def _inventory_price_text(amount_cp: int) -> str:
+    values = (
+        ("PP", 1000),
+        ("GP", 100),
+        ("SP", 10),
+        ("CP", 1),
+    )
+    remaining = amount_cp
+    parts = []
+    for label, value in values:
+        count, remaining = divmod(remaining, value)
+        if count:
+            parts.append(f"{count}{label}")
+    return " ".join(parts) if parts else "0CP"
+
+
+def _set_line_edit_text(widget, value: str) -> None:
+    if hasattr(widget, "setText"):
+        widget.setText(value)
+
+
+def _set_text_edit_text(widget, value: str) -> None:
+    if hasattr(widget, "setPlainText"):
+        widget.setPlainText(value)
+    elif hasattr(widget, "setText"):
+        widget.setText(value)
+
+
+def _set_combo_text(widget, value: str) -> None:
+    if hasattr(widget, "findText") and hasattr(widget, "setCurrentIndex"):
+        index = widget.findText(value)
+        if index >= 0:
+            widget.setCurrentIndex(index)
+            return
+    _set_line_edit_text(widget, value)
+
+
+def _format_inventory_number(value: float) -> str:
+    return str(int(value)) if value.is_integer() else str(value)
 
 
 def _standard_dialog_buttons(qt, dialog):
@@ -1517,6 +1657,8 @@ def _activate_spell_button(
     effect = _primary_spell_effect(spell)
     slot_message = "No spell slot used."
     slot_level = max(spell.level, button.rank) if spell.level > 0 else 0
+    if slot_level > 0 and ensure_spell_slot_resources_for_level(character, slot_level):
+        app.characters.save(character)
     resource_name = _spell_resource_name(effect, spell, slot_level)
     spell_slot_resource = character.resources.get(resource_name) if resource_name else None
     if resource_name is not None:
@@ -2772,7 +2914,15 @@ def _action_bar_widget(
 ):
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(widget)
-    _layout_add_widget(layout, SpellSlotTrackerWidget.create(app, qt, _active_character_id(state)))
+    _layout_add_widget(
+        layout,
+        SpellSlotTrackerWidget.create(
+            app,
+            qt,
+            _active_character_id(state),
+            action_bar=session.bar,
+        ),
+    )
     _layout_add_widget(
         layout,
         ActionBarWidget.create(qt, session, on_activate=on_activate, app=app),

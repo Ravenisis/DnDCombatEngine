@@ -574,6 +574,8 @@ def _extract_weapons(text: str) -> tuple[Weapon, ...]:
     weapons = []
     for match in pattern.finditer(text):
         name = match.group("name").strip(" :-")
+        if not _looks_like_weapon_name(name):
+            continue
         dice = match.group("dice").lower()
         damage_type = DamageType(match.group("damage_type").lower())
         weapons.append(
@@ -583,6 +585,24 @@ def _extract_weapons(text: str) -> tuple[Weapon, ...]:
             )
         )
     return tuple(weapons)
+
+
+def _looks_like_weapon_name(name: str) -> bool:
+    cleaned = name.strip().casefold()
+    rejected = {
+        "instead",
+        "range",
+        "reach",
+        "notes",
+        "attack",
+        "attacks",
+        "damage",
+        "hit",
+        "hit dc",
+        "hit/dc",
+        "dc",
+    }
+    return bool(cleaned) and cleaned not in rejected
 
 
 def _split_list(value: str) -> list[str]:

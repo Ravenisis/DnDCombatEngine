@@ -34,7 +34,10 @@ from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.effects import TargetKind, TargetReference
 from dnd_combat_engine.models.encounters import ParticipantKind
 from dnd_combat_engine.models.inventory import InventoryItem
-from dnd_combat_engine.models.spell_slots import ensure_spell_slot_resources
+from dnd_combat_engine.models.spell_slots import (
+    ensure_spell_slot_resources,
+    ensure_spell_slot_resources_for_level,
+)
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
 PARTY_FRAME_FEATURES = (
@@ -451,7 +454,12 @@ class SpellSlotTrackerWidget:
     """Factory for compact spell slot tracking next to the action bar."""
 
     @staticmethod
-    def create(app: DnDCombatEngineApp, qt, character_id: str | None = None):
+    def create(
+        app: DnDCombatEngineApp,
+        qt,
+        character_id: str | None = None,
+        action_bar=None,
+    ):
         """Create a compact spell slot tracker for a character."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
@@ -464,7 +472,10 @@ class SpellSlotTrackerWidget:
         except KeyError:
             layout.addWidget(qt.QtWidgets.QLabel("Missing leader"))
             return widget
-        if ensure_spell_slot_resources(character) and hasattr(app.characters, "save"):
+        changed = ensure_spell_slot_resources(character)
+        if action_bar is not None:
+            changed = _ensure_spell_slots_for_action_bar(character, action_bar) or changed
+        if changed and hasattr(app.characters, "save"):
             app.characters.save(character)
         slot_rows = _spell_slot_rows(character.resources)
         if not slot_rows:
@@ -661,7 +672,7 @@ def _attack_names_for_character(
         character = app.characters.load(character_id)
     except KeyError:
         return ()
-    names = [weapon.name for weapon in character.weapons]
+    names = [weapon.name for weapon in character.weapons if _is_valid_attack_name(weapon.name)]
     if "Unarmed Strike" not in names:
         names.append("Unarmed Strike")
     return tuple(names)
@@ -1327,6 +1338,15 @@ def _spell_slot_rows(resources) -> tuple[tuple[int, int, int], ...]:
     return tuple(sorted(rows))
 
 
+def _ensure_spell_slots_for_action_bar(character, action_bar) -> bool:
+    changed = False
+    for button in getattr(action_bar, "buttons", ()):
+        if button.kind != ActionBarActionKind.SPELL:
+            continue
+        changed = ensure_spell_slot_resources_for_level(character, button.rank) or changed
+    return changed
+
+
 def _action_button_text(hotkey: str, action: ActionBarButton | None) -> str:
     """Return wrapped action bar text with the shortcut on the first line."""
     if action is None:
@@ -1670,7 +1690,28 @@ def _spell_rank_options(
                     slot_level = int(match.group(1))
                     if slot_level >= spell.level:
                         slot_levels.append(slot_level)
-    return tuple(sorted(set(slot_levels))) or (spell.level,)
+    if not slot_levels:
+        return (spell.level,)
+    highest_slot = max(slot_levels)
+    return tuple(range(spell.level, highest_slot + 1))
+
+
+def _is_valid_attack_name(name: str) -> bool:
+    cleaned = name.strip().casefold()
+    rejected = {
+        "instead",
+        "range",
+        "reach",
+        "notes",
+        "attack",
+        "attacks",
+        "damage",
+        "hit",
+        "hit dc",
+        "hit/dc",
+        "dc",
+    }
+    return bool(cleaned) and cleaned not in rejected
 
 
 def _spell_rank_button_text(spell_name: str, rank: int, spell_level: int | None = None) -> str:

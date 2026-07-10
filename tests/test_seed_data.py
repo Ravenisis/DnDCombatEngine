@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from dnd_combat_engine.models import (
@@ -5,6 +6,7 @@ from dnd_combat_engine.models import (
     Character,
     EffectDefinition,
     Encounter,
+    InventoryItem,
     Monster,
     Spell,
     Weapon,
@@ -30,6 +32,9 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert Encounter.from_dict(store.load("encounters", "crypt_entry")).participants
     assert Weapon.from_dict(store.load("equipment", "rapier")).name == "Rapier"
     assert store.load("srd_catalog", "srd_spells_level_0_5")["entries"]
+    srd_items = json.loads((DATA_ROOT / "equipment" / "srd_equipment.json").read_text())
+    assert InventoryItem.from_dict(srd_items[0]).name
+    assert any(item["name"] == "Potion of Healing" for item in srd_items)
 
 
 def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:

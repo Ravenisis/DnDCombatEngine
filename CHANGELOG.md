@@ -3,6 +3,23 @@
 This changelog keeps tester-facing release notes and milestone patch history.
 For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
+## 1.0.2 - 2026-07-10
+
+### Added
+
+- Added SRD-backed inventory item choices to the Add Item dialog.
+- Added mouseover tooltips for SRD inventory choices with category, weight,
+  purchase price, sell price, and notes.
+
+### Fixed
+
+- Repaired spell-slot display and casting for imported or legacy characters
+  whose saves were missing spell-slot resource pools.
+- Expanded the Spellbook to show every castable level from a spell's base level
+  through the character's highest available spell slot.
+- Filtered noisy D&D Beyond attack-table fragments such as `instead` and
+  `Range` from imported attack buttons.
+
 ## 1.0.1 - 2026-07-10
 
 ### Added

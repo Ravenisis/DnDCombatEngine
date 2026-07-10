@@ -52,6 +52,23 @@ def test_character_import_service_parses_text_sheet() -> None:
     assert draft.armor.armor_class == 15
 
 
+def test_character_import_service_ignores_attack_table_fragments() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Actions
+        Handaxe +4 1d6 slashing
+        Warhammer +4 1d8 bludgeoning
+        instead 1d6 slashing
+        Range 1d6 slashing
+        Unarmed Strike +4 2 bludgeoning
+        """,
+        source="test",
+    )
+
+    assert [weapon.name for weapon in draft.weapons] == ["Handaxe", "Warhammer"]
+
+
 def test_character_import_draft_can_keep_rule_source_metadata() -> None:
     source = RuleSource.srd_5_2_1("character-creation.md")
     draft = CharacterImportDraft("Lyra Thorn", rule_source=source)
