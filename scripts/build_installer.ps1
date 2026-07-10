@@ -21,4 +21,4 @@ if (-not $ISCC) {
 }
 
 & $ISCC packaging/DnDCombatEngine.iss
-Write-Host "Built dist/installer/DnDCombatEngine-0.1.2-Setup.exe"
+Write-Host "Built dist/installer/DnDCombatEngine-0.1.3-Setup.exe"

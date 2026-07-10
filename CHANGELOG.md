@@ -5,6 +5,10 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ## Unreleased
 
+### Release
+
+- Bumped the package, executable, Inno installer, and MSI version to `0.1.3`.
+
 ### Documentation
 
 - Split tester-facing release history out of `DEVNOTES.md` into this dedicated

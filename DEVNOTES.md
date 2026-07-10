@@ -133,8 +133,8 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.2-x64.msi`
+- `dist/installer/DnDCombatEngine-0.1.3-Setup.exe`
+- `dist/msi/DnDCombatEngine-0.1.3-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -144,9 +144,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,136,114 bytes
-- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe` - 48,723,904 bytes
-- `dist/msi/DnDCombatEngine-0.1.2-x64.msi` - 57,867,505 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,308,698 bytes
+- `dist/installer/DnDCombatEngine-0.1.3-Setup.exe` - 51,228,715 bytes
+- `dist/msi/DnDCombatEngine-0.1.3-x64.msi` - 60,236,029 bytes
 - Verified with `python -m ruff check src tests`,
   `python -m pytest --no-cov --basetemp .tmp\pytest`, a PyInstaller rebuild,
   an Inno Setup rebuild, and a WiX MSI rebuild.
@@ -157,8 +157,8 @@ Latest verified local install smoke test:
   install into a controlled test directory, installed app launch, startup
   stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `0.1.2` executable, Inno installer, and MSI have been generated;
-  an end-to-end `0.1.2` install smoke test is still pending.
+- The rebuilt `0.1.3` executable, Inno installer, and MSI were rebuilt locally
+  after the version bump.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:

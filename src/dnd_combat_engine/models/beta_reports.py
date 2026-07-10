@@ -18,7 +18,7 @@ class BetaBugReport:
     severity: str = "Medium"
     area: str = "General"
     tester_name: str = ""
-    app_version: str = "0.1.2"
+    app_version: str = "0.1.3"
     created_at: datetime | None = None
 
     def __post_init__(self) -> None:
