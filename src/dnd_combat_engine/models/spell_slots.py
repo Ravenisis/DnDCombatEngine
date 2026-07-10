@@ -19,9 +19,10 @@ def ensure_spell_slot_resources(character: Character) -> bool:
             character.resources[name] = ResourcePool(name, maximum, maximum)
             changed = True
             continue
-        if resource.maximum < 1:
+        if resource.maximum < maximum:
+            spent = max(resource.maximum - resource.current, 0)
             resource.maximum = maximum
-            resource.current = maximum
+            resource.current = max(maximum - spent, 0)
             changed = True
     return changed
 

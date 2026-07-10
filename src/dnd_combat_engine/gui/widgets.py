@@ -565,6 +565,18 @@ class SpellbookWidget:
         output = qt.QtWidgets.QTextEdit()
         output.setReadOnly(True)
         layout.addWidget(qt.QtWidgets.QLabel(_spellbook_title(app, character_id)))
+        tabs = _spellbook_tabs(qt)
+        layout.addWidget(tabs)
+        attacks_tab = _spellbook_tab(qt)
+        spells_tab = _spellbook_tab(qt)
+        cantrips_tab = _spellbook_tab(qt)
+        abilities_tab = _spellbook_tab(qt)
+        channel_tab = _spellbook_tab(qt)
+        _add_spellbook_tab(tabs, spells_tab, "Spells")
+        _add_spellbook_tab(tabs, abilities_tab, "Abilities")
+        _add_spellbook_tab(tabs, cantrips_tab, "Cantrips")
+        _add_spellbook_tab(tabs, attacks_tab, "Attacks")
+        _add_spellbook_tab(tabs, channel_tab, "Channel Divinity")
         for attack_name in _attack_names_for_character(app, character_id):
             button = qt.QtWidgets.QPushButton(f"{attack_name} (Attack)")
             if hasattr(button, "setToolTip"):
@@ -583,7 +595,7 @@ class SpellbookWidget:
                     )
                 )
             )
-            layout.addWidget(button)
+            _spellbook_tab_add_widget(attacks_tab, button)
         for spell_id in _spell_ids_for_character(app, character_id):
             spell = app.compendium.load_spell(spell_id)
             rank_options = _spell_rank_options(app, character_id, spell)
@@ -611,7 +623,30 @@ class SpellbookWidget:
                         )
                     )
                 )
-                layout.addWidget(button)
+                target_tab = cantrips_tab if spell.level == 0 else spells_tab
+                _spellbook_tab_add_widget(target_tab, button)
+        for feature in _actionable_ability_names_for_tab(app, character_id):
+            button = qt.QtWidgets.QPushButton(feature)
+            if hasattr(button, "setToolTip"):
+                button.setToolTip(_ability_tooltip(feature))
+            button.clicked.connect(
+                lambda checked=False, name=feature: output.append(
+                    session.place_next(
+                        ActionBarButton(
+                            slot=1,
+                            kind=ActionBarActionKind.ABILITY,
+                            action_id=_action_id(name),
+                            name=name,
+                            rank=1,
+                            uses_highest_rank=True,
+                        )
+                    )
+                )
+            )
+            target_tab = channel_tab if _is_channel_divinity_name(feature) else abilities_tab
+            _spellbook_tab_add_widget(target_tab, button)
+        for tab in (spells_tab, abilities_tab, cantrips_tab, attacks_tab, channel_tab):
+            _spellbook_tab_finish(qt, tab)
         layout.addWidget(output)
         return widget
 
@@ -667,6 +702,75 @@ class AbilitiesWidget:
         return widget
 
 
+def _spellbook_tabs(qt):
+    tab_class = getattr(qt.QtWidgets, "QTabWidget", None)
+    if tab_class is None:
+        return _FallbackTabs(qt)
+    tabs = tab_class()
+    tab_position = getattr(tab_class, "TabPosition", tab_class)
+    east = getattr(tab_position, "East", None)
+    if east is not None and hasattr(tabs, "setTabPosition"):
+        tabs.setTabPosition(east)
+    return tabs
+
+
+class _FallbackTabs:
+    def __init__(self, qt) -> None:
+        self.widget = qt.QtWidgets.QWidget()
+        self.layout = qt.QtWidgets.QVBoxLayout(self.widget)
+
+    def addTab(self, widget, title: str) -> None:  # noqa: N802
+        self.layout.addWidget(widget)
+
+
+def _spellbook_tab(qt):
+    widget = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QVBoxLayout(widget)
+    widget._dnd_spellbook_tab_layout = layout  # noqa: SLF001
+    widget._dnd_spellbook_tab_count = 0  # noqa: SLF001
+    return widget
+
+
+def _add_spellbook_tab(tabs, tab, title: str) -> None:
+    if hasattr(tabs, "addTab"):
+        tabs.addTab(tab, title)
+
+
+def _spellbook_tab_add_widget(tab, widget) -> None:
+    layout = getattr(tab, "_dnd_spellbook_tab_layout", None)
+    if layout is None:
+        return
+    layout.addWidget(widget)
+    tab._dnd_spellbook_tab_count = getattr(tab, "_dnd_spellbook_tab_count", 0) + 1  # noqa: SLF001
+
+
+def _spellbook_tab_finish(qt, tab) -> None:
+    layout = getattr(tab, "_dnd_spellbook_tab_layout", None)
+    if layout is None:
+        return
+    if getattr(tab, "_dnd_spellbook_tab_count", 0) == 0:
+        layout.addWidget(qt.QtWidgets.QLabel("None available"))
+    if hasattr(layout, "addStretch"):
+        layout.addStretch(1)
+
+
+def _actionable_ability_names_for_tab(
+    app: DnDCombatEngineApp,
+    character_id: str | None,
+) -> tuple[str, ...]:
+    if character_id is None:
+        return ()
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        return ()
+    return _actionable_ability_names(character.features)
+
+
+def _is_channel_divinity_name(name: str) -> bool:
+    return name.lower().startswith("channel divinity")
+
+
 class InventoryWidget:
     """Factory for an RPG-style inventory window."""
 
@@ -677,13 +781,20 @@ class InventoryWidget:
         character_id: str,
         on_consume=None,
         on_currency_change=None,
+        on_add_item=None,
     ):
         """Create an icon inventory grouped by carried containers."""
         character = app.characters.load(character_id)
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
         layout.addWidget(
-            _inventory_header(qt, character.name, character.currency, on_currency_change)
+            _inventory_header(
+                qt,
+                character.name,
+                character.currency,
+                on_currency_change,
+                on_add_item,
+            )
         )
         sections = _inventory_sections(character.inventory)
         for section_name, items in sections:
@@ -694,12 +805,24 @@ class InventoryWidget:
         return widget
 
 
-def _inventory_header(qt, character_name: str, purse: CurrencyPurse, on_currency_change):
+def _inventory_header(
+    qt,
+    character_name: str,
+    purse: CurrencyPurse,
+    on_currency_change,
+    on_add_item=None,
+):
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(widget)
     layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character_name}"))
     if hasattr(layout, "addStretch"):
         layout.addStretch(1)
+    if on_add_item is not None:
+        add_item_button = qt.QtWidgets.QPushButton("Add Item")
+        if hasattr(add_item_button, "setToolTip"):
+            add_item_button.setToolTip("Manually add an item stack to this inventory.")
+        add_item_button.clicked.connect(lambda checked=False: on_add_item())
+        layout.addWidget(add_item_button)
     money_log = [f"Opening balance: {_currency_price_text(purse.total_cp)}"]
     money_log_button = qt.QtWidgets.QPushButton("Money Log")
     if hasattr(money_log_button, "setToolTip"):
@@ -1539,6 +1662,8 @@ def _spell_rank_options(
         except KeyError:
             character = None
         if character is not None:
+            if ensure_spell_slot_resources(character) and hasattr(app.characters, "save"):
+                app.characters.save(character)
             for resource_name, resource in character.resources.items():
                 match = re.fullmatch(r"spell_slot_(\d+)", resource_name)
                 if match and resource.maximum > 0:

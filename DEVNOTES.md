@@ -133,9 +133,9 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/DnDCombatEngine-1.0.0-windows.zip`
-- `dist/installer/DnDCombatEngine-1.0.0-Setup.exe`
-- `dist/msi/DnDCombatEngine-1.0.0-x64.msi`
+- `dist/DnDCombatEngine-1.0.1-windows.zip`
+- `dist/installer/DnDCombatEngine-1.0.1-Setup.exe`
+- `dist/msi/DnDCombatEngine-1.0.1-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -145,12 +145,9 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,310,389 bytes
-- `dist/DnDCombatEngine-1.0.0-windows.zip` - 72,838,723 bytes
-- `dist/installer/DnDCombatEngine-1.0.0-Setup.exe` - 51,229,535 bytes
-- `dist/msi/DnDCombatEngine-1.0.0-x64.msi` - 60,236,029 bytes
-- `dist/dnd_combat_engine-1.0.0b1.tar.gz` - 2,457,665 bytes
-- `dist/dnd_combat_engine-1.0.0b1-py3-none-any.whl` - 2,458,020 bytes
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,322,554 bytes
+- `dist/installer/DnDCombatEngine-1.0.1-Setup.exe` - 51,230,209 bytes
+- `dist/msi/DnDCombatEngine-1.0.1-x64.msi` - 60,244,221 bytes
 - Verified with `python -m ruff check .`, `python -m pytest`, `python -m build`,
   a PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
 
@@ -160,9 +157,8 @@ Latest verified local install smoke test:
   install into a controlled test directory, installed app launch, startup
   stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `1.0.0-beta.1` executable, zipped Windows app folder, Inno
-  installer, MSI, wheel, and source distribution were produced locally for the
-  beta release candidate.
+- The rebuilt `1.0.1` executable, Inno installer, and MSI were produced locally
+  and synchronized to the user's Downloads folder.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:

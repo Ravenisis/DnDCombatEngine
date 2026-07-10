@@ -436,7 +436,7 @@ def _run_menu_action(
             window,
             qt,
             "About DnDCombatEngine",
-            "DnDCombatEngine 1.0.0 Beta\nLayered Dungeons & Dragons combat workspace.",
+            "DnDCombatEngine 1.0.1\nLayered Dungeons & Dragons combat workspace.",
         )
         return
     _set_status(window, f"{action_id} selected.")
@@ -1066,8 +1066,10 @@ def _open_inventory_window(
     if hasattr(popup, "resize"):
         popup.resize(620, 520)
     layout = qt.QtWidgets.QVBoxLayout(popup)
-    layout.addWidget(
-        InventoryWidget.create(
+    content = {"widget": None}
+
+    def refresh_inventory() -> None:
+        next_widget = InventoryWidget.create(
             app,
             qt,
             character_id,
@@ -1085,10 +1087,109 @@ def _open_inventory_window(
                 character_id,
                 delta_cp,
             ),
+            on_add_item=lambda: _add_inventory_item_from_dialog(
+                window,
+                qt,
+                app,
+                state,
+                character_id,
+                refresh_inventory,
+            ),
         )
-    )
+        previous = content.get("widget")
+        if previous is not None and hasattr(layout, "removeWidget"):
+            layout.removeWidget(previous)
+        layout.addWidget(next_widget)
+        if previous is not None and hasattr(previous, "setParent"):
+            previous.setParent(None)
+        content["widget"] = next_widget
+
+    refresh_inventory()
     _show_popup(window, popup, key="inventory")
     _set_status(window, f"Opened {character.name} inventory.")
+
+
+def _add_inventory_item_from_dialog(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    refresh_inventory,
+) -> None:
+    item = _ask_inventory_item(qt, window)
+    if item is None:
+        _set_status(window, "Add item canceled.")
+        return
+    try:
+        character = app.characters.load(character_id)
+        app.inventory.add_item(character, item, autosave=True)
+    except (KeyError, ValueError) as exc:
+        _show_message(window, qt, "Add Item Failed", str(exc), error=True)
+        return
+    message = f"Added {item.quantity} x {item.name} to {character.name}."
+    _record_campaign_activity(app, state, message, "inventory")
+    refresh_inventory()
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, message)
+
+
+def _ask_inventory_item(qt, parent) -> InventoryItem | None:
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    if dialog_class is None:
+        return None
+    dialog = dialog_class(parent)
+    if hasattr(dialog, "setWindowTitle"):
+        dialog.setWindowTitle("Add Inventory Item")
+    layout = qt.QtWidgets.QVBoxLayout(dialog)
+    name = qt.QtWidgets.QLineEdit()
+    quantity = qt.QtWidgets.QLineEdit("1")
+    weight = qt.QtWidgets.QLineEdit("0")
+    price = qt.QtWidgets.QLineEdit("0")
+    category = _combo_box(qt, tuple(item.value for item in ItemCategory))
+    notes = qt.QtWidgets.QTextEdit()
+    _add_form_row(qt, layout, "Name", name)
+    _add_form_row(qt, layout, "Quantity", quantity)
+    _add_form_row(qt, layout, "Category", category)
+    _add_form_row(qt, layout, "Weight", weight)
+    _add_form_row(qt, layout, "Price CP", price)
+    _add_labeled_text(qt, layout, "Notes", notes)
+    buttons = _standard_dialog_buttons(qt, dialog)
+    if buttons is not None:
+        layout.addWidget(buttons)
+    if not _generic_dialog_accepted(qt, dialog):
+        return None
+    item_name = _line_edit_text(name).strip()
+    if not item_name:
+        raise ValueError("item name is required")
+    item_id = _slug(item_name)
+    return InventoryItem(
+        item_id=item_id,
+        name=item_name,
+        quantity=int(_line_edit_text(quantity) or "1"),
+        weight=float(_line_edit_text(weight) or "0"),
+        category=ItemCategory(_combo_text(category)),
+        notes=_text_edit_text(notes) or None,
+        purchase_price_cp=int(_line_edit_text(price) or "0"),
+    )
+
+
+def _standard_dialog_buttons(qt, dialog):
+    button_box = getattr(qt.QtWidgets, "QDialogButtonBox", None)
+    if button_box is None:
+        return None
+    button_mask = _dialog_buttons(button_box)
+    buttons = button_box(button_mask) if button_mask is not None else button_box()
+    if hasattr(buttons, "accepted"):
+        buttons.accepted.connect(dialog.accept)
+    if hasattr(buttons, "rejected"):
+        buttons.rejected.connect(dialog.reject)
+    return buttons
+
+
+def _generic_dialog_accepted(qt, dialog) -> bool:
+    result = dialog.exec() if hasattr(dialog, "exec") else dialog.exec_()
+    return _dialog_accepted(qt.QtWidgets.QDialog, result)
 
 
 def _open_key_binds_window(window, qt) -> None:

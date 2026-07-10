@@ -1,4 +1,4 @@
-from dnd_combat_engine.models import Character, HitPoints
+from dnd_combat_engine.models import Character, HitPoints, ResourcePool
 from dnd_combat_engine.models.spell_slots import (
     ensure_spell_slot_resources,
     inferred_spell_slots,
@@ -38,3 +38,23 @@ def test_spell_slot_repair_does_not_reset_existing_spent_slots() -> None:
 
     assert ensure_spell_slot_resources(character) is False
     assert character.resources["spell_slot_1"].current == 0
+
+
+def test_spell_slot_repair_upgrades_incomplete_legacy_slot_maps() -> None:
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        level=6,
+        features=("Cleric 6",),
+        resources={
+            "spell_slot_1": ResourcePool("spell_slot_1", current=1, maximum=2),
+        },
+    )
+
+    assert ensure_spell_slot_resources(character) is True
+
+    assert character.resources["spell_slot_1"].maximum == 4
+    assert character.resources["spell_slot_1"].current == 3
+    assert character.resources["spell_slot_2"].maximum == 3
+    assert character.resources["spell_slot_3"].maximum == 3

@@ -3,6 +3,21 @@
 This changelog keeps tester-facing release notes and milestone patch history.
 For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
+## 1.0.1 - 2026-07-10
+
+### Added
+
+- Added manual inventory item entry with autosave and immediate inventory refresh.
+- Added right-side Spellbook tabs for Spells, Abilities, Cantrips, Attacks, and
+  Channel Divinity.
+
+### Fixed
+
+- Repaired spell slot availability for legacy or incomplete character saves by
+  upgrading inferred slot maps without resetting already-spent slots.
+- Ensured Spellbook rank choices repair inferred spell slots before listing
+  available casting levels.
+
 ## 1.0.0-beta.1 - 2026-07-10
 
 ### Release
