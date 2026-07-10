@@ -1,0 +1,4015 @@
+{
+  "catalog_id": "srd_spells_level_0_5",
+  "entries": [
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "acid_arrow",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Acid Arrow",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L262",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "acid_splash",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Acid Splash",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L275",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "aid",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Aid",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L288",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Ranger",
+        "Wizard"
+      ],
+      "entry_id": "alarm",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Alarm",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L301",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "alter_self",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Alter Self",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L316",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "animal_friendship",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Animal Friendship",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L333",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "animal_messenger",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Animal Messenger",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L347",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "animate_dead",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Animate Dead",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L377",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "animate_objects",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Animate Objects",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L394",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "antilife_shell",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Antilife Shell",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L473",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "arcane_eye",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Arcane Eye",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L521",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "arcane_hand",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Arcane Hand",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L534",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "arcane_lock",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Arcane Lock",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L559",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "arcanist_s_magic_aura",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Arcanist's Magic Aura",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L585",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "augury",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Augury",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L619",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "aura_of_life",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Aura of Life",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L663",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid"
+      ],
+      "entry_id": "awaken",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Awaken",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L674",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Warlock"
+      ],
+      "entry_id": "bane",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Bane",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L688",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "banishment",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Banishment",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L701",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "barkskin",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Barkskin",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L716",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "beacon_of_hope",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Beacon of Hope",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L728",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "bestow_curse",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Bestow Curse",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L754",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "black_tentacles",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Black Tentacles",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L772",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "bless",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Bless",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L800",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "blight",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Blight",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L814",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "blindness_deafness",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Blindness/Deafness",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L829",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "blink",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Blink",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L842",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "blur",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Blur",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L856",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "burning_hands",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Burning Hands",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L867",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "call_lightning",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Call Lightning",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L882",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric"
+      ],
+      "entry_id": "calm_emotions",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Calm Emotions",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L901",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "charm_monster",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Charm Monster",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L930",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "charm_person",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Charm Person",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L942",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "chill_touch",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Chill Touch",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L955",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "chromatic_orb",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Chromatic Orb",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L968",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "clairvoyance",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Clairvoyance",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L996",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "cloudkill",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Cloudkill",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1023",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "color_spray",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Color Spray",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L1040",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "command",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Command",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1051",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "commune",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Commune",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1074",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "commune_with_nature",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Commune with Nature",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1089",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "comprehend_languages",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Comprehend Languages",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1111",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard"
+      ],
+      "entry_id": "compulsion",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Compulsion",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1122",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "cone_of_cold",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Cone of Cold",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L1135",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "confusion",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Confusion",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1148",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "conjure_animals",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Conjure Animals",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1190",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "conjure_elemental",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Conjure Elemental",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1229",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "conjure_minor_elementals",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Conjure Minor Elementals",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1261",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "conjure_woodland_beings",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Conjure Woodland Beings",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1276",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "contact_other_plane",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Contact Other Plane",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1292",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "contagion",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Contagion",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L1305",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "continual_flame",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Continual Flame",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L1335",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "control_water",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Control Water",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L1346",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "counterspell",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Counterspell",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L1488",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "create_food_and_water",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Create Food and Water",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1499",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "create_or_destroy_water",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Create or Destroy Water",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L1510",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "creation",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Creation",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L1544",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "cure_wounds",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Cure Wounds",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L1592",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "dancing_lights",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dancing Lights",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L1605",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "darkness",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Darkness",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L1617",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "darkvision",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Darkvision",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L1632",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger",
+        "Sorcerer"
+      ],
+      "entry_id": "daylight",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Daylight",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L1643",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "death_ward",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Death Ward",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L1658",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "detect_evil_and_good",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Detect Evil and Good",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1704",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "detect_magic",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Detect Magic",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1717",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "detect_poison_and_disease",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Detect Poison and Disease",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1730",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "detect_thoughts",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Detect Thoughts",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1743",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "dimension_door",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dimension Door",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L1762",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "disguise_self",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Disguise Self",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L1776",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "dispel_evil_and_good",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dispel Evil and Good",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L1808",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "dispel_magic",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dispel Magic",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L1823",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard"
+      ],
+      "entry_id": "dissonant_whispers",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dissonant Whispers",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1836",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "divination",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Divination",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L1849",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin"
+      ],
+      "entry_id": "divine_favor",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Divine Favor",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L1862",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin"
+      ],
+      "entry_id": "divine_smite",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Divine Smite",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L1873",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer"
+      ],
+      "entry_id": "dominate_beast",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dominate Beast",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1926",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "dominate_person",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dominate Person",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L1959",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "dragon_s_breath",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dragon's Breath",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L1976",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "dream",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Dream",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L1989",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "druidcraft",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Druidcraft",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2006",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Warlock"
+      ],
+      "entry_id": "eldritch_blast",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Eldritch Blast",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2046",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "elementalism",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Elementalism",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2059",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "enhance_ability",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Enhance Ability",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2080",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "enlarge_reduce",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Enlarge/Reduce",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2093",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Ranger"
+      ],
+      "entry_id": "ensnaring_strike",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ensnaring Strike",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2110",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "entangle",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Entangle",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2125",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock"
+      ],
+      "entry_id": "enthrall",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Enthrall",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L2138",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "expeditious_retreat",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Expeditious Retreat",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2168",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "fabricate",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fabricate",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2198",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid"
+      ],
+      "entry_id": "faerie_fire",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Faerie Fire",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2213",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "faithful_hound",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Faithful Hound",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2226",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "false_life",
+      "entry_type": "spell",
+      "level": null,
+      "name": "False Life",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L2243",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "fear",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fear",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L2256",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "feather_fall",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Feather Fall",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2269",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "find_familiar",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Find Familiar",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2280",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin"
+      ],
+      "entry_id": "find_steed",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Find Steed",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2301",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "find_traps",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Find Traps",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L2405",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "fire_bolt",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fire Bolt",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2446",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "fire_shield",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fire Shield",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2459",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "fireball",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fireball",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2431",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer"
+      ],
+      "entry_id": "flame_blade",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Flame Blade",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2487",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "flame_strike",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Flame Strike",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2504",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "flaming_sphere",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Flaming Sphere",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2517",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "floating_disk",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Floating Disk",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2549",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "fly",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fly",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2564",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "fog_cloud",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Fog Cloud",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2577",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "freedom_of_movement",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Freedom of Movement",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L2637",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "gaseous_form",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Gaseous Form",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L2669",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Wizard"
+      ],
+      "entry_id": "geas",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Geas",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L2703",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin",
+        "Wizard"
+      ],
+      "entry_id": "gentle_repose",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Gentle Repose",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L2722",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "giant_insect",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Giant Insect",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2735",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "glyph_of_warding",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Glyph of Warding",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L2850",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "goodberry",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Goodberry",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2878",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "grease",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Grease",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2891",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "greater_invisibility",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Greater Invisibility",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L2904",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "greater_restoration",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Greater Restoration",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L2915",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "guardian_of_faith",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Guardian of Faith",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L2932",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "guidance",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Guidance",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L2973",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "guiding_bolt",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Guiding Bolt",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2984",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "gust_of_wind",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Gust of Wind",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L2997",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "hallow",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hallow",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3014",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "hallucinatory_terrain",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hallucinatory Terrain",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3048",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "haste",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Haste",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3072",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "healing_word",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Healing Word",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3098",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid"
+      ],
+      "entry_id": "heat_metal",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Heat Metal",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3111",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Warlock"
+      ],
+      "entry_id": "hellish_rebuke",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hellish Rebuke",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3125",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Paladin"
+      ],
+      "entry_id": "heroism",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Heroism",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3151",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Warlock"
+      ],
+      "entry_id": "hex",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hex",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3164",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "hideous_laughter",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hideous Laughter",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3179",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "hold_monster",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hold Monster",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3194",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "hold_person",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hold Person",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3207",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Ranger"
+      ],
+      "entry_id": "hunter_s_mark",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hunter's Mark",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3231",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "hypnotic_pattern",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Hypnotic Pattern",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3246",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "ice_knife",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ice Knife",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L3259",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "ice_storm",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ice Storm",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3272",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "identify",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Identify",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3286",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "illusory_script",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Illusory Script",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3299",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "inflict_wounds",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Inflict Wounds",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L3355",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Sorcerer"
+      ],
+      "entry_id": "insect_plague",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Insect Plague",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L3368",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "invisibility",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Invisibility",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3411",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "jump",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Jump",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3424",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "knock",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Knock",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3437",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "legend_lore",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Legend Lore",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3453",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "lesser_restoration",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Lesser Restoration",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3468",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "levitate",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Levitate",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3479",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "light",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Light",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3494",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "lightning_bolt",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Lightning Bolt",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3507",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "locate_animals_or_plants",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Locate Animals or Plants",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3520",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger",
+        "Wizard"
+      ],
+      "entry_id": "locate_creature",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Locate Creature",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3531",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger",
+        "Wizard"
+      ],
+      "entry_id": "locate_object",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Locate Object",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3546",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger",
+        "Wizard"
+      ],
+      "entry_id": "longstrider",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Longstrider",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3561",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "mage_armor",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mage Armor",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3574",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "mage_hand",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mage Hand",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L3585",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "magic_circle",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Magic Circle",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3602",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "magic_missile",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Magic Missile",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3646",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "magic_mouth",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Magic Mouth",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3659",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "magic_weapon",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Magic Weapon",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3674",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "major_image",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Major Image",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3706",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "mass_cure_wounds",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mass Cure Wounds",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3723",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric"
+      ],
+      "entry_id": "mass_healing_word",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mass Healing Word",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3747",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "meld_into_stone",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Meld into Stone",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3790",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "mending",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mending",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3805",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "message",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Message",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L3818",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "mind_spike",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mind Spike",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L3854",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "minor_illusion",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Minor Illusion",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3869",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "mirror_image",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mirror Image",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3904",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "mislead",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Mislead",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L3919",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "misty_step",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Misty Step",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L3934",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "modify_memory",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Modify Memory",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L3945",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "moonbeam",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Moonbeam",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L3966",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Ranger",
+        "Wizard"
+      ],
+      "entry_id": "nondetection",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Nondetection",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L3997",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "pass_without_trace",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Pass without Trace",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4022",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "passwall",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Passwall",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4009",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "phantasmal_force",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Phantasmal Force",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4033",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "phantasmal_killer",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Phantasmal Killer",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4050",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "phantom_steed",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Phantom Steed",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4065",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "planar_binding",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Planar Binding",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4097",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "plant_growth",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Plant Growth",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4124",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "poison_spray",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Poison Spray",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4139",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "polymorph",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Polymorph",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4152",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "prayer_of_healing",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Prayer of Healing",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4203",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "prestidigitation",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Prestidigitation",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4216",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "private_sanctum",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Private Sanctum",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4353",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "produce_flame",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Produce Flame",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L4377",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "protection_from_energy",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Protection from Energy",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4425",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "protection_from_evil_and_good",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Protection from Evil and Good",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4436",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "protection_from_poison",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Protection from Poison",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4449",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin"
+      ],
+      "entry_id": "purify_food_and_drink",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Purify Food and Drink",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4460",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "raise_dead",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Raise Dead",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4471",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "ray_of_enfeeblement",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ray of Enfeeblement",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4488",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "ray_of_frost",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ray of Frost",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4501",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "ray_of_sickness",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Ray of Sickness",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4525",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "reincarnate",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Reincarnate",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4538",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "remove_curse",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Remove Curse",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4594",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "resilient_sphere",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Resilient Sphere",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4606",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "resistance",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Resistance",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4623",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Paladin",
+        "Ranger"
+      ],
+      "entry_id": "revivify",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Revivify",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L4663",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "rope_trick",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Rope Trick",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4674",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "sacred_flame",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sacred Flame",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4687",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "sanctuary",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sanctuary",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4700",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "scorching_ray",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Scorching Ray",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4711",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "scrying",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Scrying",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L4724",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin"
+      ],
+      "entry_id": "searing_smite",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Searing Smite",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4787",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "secret_chest",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Secret Chest",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L4800",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "see_invisibility",
+      "entry_type": "spell",
+      "level": null,
+      "name": "See Invisibility",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L4815",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "seeming",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Seeming",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4826",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "sending",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sending",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L4843",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "shatter",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shatter",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4890",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "shield",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shield",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4905",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "shield_of_faith",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shield of Faith",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L4917",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid"
+      ],
+      "entry_id": "shillelagh",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shillelagh",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4928",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Paladin"
+      ],
+      "entry_id": "shining_smite",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shining Smite",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L4943",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "shocking_grasp",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Shocking Grasp",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L4956",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Ranger"
+      ],
+      "entry_id": "silence",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Silence",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4969",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "silent_image",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Silent Image",
+      "owner": "",
+      "school": "illusion",
+      "source_reference": "spells.md:L4980",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "sleep",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sleep",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L5011",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "sleet_storm",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sleet Storm",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5024",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "slow",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Slow",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5037",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer"
+      ],
+      "entry_id": "sorcerous_burst",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Sorcerous Burst",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5052",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid"
+      ],
+      "entry_id": "spare_the_dying",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Spare the Dying",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L5067",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger",
+        "Warlock"
+      ],
+      "entry_id": "speak_with_animals",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Speak with Animals",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L5080",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "entry_id": "speak_with_dead",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Speak with Dead",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L5093",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "speak_with_plants",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Speak with Plants",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5106",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "spider_climb",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Spider Climb",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5123",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "spike_growth",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Spike Growth",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5136",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "spirit_guardians",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Spirit Guardians",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5149",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "spiritual_weapon",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Spiritual Weapon",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5164",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid"
+      ],
+      "entry_id": "starry_wisp",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Starry Wisp",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5179",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "stinking_cloud",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Stinking Cloud",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5192",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Wizard"
+      ],
+      "entry_id": "stone_shape",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Stone Shape",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5205",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "stoneskin",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Stoneskin",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5216",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "suggestion",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Suggestion",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L5247",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "summon_dragon",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Summon Dragon",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5260",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "telekinesis",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Telekinesis",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5408",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "telepathic_bond",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Telepathic Bond",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L5425",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "teleportation_circle",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Teleportation Circle",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5526",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric"
+      ],
+      "entry_id": "thaumaturgy",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Thaumaturgy",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5543",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "thunderwave",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Thunderwave",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5566",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Wizard"
+      ],
+      "entry_id": "tiny_hut",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Tiny Hut",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5594",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "tongues",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Tongues",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L5611",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "tree_stride",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Tree Stride",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5633",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "true_strike",
+      "entry_type": "spell",
+      "level": null,
+      "name": "True Strike",
+      "owner": "",
+      "school": "divination",
+      "source_reference": "spells.md:L5699",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "unseen_servant",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Unseen Servant",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5729",
+      "spell_level": 1
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "entry_id": "vampiric_touch",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Vampiric Touch",
+      "owner": "",
+      "school": "necromancy",
+      "source_reference": "spells.md:L5744",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard"
+      ],
+      "entry_id": "vicious_mockery",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Vicious Mockery",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L5759",
+      "spell_level": 0
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "vitriolic_sphere",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Vitriolic Sphere",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5772",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "wall_of_fire",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Wall of Fire",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5785",
+      "spell_level": 4
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Wizard"
+      ],
+      "entry_id": "wall_of_force",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Wall of Force",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5802",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "wall_of_stone",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Wall of Stone",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5833",
+      "spell_level": 5
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "warding_bond",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Warding Bond",
+      "owner": "",
+      "school": "abjuration",
+      "source_reference": "spells.md:L5871",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "water_breathing",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Water Breathing",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5884",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Cleric",
+        "Druid",
+        "Ranger",
+        "Sorcerer"
+      ],
+      "entry_id": "water_walk",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Water Walk",
+      "owner": "",
+      "school": "transmutation",
+      "source_reference": "spells.md:L5895",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Sorcerer",
+        "Wizard"
+      ],
+      "entry_id": "web",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Web",
+      "owner": "",
+      "school": "conjuration",
+      "source_reference": "spells.md:L5908",
+      "spell_level": 2
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "entry_id": "wind_wall",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Wind Wall",
+      "owner": "",
+      "school": "evocation",
+      "source_reference": "spells.md:L5953",
+      "spell_level": 3
+    },
+    {
+      "automation_status": "cataloged",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin"
+      ],
+      "entry_id": "zone_of_truth",
+      "entry_type": "spell",
+      "level": null,
+      "name": "Zone of Truth",
+      "owner": "",
+      "school": "enchantment",
+      "source_reference": "spells.md:L6014",
+      "spell_level": 2
+    }
+  ],
+  "max_character_level": 10,
+  "notes": "Spells of level 0 through 5 are cataloged because full casters reach 5th-level spells by character level 9.",
+  "schema_version": 1,
+  "source": {
+    "attribution": "SRD 5.2.1 Copyright 2024 Wizards of the Coast LLC.",
+    "license_name": "Creative Commons Attribution 4.0 International License",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "name": "System Reference Document",
+    "version": "5.2.1"
+  },
+  "title": "SRD spells available by character level 10"
+}

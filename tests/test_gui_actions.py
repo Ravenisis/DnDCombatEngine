@@ -38,6 +38,7 @@ def test_default_action_specs_include_core_commands() -> None:
         "dice.repeat_last",
         "settings.key_binds",
         "settings.preferences",
+        "help.report_bug",
         "help.about",
     }
     assert next(spec for spec in specs if spec.action_id == "character.inventory").shortcut == "B"
@@ -84,7 +85,8 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
         "dice.repeat_last",
     ]
     assert grouped["Settings"][0].action_id == "settings.key_binds"
-    assert grouped["Help"][0].action_id == "help.about"
+    assert grouped["Help"][0].action_id == "help.report_bug"
+    assert grouped["Help"][1].action_id == "help.about"
 
 
 def test_action_spec_rejects_missing_metadata() -> None:

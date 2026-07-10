@@ -21,7 +21,8 @@ action bar.
 7. Open the Spellbook, Abilities, or Inventory windows from the Character menu.
 8. Put actions on the action bar and run combat from the main workspace.
 
-For local build and packaging notes, see [DEVNOTES.md](DEVNOTES.md).
+For local build and packaging notes, see [DEVNOTES.md](DEVNOTES.md). For release
+history, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Main Controls
 
@@ -84,8 +85,11 @@ See [Import Character Sheet](docs/import-character-sheet.md).
 - [Action Bar](docs/action-bar.md)
 - [Import Character Sheet](docs/import-character-sheet.md)
 - [Release Test Plan](docs/release-test-plan.md)
+- [Beta Feedback](docs/beta-feedback.md)
 - [SRD Design Guide](docs/srd-design-guide.md)
-- [Developer Notes and Patch Notes](DEVNOTES.md)
+- [SRD Attribution](THIRD_PARTY_LICENSES/SRD.md)
+- [Changelog](CHANGELOG.md)
+- [Developer Notes](DEVNOTES.md)
 
 ## Project Status
 

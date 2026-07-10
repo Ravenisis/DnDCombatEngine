@@ -1,5 +1,6 @@
 """Business service layer."""
 
+from dnd_combat_engine.services.beta_report_service import BetaReportService
 from dnd_combat_engine.services.campaign_service import CampaignService
 from dnd_combat_engine.services.character_import_service import (
     CharacterImportError,
@@ -16,9 +17,11 @@ from dnd_combat_engine.services.inventory_service import InventoryService
 from dnd_combat_engine.services.monster_service import MonsterService
 from dnd_combat_engine.services.persistence_service import PersistenceService
 from dnd_combat_engine.services.spell_service import SpellService
+from dnd_combat_engine.services.srd_catalog_service import SrdCatalogService
 
 __all__ = [
     "CampaignService",
+    "BetaReportService",
     "CharacterService",
     "CharacterImportError",
     "CharacterImportService",
@@ -32,4 +35,5 @@ __all__ = [
     "MonsterService",
     "PersistenceService",
     "SpellService",
+    "SrdCatalogService",
 ]

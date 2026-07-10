@@ -151,6 +151,12 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Preferences",
             "Change visual preferences",
         ),
+        GuiActionSpec(
+            "help.report_bug",
+            "Help",
+            "Report Bug",
+            "Send a beta tester report",
+        ),
         GuiActionSpec("help.about", "Help", "About", "Show application information"),
     )
 

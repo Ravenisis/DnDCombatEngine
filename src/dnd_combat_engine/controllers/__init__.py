@@ -1,5 +1,6 @@
 """Controller layer for UI-facing application workflows."""
 
+from dnd_combat_engine.controllers.beta_report_controller import BetaReportController
 from dnd_combat_engine.controllers.campaign_controller import CampaignController
 from dnd_combat_engine.controllers.character_controller import CharacterController
 from dnd_combat_engine.controllers.character_import_controller import (
@@ -49,5 +50,6 @@ __all__ = [
     "InventoryController",
     "InitiativeSummary",
     "AttackSummary",
+    "BetaReportController",
     "capture_controller_error",
 ]

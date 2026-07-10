@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from dnd_combat_engine.gui import main_window
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.models import (
+    BetaBugReport,
     Campaign,
     Character,
     HitPoints,
@@ -197,6 +198,37 @@ def test_url_menu_action_runs_import_and_reports_errors(monkeypatch) -> None:
 
     assert window.status.message == "could not import"
     assert FakeMessageBox.warning_calls[-1][1] == "Import Failed"
+
+
+def test_report_bug_menu_writes_beta_report(monkeypatch, tmp_path) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState()
+    report_file = tmp_path / "BETA_TESTER_REPORTS.md"
+    report = BetaBugReport("Crash on launch", "The app closes immediately.")
+    FakeMessageBox.information_calls = []
+
+    def submit_bug_report(submitted):
+        report_file.write_text(submitted.summary, encoding="utf-8")
+        return report_file
+
+    app = SimpleNamespace(beta_reports=SimpleNamespace(submit_bug_report=submit_bug_report))
+    monkeypatch.setattr(main_window, "_ask_bug_report", lambda qt, parent: report)
+
+    main_window._run_menu_action(window, FakeQt, app, state, "help.report_bug")
+
+    assert report_file.read_text(encoding="utf-8") == "Crash on launch"
+    assert FakeMessageBox.information_calls[-1][1] == "Bug Report Saved"
+    assert window.status.message == f"Saved bug report to {report_file}."
+
+
+def test_report_bug_menu_handles_cancel(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState()
+    monkeypatch.setattr(main_window, "_ask_bug_report", lambda qt, parent: None)
+
+    main_window._run_menu_action(window, FakeQt, object(), state, "help.report_bug")
+
+    assert window.status.message == "Bug report canceled."
 
 
 def test_close_campaign_clears_active_state(monkeypatch) -> None:

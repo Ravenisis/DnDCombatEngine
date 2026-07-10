@@ -29,6 +29,7 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert Encounter.from_dict(store.load("encounters", "roadside_ambush")).participants
     assert Encounter.from_dict(store.load("encounters", "crypt_entry")).participants
     assert Weapon.from_dict(store.load("equipment", "rapier")).name == "Rapier"
+    assert store.load("srd_catalog", "srd_spells_level_0_5")["entries"]
 
 
 def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:

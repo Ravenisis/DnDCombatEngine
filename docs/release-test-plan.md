@@ -108,7 +108,7 @@ Verify:
 
 Before upload:
 
-- Update `DEVNOTES.md` patch notes.
+- Update `CHANGELOG.md` with tester-facing patch notes.
 - Confirm `README.md` still reflects user-facing behavior.
 - Confirm docs are current.
 - Bump package and installer version when appropriate.

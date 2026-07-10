@@ -8,6 +8,7 @@ from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.encounters import Encounter
 from dnd_combat_engine.models.monsters import Monster
 from dnd_combat_engine.models.spells import Spell
+from dnd_combat_engine.models.srd_catalog import SrdCatalog
 from dnd_combat_engine.persistence.json_store import JsonFileStore
 from dnd_combat_engine.persistence.migrations import (
     migrate_campaign,
@@ -92,3 +93,11 @@ class PersistenceService:
     def list_encounter_ids(self) -> list[str]:
         """List saved encounter ids."""
         return self.store.list_ids("encounters")
+
+    def load_srd_catalog(self, catalog_id: str) -> SrdCatalog:
+        """Load an SRD support catalog from a JSON document."""
+        return SrdCatalog.from_dict(self.store.load("srd_catalog", catalog_id))
+
+    def list_srd_catalog_ids(self) -> list[str]:
+        """List saved SRD support catalog ids."""
+        return self.store.list_ids("srd_catalog")

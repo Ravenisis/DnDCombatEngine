@@ -1,20 +1,21 @@
 # SRD Design Guide
 
-This project uses the D&D 5e SRD Markdown reference located outside the repo at
-`C:\Users\aiacu\Downloads\dnd-5e-srd-markdown-master\dnd-5e-srd-markdown-master`
-as a design and rules-accuracy reference.
+This project uses the D&D 5e System Reference Document 5.2.1 as an open
+licensed rules baseline for structured rules design. The repo carries the
+project's SRD attribution and license reference at
+[THIRD_PARTY_LICENSES/SRD.md](../THIRD_PARTY_LICENSES/SRD.md), so contributors
+do not need access to any developer's local SRD checkout to understand licensing
+obligations.
 
-The source states that it contains material from the System Reference Document
-5.2.1 by Wizards of the Coast LLC and is licensed under the Creative Commons
-Attribution 4.0 International License. Any SRD-derived data or generated rules
-tables that are committed to this project must preserve appropriate attribution,
-link to the license, and note meaningful changes.
+Any SRD-derived data or generated rules tables committed to this project must
+preserve appropriate attribution, link to the license, and note meaningful
+changes.
 
 ## Engineering Principles
 
 - Treat the SRD as a rules baseline, not a pile of UI text. Convert rules into
   typed data, effect definitions, and resolution workflows.
-- Keep rule edition and source version explicit. The current local SRD is 5.2.1
+- Keep rule edition and source version explicit. The current SRD baseline is 5.2.1
   / 2024 material, while some campaign workflows may still need 2014-compatible
   behavior.
 - Prefer structured parsers over ad hoc string matching for spells, monsters,
@@ -82,6 +83,9 @@ High-value SRD-informed slices:
   movement, object interaction, and special actions.
 - Done: Add concentration lifecycle handling: start, replace, break, and save
   after damage.
+- Done: Add compact SRD catalogs for spells through spell level 5, class and
+  subclass abilities through level 10, and species traits for character-builder
+  coverage.
 - Next: Wire concentration results into dependent effect cleanup for party
   frames, target frames, and active spell buffs.
 - Add SRD spell parsing/import tools that generate structured spell JSON from

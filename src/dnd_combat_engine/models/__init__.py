@@ -3,6 +3,7 @@
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
 from dnd_combat_engine.models.action_economy import ActionCost, TurnEconomy
+from dnd_combat_engine.models.beta_reports import BetaBugReport
 from dnd_combat_engine.models.campaigns import Campaign, CampaignActivityEntry, CampaignStatus
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
@@ -45,6 +46,7 @@ from dnd_combat_engine.models.spell_slots import (
     inferred_spell_slots,
 )
 from dnd_combat_engine.models.spells import Spell, SpellSchool
+from dnd_combat_engine.models.srd_catalog import SrdCatalog, SrdCatalogEntry
 
 __all__ = [
     "AbilityScores",
@@ -53,6 +55,7 @@ __all__ = [
     "ActionBarButton",
     "ActionCost",
     "Armor",
+    "BetaBugReport",
     "Campaign",
     "CampaignActivityEntry",
     "CampaignStatus",
@@ -91,6 +94,8 @@ __all__ = [
     "RuleSource",
     "Spell",
     "SpellSchool",
+    "SrdCatalog",
+    "SrdCatalogEntry",
     "TargetProfile",
     "TargetKind",
     "TargetReference",

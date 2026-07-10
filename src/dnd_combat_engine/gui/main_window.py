@@ -44,6 +44,7 @@ from dnd_combat_engine.gui.widgets import (
 from dnd_combat_engine.models import (
     ActionBarActionKind,
     ActionBarButton,
+    BetaBugReport,
     Campaign,
     Character,
     ConcentrationState,
@@ -427,6 +428,9 @@ def _run_menu_action(
     if action_id == "settings.preferences":
         _open_preferences_window(window, qt)
         return
+    if action_id == "help.report_bug":
+        _report_bug_from_menu(window, qt, app)
+        return
     if action_id == "help.about":
         _show_message(
             window,
@@ -436,6 +440,151 @@ def _run_menu_action(
         )
         return
     _set_status(window, f"{action_id} selected.")
+
+
+def _report_bug_from_menu(window, qt, app: DnDCombatEngineApp) -> None:
+    report = _ask_bug_report(qt, window)
+    if report is None:
+        _set_status(window, "Bug report canceled.")
+        return
+    try:
+        path = app.beta_reports.submit_bug_report(report)
+    except (OSError, ValueError) as exc:
+        _show_message(window, qt, "Report Bug Failed", str(exc), error=True)
+        _set_status(window, str(exc))
+        return
+    _show_message(
+        window,
+        qt,
+        "Bug Report Saved",
+        f"Saved beta tester report to:\n{path}",
+    )
+    _set_status(window, f"Saved bug report to {path}.")
+
+
+def _ask_bug_report(qt, parent) -> BetaBugReport | None:
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    if dialog_class is None:
+        return None
+
+    dialog = dialog_class(parent)
+    if hasattr(dialog, "setWindowTitle"):
+        dialog.setWindowTitle("Report Bug")
+    if hasattr(dialog, "resize"):
+        dialog.resize(560, 620)
+
+    layout = qt.QtWidgets.QVBoxLayout(dialog)
+    summary = qt.QtWidgets.QLineEdit()
+    tester = qt.QtWidgets.QLineEdit()
+    severity = _combo_box(qt, ("Medium", "Low", "High", "Critical"))
+    area = _combo_box(
+        qt,
+        (
+            "General",
+            "Character Import",
+            "Campaign",
+            "Combat",
+            "Action Bar",
+            "Inventory",
+            "Installer",
+            "Documentation",
+        ),
+    )
+    description = qt.QtWidgets.QTextEdit()
+    steps = qt.QtWidgets.QTextEdit()
+    expected = qt.QtWidgets.QTextEdit()
+    actual = qt.QtWidgets.QTextEdit()
+
+    _add_form_row(qt, layout, "Summary", summary)
+    _add_form_row(qt, layout, "Tester", tester)
+    _add_form_row(qt, layout, "Severity", severity)
+    _add_form_row(qt, layout, "Area", area)
+    _add_labeled_text(qt, layout, "Description", description)
+    _add_labeled_text(qt, layout, "Steps To Reproduce", steps)
+    _add_labeled_text(qt, layout, "Expected Result", expected)
+    _add_labeled_text(qt, layout, "Actual Result", actual)
+
+    buttons = _dialog_buttons(qt, dialog)
+    if buttons is not None:
+        layout.addWidget(buttons)
+
+    if not _bug_report_dialog_accepted(qt, dialog):
+        return None
+    return BetaBugReport(
+        summary=_line_edit_text(summary),
+        description=_text_edit_text(description),
+        steps_to_reproduce=_text_edit_text(steps),
+        expected_result=_text_edit_text(expected),
+        actual_result=_text_edit_text(actual),
+        severity=_combo_text(severity),
+        area=_combo_text(area),
+        tester_name=_line_edit_text(tester),
+    )
+
+
+def _combo_box(qt, values: tuple[str, ...]):
+    combo_class = getattr(qt.QtWidgets, "QComboBox", None)
+    if combo_class is None:
+        label = qt.QtWidgets.QLineEdit(values[0] if values else "")
+        return label
+    combo = combo_class()
+    for value in values:
+        combo.addItem(value)
+    return combo
+
+
+def _add_form_row(qt, layout, label: str, widget) -> None:
+    row = qt.QtWidgets.QWidget()
+    row_layout = qt.QtWidgets.QHBoxLayout(row)
+    row_layout.addWidget(qt.QtWidgets.QLabel(label))
+    row_layout.addWidget(widget)
+    layout.addWidget(row)
+
+
+def _add_labeled_text(qt, layout, label: str, widget) -> None:
+    layout.addWidget(qt.QtWidgets.QLabel(label))
+    layout.addWidget(widget)
+
+
+def _dialog_buttons(qt, dialog):
+    button_box = getattr(qt.QtWidgets, "QDialogButtonBox", None)
+    if button_box is None:
+        return None
+    standard_button = getattr(button_box, "StandardButton", button_box)
+    buttons = button_box(
+        getattr(standard_button, "Ok", 0) | getattr(standard_button, "Cancel", 0)
+    )
+    if hasattr(buttons, "accepted"):
+        buttons.accepted.connect(dialog.accept)
+    if hasattr(buttons, "rejected"):
+        buttons.rejected.connect(dialog.reject)
+    return buttons
+
+
+def _bug_report_dialog_accepted(qt, dialog) -> bool:
+    result = dialog.exec() if hasattr(dialog, "exec") else dialog.exec_()
+    dialog_code = getattr(getattr(qt.QtWidgets.QDialog, "DialogCode", None), "Accepted", None)
+    if dialog_code is None:
+        dialog_code = getattr(qt.QtWidgets.QDialog, "Accepted", 1)
+    return result == dialog_code or result is True
+
+
+def _line_edit_text(widget) -> str:
+    return str(widget.text()).strip() if hasattr(widget, "text") else ""
+
+
+def _text_edit_text(widget) -> str:
+    if hasattr(widget, "toPlainText"):
+        return str(widget.toPlainText()).strip()
+    if hasattr(widget, "text"):
+        return str(widget.text()).strip()
+    return ""
+
+
+def _combo_text(widget) -> str:
+    if hasattr(widget, "currentText"):
+        return str(widget.currentText()).strip()
+    return _line_edit_text(widget)
 
 
 def _import_pdf_from_menu(window, qt, app: DnDCombatEngineApp, state: GuiCampaignState) -> None:
