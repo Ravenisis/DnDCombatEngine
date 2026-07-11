@@ -506,6 +506,35 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     assert "Current balance: 3GP" in log_text
 
 
+def test_inventory_money_log_records_buy_and_sell_transactions() -> None:
+    from dnd_combat_engine.gui import main_window
+    from dnd_combat_engine.models import CurrencyPurse
+
+    state = {
+        "entries": ["Opening balance: 10GP"],
+        "current": {"purse": CurrencyPurse(gp=10)},
+    }
+
+    main_window._record_money_log_transaction(
+        state,
+        "Buy",
+        -200,
+        CurrencyPurse(gp=8),
+        "1 x Backpack",
+    )
+    main_window._record_money_log_transaction(
+        state,
+        "Sell",
+        100,
+        CurrencyPurse(gp=9),
+        "1 x Backpack",
+    )
+
+    assert "Buy: 1 x Backpack (-2GP) -> 8GP" in state["entries"]
+    assert "Sell: 1 x Backpack (+1GP) -> 9GP" in state["entries"]
+    assert state["current"]["purse"].gp == 9
+
+
 def test_party_initiative_helpers_parse_and_prompt() -> None:
     from dnd_combat_engine.gui.widgets import (
         _ask_initiative_roll,

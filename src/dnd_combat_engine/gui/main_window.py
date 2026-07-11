@@ -1081,6 +1081,9 @@ def _open_inventory_window(
         popup.resize(620, 520)
     layout = qt.QtWidgets.QVBoxLayout(popup)
     content = {"widget": None}
+    money_log_entries = [f"Opening balance: {_currency_change_text(character.currency.total_cp)}"]
+    money_log_current = {"purse": character.currency}
+    money_log_state = {"entries": money_log_entries, "current": money_log_current}
 
     def refresh_inventory() -> None:
         next_widget = InventoryWidget.create(
@@ -1102,6 +1105,7 @@ def _open_inventory_window(
                 state,
                 character_id,
                 item_id,
+                money_log_state,
             ),
             on_currency_change=lambda delta_cp: _change_character_currency(
                 window,
@@ -1116,7 +1120,10 @@ def _open_inventory_window(
                 state,
                 character_id,
                 refresh_inventory,
+                money_log_state,
             ),
+            money_log_entries=money_log_entries,
+            money_log_current=money_log_current,
         )
         previous = content.get("widget")
         if previous is not None and hasattr(layout, "removeWidget"):
@@ -1138,6 +1145,7 @@ def _add_inventory_item_from_dialog(
     state: GuiCampaignState,
     character_id: str,
     refresh_inventory,
+    money_log_state: dict | None = None,
 ) -> None:
     item = _ask_inventory_item(qt, window)
     if item is None:
@@ -1157,6 +1165,13 @@ def _add_inventory_item_from_dialog(
         message = (
             f"Bought {item.quantity} x {item.name} for "
             f"{_currency_change_text(purchase_total)}."
+        )
+        _record_money_log_transaction(
+            money_log_state,
+            "Buy",
+            -purchase_total,
+            character.currency,
+            f"{item.quantity} x {item.name}",
         )
     _record_campaign_activity(app, state, message, "inventory")
     refresh_inventory()
@@ -1567,6 +1582,7 @@ def _sell_inventory_item(
     state: GuiCampaignState,
     character_id: str,
     item_id: str,
+    money_log_state: dict | None = None,
 ) -> int | str:
     try:
         character = app.characters.load(character_id)
@@ -1585,6 +1601,13 @@ def _sell_inventory_item(
         else:
             character.currency = character.currency.add_cp(sell_price)
             app.characters.save(character)
+            _record_money_log_transaction(
+                money_log_state,
+                "Sell",
+                sell_price,
+                character.currency,
+                f"1 x {item.name}",
+            )
             message = (
                 f"Sold 1 x {item.name} for {_currency_change_text(sell_price)}. "
                 f"Balance {_currency_change_text(character.currency.total_cp)}."
@@ -1598,6 +1621,26 @@ def _sell_inventory_item(
     except KeyError:
         return 0
     return app.inventory.quantity(updated, item_id)
+
+
+def _record_money_log_transaction(
+    money_log_state: dict | None,
+    action: str,
+    delta_cp: int,
+    purse,
+    detail: str,
+) -> None:
+    if money_log_state is None:
+        return
+    entries = money_log_state.get("entries")
+    current = money_log_state.get("current")
+    if not isinstance(entries, list) or not isinstance(current, dict):
+        return
+    sign = "+" if delta_cp >= 0 else "-"
+    amount = _currency_change_text(abs(delta_cp))
+    balance = _currency_change_text(purse.total_cp)
+    entries.append(f"{action}: {detail} ({sign}{amount}) -> {balance}")
+    current["purse"] = purse
 
 
 def _inventory_item_sell_price_cp(item: InventoryItem) -> int:

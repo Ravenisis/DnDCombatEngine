@@ -794,6 +794,8 @@ class InventoryWidget:
         on_sell=None,
         on_currency_change=None,
         on_add_item=None,
+        money_log_entries: list[str] | None = None,
+        money_log_current: dict | None = None,
     ):
         """Create an icon inventory grouped by carried containers."""
         character = app.characters.load(character_id)
@@ -806,6 +808,8 @@ class InventoryWidget:
                 character.currency,
                 on_currency_change,
                 on_add_item,
+                money_log_entries,
+                money_log_current,
             )
         )
         sections = _inventory_sections(character.inventory)
@@ -823,6 +827,8 @@ def _inventory_header(
     purse: CurrencyPurse,
     on_currency_change,
     on_add_item=None,
+    money_log_entries: list[str] | None = None,
+    money_log_current: dict | None = None,
 ):
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(widget)
@@ -835,7 +841,9 @@ def _inventory_header(
             add_item_button.setToolTip("Manually add an item stack to this inventory.")
         add_item_button.clicked.connect(lambda checked=False: on_add_item())
         layout.addWidget(add_item_button)
-    money_log = [f"Opening balance: {_currency_price_text(purse.total_cp)}"]
+    money_log = money_log_entries
+    if money_log is None:
+        money_log = [f"Opening balance: {_currency_price_text(purse.total_cp)}"]
     money_log_button = qt.QtWidgets.QPushButton("Money Log")
     if hasattr(money_log_button, "setToolTip"):
         money_log_button.setToolTip("Show currency changes made while this inventory is open.")
@@ -857,7 +865,8 @@ def _inventory_header(
     layout.addWidget(buttons)
     boxes = _currency_boxes(qt, purse)
     layout.addWidget(_currency_box_grid(qt, boxes))
-    current = {"purse": purse}
+    current = money_log_current if money_log_current is not None else {"purse": purse}
+    current["purse"] = purse
 
     def apply_ledger(multiplier: int) -> None:
         if on_currency_change is None:
