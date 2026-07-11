@@ -371,6 +371,65 @@ def test_srd_inventory_dialog_tooltip_includes_item_details() -> None:
     assert "2d4 + 2" in tooltip
 
 
+def test_srd_inventory_catalog_expansion_surfaces_magic_and_trade_items() -> None:
+    from dnd_combat_engine.gui import main_window, widgets
+
+    items = {item.name: item for item in main_window._srd_inventory_items()}
+
+    assert len(items) >= 625
+    assert items["Spell Scroll (Level 9)"].category.value == "consumable"
+    assert "magic item" in items["Potion of Flying"].tags
+    assert "requires attunement" in items["Ring of Protection"].tags
+    assert "trade good" in items["Saffron (1 lb.)"].tags
+    assert "bonus:+3" in items["Vorpal Sword"].tags
+    assert "gemstone" in items["Diamond Gemstone"].tags
+    assert "art object" in items["Jeweled Platinum Ring"].tags
+    assert "manual" in items["Manual of Gainful Exercise"].tags
+    assert "cursed" in items["Berserker Axe"].tags
+    assert "healing" in items["Potion of Healing (Supreme)"].tags
+    assert "figurine" in items["Figurine of Wondrous Power (Silver Raven)"].tags
+    assert "force" in items["Cube of Force"].tags
+    assert "talisman" in items["Talisman of Pure Good"].tags
+
+    tooltip = main_window._srd_inventory_item_tooltip(items["Ring of Protection"])
+    assert "Ring of Protection" in tooltip
+    assert "requires attunement" in tooltip
+    assert "saving throws" in tooltip
+
+    assert "ring" in widgets._inventory_icon_candidates(items["Ring of Protection"])
+    assert "manual" in widgets._inventory_icon_candidates(
+        items["Manual of Gainful Exercise"]
+    )
+    assert "cursed" in widgets._inventory_icon_candidates(items["Berserker Axe"])
+    assert "magic_weapon" in widgets._inventory_icon_candidates(items["Vorpal Sword"])
+    assert "gemstone" in widgets._inventory_icon_candidates(items["Diamond Gemstone"])
+    assert "art_object" in widgets._inventory_icon_candidates(
+        items["Jeweled Platinum Ring"]
+    )
+    assert "figurine" in widgets._inventory_icon_candidates(
+        items["Figurine of Wondrous Power (Silver Raven)"]
+    )
+    assert "force_item" in widgets._inventory_icon_candidates(items["Cube of Force"])
+    assert "talisman" in widgets._inventory_icon_candidates(
+        items["Talisman of Pure Good"]
+    )
+    assert "gauntlets" in widgets._inventory_icon_candidates(
+        items["Gauntlets of Ogre Power"]
+    )
+    assert "horn_magic" in widgets._inventory_icon_candidates(items["Horn of Blasting"])
+    assert widgets._inventory_icon_path(items["Ring of Protection"]).name == "ring.svg"
+    assert (
+        widgets._inventory_icon_path(items["Manual of Gainful Exercise"]).name
+        == "manual.svg"
+    )
+    assert widgets._inventory_icon_path(items["Berserker Axe"]).name == "cursed.svg"
+    assert (
+        widgets._inventory_icon_path(items["Figurine of Wondrous Power (Silver Raven)"]).name
+        == "figurine.svg"
+    )
+    assert widgets._inventory_icon_path(items["Cube of Force"]).name == "force_item.svg"
+
+
 def test_inventory_sell_price_uses_half_purchase_price() -> None:
     from dnd_combat_engine.gui import main_window
     from dnd_combat_engine.models import InventoryItem

@@ -38,6 +38,25 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert any(item["name"] == "Potion of Healing" for item in srd_items)
     assert any(item["name"] == "Playing Card Set" for item in srd_items)
     assert any(item["name"] == "Airship" for item in srd_items)
+    assert len(srd_items) >= 625
+    srd_items_by_name = {item["name"]: item for item in srd_items}
+    assert srd_items_by_name["Spell Scroll (Level 9)"]["category"] == "consumable"
+    assert "magic item" in srd_items_by_name["Potion of Flying"]["tags"]
+    assert "requires attunement" in srd_items_by_name["Ring of Protection"]["tags"]
+    assert "trade good" in srd_items_by_name["Saffron (1 lb.)"]["tags"]
+    assert "bonus:+3" in srd_items_by_name["Vorpal Sword"]["tags"]
+    assert "gemstone" in srd_items_by_name["Diamond Gemstone"]["tags"]
+    assert "art object" in srd_items_by_name["Jeweled Platinum Ring"]["tags"]
+    assert "manual" in srd_items_by_name["Manual of Gainful Exercise"]["tags"]
+    assert "cursed" in srd_items_by_name["Berserker Axe"]["tags"]
+    assert "healing" in srd_items_by_name["Potion of Healing (Supreme)"]["tags"]
+    assert "figurine" in srd_items_by_name[
+        "Figurine of Wondrous Power (Silver Raven)"
+    ]["tags"]
+    assert "force" in srd_items_by_name["Cube of Force"]["tags"]
+    assert "talisman" in srd_items_by_name["Talisman of Pure Good"]["tags"]
+    assert "shield" in srd_items_by_name["Animated Shield"]["tags"]
+    assert "damage:radiant" in srd_items_by_name["Holy Avenger"]["tags"]
 
 
 def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:

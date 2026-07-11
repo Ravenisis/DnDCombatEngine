@@ -3,6 +3,39 @@
 This changelog keeps tester-facing release notes and milestone patch history.
 For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
+## Unreleased
+
+### Added
+
+- Expanded the SRD inventory catalog from 209 to 628 selectable entries.
+- Added more mundane adventuring gear, trade goods, higher-level spell scrolls,
+  potion variants, magic armor, magic weapons, rings, rods, staves, wands, and
+  wondrous items.
+- Added more SRD treasure inventory, including gemstones, art objects, manuals,
+  tomes, cursed items, bard instruments, utility wearables, and named wondrous
+  loot.
+- Added another SRD inventory pass with force items, elemental command items,
+  figurines of wondrous power, horns, pipes, talismans, prayer beads, gauntlets,
+  goggles, animated shields, special armor, special weapons, poison variants,
+  and higher healing potions.
+- Added richer inventory tags for magic items, attunement, bonuses, trade goods,
+  scroll levels, and item behavior notes used by add-item tooltips.
+- Added 23 inventory SVG icons for SRD item families such as rings, rods, wands,
+  staves, magic armor, magic weapons, magic containers, gems, art objects,
+  amulets, manuals, tomes, cursed loot, and wearable magic items.
+- Added 6 more inventory SVG icons for figurines, force items, gauntlets,
+  goggles, magic horns, and talismans.
+
+### Changed
+
+- Improved inventory icon fallback tags for magic items, rings, rods, wands,
+  focus items, clothing, trade goods, light sources, weapons, gems, art objects,
+  books, jewelry, and cursed loot.
+- Assigned the expanded SRD catalog to item-family icons so every selectable
+  inventory item resolves to a concrete icon in the inventory window.
+- Extended icon family matching for summoning figurines, force cubes, elemental
+  command items, gauntlets, goggles, horns, and talismans.
+
 ## 1.0.2 - 2026-07-10
 
 ### Added

@@ -1272,26 +1272,116 @@ def _inventory_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
     }
     if item.item_id in aliases:
         names.insert(0, aliases[item.item_id])
+    names.extend(_inventory_family_icon_candidates(item))
     names.extend(_inventory_tag_icon_candidates(item))
     return tuple(dict.fromkeys(names))
+
+
+def _inventory_family_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
+    """Return icon candidates inferred from common SRD item families."""
+    item_id = item.item_id
+    tags = set(item.tags)
+    candidates: list[str] = []
+    prefix_icons = (
+        ("amulet_", "amulet"),
+        ("bag_of_", "magic_container"),
+        ("belt_", "belt"),
+        ("boots_", "boots"),
+        ("bracers_", "bracers"),
+        ("cloak_", "cloak"),
+        ("cube_", "force_item"),
+        ("figurine_", "figurine"),
+        ("gem_of_", "gemstone"),
+        ("gloves_", "gloves"),
+        ("goggles_", "goggles"),
+        ("hat_", "clothing"),
+        ("helm_", "helm"),
+        ("horn_", "horn_magic"),
+        ("instrument_of_the_bards_", "bard_instrument"),
+        ("ioun_stone_", "ioun_stone"),
+        ("manual_", "manual"),
+        ("oil_", "potion"),
+        ("periapt_", "amulet"),
+        ("potion_", "potion"),
+        ("ring_", "ring"),
+        ("robe_", "robe_magic"),
+        ("rod_", "rod"),
+        ("staff_", "staff_magic"),
+        ("talisman_", "talisman"),
+        ("tome_", "tome"),
+        ("wand_", "wand"),
+    )
+    for prefix, icon in prefix_icons:
+        if item_id.startswith(prefix):
+            candidates.append(icon)
+            break
+    if "cursed" in tags:
+        candidates.append("cursed")
+    if item.category == ItemCategory.ARMOR and "magic item" in tags:
+        candidates.append("magic_armor")
+    if item.category == ItemCategory.WEAPON and "magic item" in tags:
+        candidates.append("magic_weapon")
+    if "container" in tags and "magic item" in tags:
+        candidates.append("magic_container")
+    if "gemstone" in tags or "gem" in tags:
+        candidates.append("gemstone")
+    if "art object" in tags:
+        candidates.append("art_object")
+    if "manual" in tags:
+        candidates.append("manual")
+    if "tome" in tags:
+        candidates.append("tome")
+    if "jewelry" in tags and not any(icon in candidates for icon in ("amulet", "ring")):
+        candidates.append("jewelry")
+    return tuple(dict.fromkeys(candidates))
 
 
 def _inventory_tag_icon_candidates(item: InventoryItem) -> tuple[str, ...]:
     tag_icons = {
         "ammunition": "ammunition",
         "arcane focus": "focus",
+        "art object": "art_object",
+        "belt": "belt",
+        "book": "book",
+        "bracers": "bracers",
+        "card": "game",
+        "clothing": "clothing",
         "container": "container",
+        "cursed": "trap",
         "druidic focus": "focus",
+        "elemental": "focus",
+        "figurine": "figurine",
+        "focus": "focus",
+        "force": "force_item",
+        "gauntlets": "gauntlets",
         "gaming set": "game",
+        "gem": "gemstone",
+        "gemstone": "gemstone",
+        "goggles": "goggles",
         "healing": "potion",
         "holy symbol": "holy_symbol",
+        "horn": "horn_magic",
+        "jewelry": "jewelry",
         "large vehicle": "vehicle",
+        "light": "light_source",
+        "light_source": "light_source",
+        "magic item": "treasure",
+        "manual": "manual",
         "mount": "mount",
         "musical instrument": "instrument",
+        "portal": "focus",
         "potion": "potion",
+        "ring": "ring",
+        "rod": "rod",
         "scroll": "scroll",
         "service": "treasure",
+        "summoning": "figurine",
+        "talisman": "talisman",
+        "tome": "tome",
+        "trade good": "treasure",
         "vehicle": "vehicle",
+        "wand": "wand",
+        "weapon": "weapon",
     }
     return tuple(tag_icons[tag] for tag in item.tags if tag in tag_icons)
 
