@@ -1,25 +1,75 @@
 {
-    "casting_time":  "1 bonus action",
-    "components":  [
-                       "V",
-                       "S",
-                       "M"
-                   ],
-    "concentration":  true,
-    "damage":  [
-                   {
-                       "damage_type":  "necrotic",
-                       "dice":  "1d6"
-                   }
-               ],
-    "description":  "Deal extra necrotic damage to a cursed target.",
-    "duration":  "Concentration, up to 1 hour",
-    "level":  1,
-    "range_text":  "90 feet",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "enchantment",
-    "spell_id":  "hex",
-    "name":  "Hex",
-    "schema_version":  1
+  "casting_time": "1 bonus action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": true,
+  "damage": [
+    {
+      "damage_type": "necrotic",
+      "dice": "1d6"
+    }
+  ],
+  "description": "Deal extra necrotic damage to a cursed target.",
+  "duration": "Concentration, up to 1 hour",
+  "effects": [
+    {
+      "action_cost": "bonus_action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": "1d6",
+      "duration": {
+        "amount": 1,
+        "kind": "concentration",
+        "text": "up to 1 hour"
+      },
+      "effect_id": "hex-curse",
+      "effect_kind": "buff",
+      "interactions": [
+        {
+          "interaction_id": "hex-necrotic-rider",
+          "label": "Hex",
+          "metadata": {
+            "damage_type": "necrotic",
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_damage",
+          "scaling": {},
+          "trigger": "on_hit",
+          "value": "extra 1d6 necrotic damage"
+        },
+        {
+          "interaction_id": "hex-ability-check-disadvantage",
+          "label": "Hexed Ability",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_condition",
+          "scaling": {},
+          "trigger": "on_cast",
+          "value": "disadvantage on checks with the chosen ability"
+        }
+      ],
+      "name": "Hex",
+      "range_text": "90 feet",
+      "resource_cost": "spell_slot_1",
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 1,
+  "name": "Hex",
+  "range_text": "90 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "enchantment",
+  "spell_id": "hex"
 }

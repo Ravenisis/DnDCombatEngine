@@ -5,7 +5,10 @@ from dnd_combat_engine.models import (
     DurationKind,
     DurationProfile,
     EffectDefinition,
+    EffectInteraction,
     EffectKind,
+    InteractionOutcomeKind,
+    InteractionTrigger,
     ResourcePool,
     TargetKind,
     TargetProfile,
@@ -25,10 +28,28 @@ def test_effect_definition_round_trips_to_plain_data() -> None:
         duration=DurationProfile(DurationKind.INSTANTANEOUS),
         resource_cost="spell_slot_1",
         dice="1d8+3",
+        interactions=(
+            EffectInteraction(
+                "cure-wounds-heal",
+                InteractionTrigger.ON_TARGET,
+                InteractionOutcomeKind.APPLY_HEALING,
+                label="Hit Points",
+                value="1d8 + spellcasting modifier",
+                scaling={
+                    "mode": "spell_slot",
+                    "base_spell_level": 1,
+                    "per_slot_level_above_base": "+1d8 healing",
+                },
+            ),
+        ),
     )
 
     assert EffectDefinition.from_dict(effect.to_dict()) == effect
     assert effect.requires_target is True
+    assert effect.interactions[0].summary() == (
+        "on target: apply healing Hit Points 1d8 + spellcasting modifier "
+        "(scales +1d8 healing above level 1)."
+    )
 
 
 def test_effect_resolver_spends_action_resource_and_explains_resolution() -> None:
@@ -40,6 +61,15 @@ def test_effect_resolver_spends_action_resource_and_explains_resolution() -> Non
         target_profile=TargetProfile.ONE_CREATURE,
         resource_cost="spell_slot_1",
         dice="1d8+3",
+        interactions=(
+            EffectInteraction(
+                "cure-wounds-heal",
+                InteractionTrigger.ON_TARGET,
+                InteractionOutcomeKind.APPLY_HEALING,
+                label="Hit Points",
+                value="1d8 + spellcasting modifier",
+            ),
+        ),
     )
     resources = {"spell_slot_1": ResourcePool("spell_slot_1", current=1, maximum=4)}
     economy = TurnEconomy()
@@ -56,7 +86,9 @@ def test_effect_resolver_spends_action_resource_and_explains_resolution() -> Non
     assert economy.action_used is True
     assert result.messages == (
         "Cleric resolves Cure Wounds on Ravenisis [healing]. "
-        "Total 7. Spent spell_slot_1. Dice 1d8+3. Applied 7 healing.",
+        "Total 7. Spent spell_slot_1. Dice 1d8+3. "
+        "on target: apply healing Hit Points 1d8 + spellcasting modifier. "
+        "Applied 7 healing.",
     )
 
 

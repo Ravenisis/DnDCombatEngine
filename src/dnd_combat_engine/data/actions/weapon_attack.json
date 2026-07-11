@@ -15,6 +15,32 @@
   },
   "effect_id": "weapon_attack",
   "effect_kind": "attack",
+  "interactions": [
+    {
+      "interaction_id": "weapon-attack-hit",
+      "label": "Weapon Damage",
+      "metadata": {
+        "critical_hit_doubles_damage_dice": true,
+        "ruleset": "SRD 5.2.1 / 2024 framework"
+      },
+      "outcome_kind": "apply_damage",
+      "scaling": {},
+      "trigger": "on_hit",
+      "value": "weapon damage plus modifiers"
+    },
+    {
+      "interaction_id": "weapon-attack-critical-miss",
+      "label": "Critical Miss",
+      "metadata": {
+        "natural_roll": 1,
+        "ruleset": "SRD 5.2.1 / 2024 framework"
+      },
+      "outcome_kind": "narrate",
+      "scaling": {},
+      "trigger": "on_miss",
+      "value": "natural 1 misses automatically"
+    }
+  ],
   "name": "Weapon Attack",
   "range_text": "Weapon range",
   "resource_cost": null,

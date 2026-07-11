@@ -5,6 +5,7 @@
 .ruff_cache/
 .tmp/
 .tools/
+.vs/
 __pycache__/
 *.py[cod]
 *.egg-info/

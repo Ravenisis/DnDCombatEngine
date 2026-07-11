@@ -1,24 +1,71 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "S"
-                   ],
-    "concentration":  false,
-    "damage":  [
-                   {
-                       "damage_type":  "radiant",
-                       "dice":  "1d8"
-                   }
-               ],
-    "description":  "Flame-like radiance descends on a creature that fails a Dexterity save.",
-    "duration":  "Instantaneous",
-    "level":  0,
-    "name":  "Sacred Flame",
-    "range_text":  "60 feet",
-    "ritual":  false,
-    "saving_throw":  "dexterity",
-    "school":  "evocation",
-    "spell_id":  "sacred_flame",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S"
+  ],
+  "concentration": false,
+  "damage": [
+    {
+      "damage_type": "radiant",
+      "dice": "1d8"
+    }
+  ],
+  "description": "Flame-like radiance descends on a creature that fails a Dexterity save.",
+  "duration": "Instantaneous",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": "dexterity",
+        "bonus": 0,
+        "dc": null,
+        "kind": "saving_throw",
+        "proficiency_applies": false
+      },
+      "dice": "1d8",
+      "duration": {
+        "amount": null,
+        "kind": "instantaneous",
+        "text": "Instantaneous"
+      },
+      "effect_id": "sacred-flame-damage",
+      "effect_kind": "damage",
+      "interactions": [
+        {
+          "interaction_id": "sacred-flame-radiant-damage",
+          "label": "Radiant",
+          "metadata": {
+            "damage_type": "radiant",
+            "ignores_cover_bonus": true,
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_damage",
+          "scaling": {
+            "levels": {
+              "11": "3d8",
+              "17": "4d8",
+              "5": "2d8"
+            },
+            "mode": "character_level"
+          },
+          "trigger": "on_failed_save",
+          "value": "1d8 radiant damage"
+        }
+      ],
+      "name": "Sacred Flame",
+      "range_text": "60 feet",
+      "resource_cost": null,
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 0,
+  "name": "Sacred Flame",
+  "range_text": "60 feet",
+  "ritual": false,
+  "saving_throw": "dexterity",
+  "schema_version": 1,
+  "school": "evocation",
+  "spell_id": "sacred_flame"
 }

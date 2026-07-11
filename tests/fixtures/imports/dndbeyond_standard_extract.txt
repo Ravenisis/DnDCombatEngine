@@ -1,0 +1,49 @@
+Character Name: Ravenisis
+Class & Level: Cleric 6
+Player Name: wazic
+Species: Hill Dwarf
+Background: Folk Hero
+Strength: 12
+Dexterity: 13
+Constitution: 18
+Intelligence: 10
+Wisdom: 15
+Charisma: 9
+Max HP: 63
+Current HP: 63
+Armor Class: 20
+Inventory: 1 x Bag of Holding (5 lb); 1 x Shield (6 lb); 1 x Plate (65 lb); 1 x Handaxe (2 lb); 1 x Warhammer (5 lb); 1 x Backpack (5 lb); 1 x Clothes, Common (3 lb); 1 x Pouch (1 lb); 1 x Holy Symbol (0 lb); 3 x Healer's Kit (9 lb); 8 x Rations (1 day\) (16 lb); 1 x Mason's Tools (8 lb); 1 x Potion of Healing (Greater\) (0.5 lb)
+Currency: 0PP 2,989GP 0SP 0CP
+Resistances - Necrotic*, Poison
+ARMOR
+Heavy
+Armor,
+Plate,
+Shields
+WEAPONS
+Battleaxe,
+Simple
+Weapons,
+TOOLS
+Cook's
+Utensils,
+Mason's
+Tools,
+Vehicles
+LANGUAGES
+Common,
+Dwarvish
+=== CANTRIPS ===
+Light
+Sacred Flame
+Thaumaturgy
+=== 1st LEVEL ===
+Guiding Bolt
+Bless
+Cure Wounds
+=== 2nd LEVEL ===
+Lesser Restoration
+Spiritual Weapon
+=== 3rd LEVEL ===
+Beacon of Hope
+Revivify

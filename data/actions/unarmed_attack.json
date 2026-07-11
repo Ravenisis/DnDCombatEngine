@@ -15,6 +15,33 @@
   },
   "effect_id": "unarmed_attack",
   "effect_kind": "attack",
+  "interactions": [
+    {
+      "interaction_id": "unarmed-strike-hit",
+      "label": "Unarmed Strike",
+      "metadata": {
+        "critical_hit_doubles_damage_dice": true,
+        "damage_type": "bludgeoning",
+        "ruleset": "SRD 5.2.1 / 2024 framework"
+      },
+      "outcome_kind": "apply_damage",
+      "scaling": {},
+      "trigger": "on_hit",
+      "value": "1 + Strength modifier bludgeoning damage"
+    },
+    {
+      "interaction_id": "unarmed-strike-critical-miss",
+      "label": "Critical Miss",
+      "metadata": {
+        "natural_roll": 1,
+        "ruleset": "SRD 5.2.1 / 2024 framework"
+      },
+      "outcome_kind": "narrate",
+      "scaling": {},
+      "trigger": "on_miss",
+      "value": "natural 1 misses automatically"
+    }
+  ],
   "name": "Unarmed Strike",
   "range_text": "5 feet",
   "resource_cost": null,

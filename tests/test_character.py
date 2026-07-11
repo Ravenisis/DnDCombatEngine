@@ -36,6 +36,12 @@ def test_character_round_trips_to_plain_data() -> None:
         features=("Sneak Attack",),
         conditions=(Condition(ConditionName.POISONED, remaining_rounds=2),),
         resources={"hit_dice": ResourcePool("hit_dice", current=1, maximum=1)},
+        saving_throw_proficiencies=("Dexterity",),
+        armor_proficiencies=("Light Armor",),
+        weapon_proficiencies=("Simple Weapons",),
+        tool_proficiencies=("Thieves' Tools",),
+        languages=("Common",),
+        damage_resistances=(DamageType.POISON,),
     )
 
     restored = Character.from_dict(character.to_dict())

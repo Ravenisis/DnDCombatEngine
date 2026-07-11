@@ -67,9 +67,12 @@ def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:
         "bless": "bless-buff",
         "cure_wounds": "cure-wounds-healing",
         "guiding_bolt": "guiding-bolt-damage",
+        "hex": "hex-curse",
         "lesser_restoration": "lesser-restoration-condition",
         "light": "light-utility",
         "revivify": "revivify-healing",
+        "sacred_flame": "sacred-flame-damage",
+        "spiritual_weapon": "spiritual-weapon-attack",
         "thaumaturgy": "thaumaturgy-utility",
     }
 
@@ -77,6 +80,16 @@ def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:
         spell = Spell.from_dict(store.load("spells", spell_id))
         assert effect_id in {effect.effect_id for effect in spell.effects}
         assert all(effect.range_text for effect in spell.effects)
+        assert all(effect.interactions for effect in spell.effects)
+
+    guiding_bolt = Spell.from_dict(store.load("spells", "guiding_bolt"))
+    damage = next(
+        effect for effect in guiding_bolt.effects if effect.effect_id == "guiding-bolt-damage"
+    )
+    assert {
+        interaction.outcome_kind.value for interaction in damage.interactions
+    } >= {"apply_damage", "grant_advantage"}
+    assert damage.interactions[0].scaling["per_slot_level_above_base"] == "+1d6 damage"
 
 
 def test_seed_action_effects_define_weapon_and_unarmed_attacks() -> None:
@@ -87,5 +100,10 @@ def test_seed_action_effects_define_weapon_and_unarmed_attacks() -> None:
 
     assert weapon_attack.effect_id == "weapon_attack"
     assert weapon_attack.dice == "weapon_damage"
+    assert {interaction.outcome_kind.value for interaction in weapon_attack.interactions} >= {
+        "apply_damage",
+        "narrate",
+    }
     assert unarmed_attack.effect_id == "unarmed_attack"
     assert unarmed_attack.range_text == "5 feet"
+    assert unarmed_attack.interactions

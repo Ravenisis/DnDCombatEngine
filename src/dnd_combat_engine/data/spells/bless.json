@@ -1,45 +1,73 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "S",
-                       "M"
-                   ],
-    "concentration":  true,
-    "damage":  null,
-    "description":  "Add 1d4 to attacks and saving throws.",
-    "duration":  "Concentration, up to 1 minute",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  "1d4",
-                        "duration":  {
-                                         "amount":  1,
-                                         "kind":  "concentration",
-                                         "text":  "up to 1 minute"
-                                     },
-                        "effect_id":  "bless-buff",
-                        "effect_kind":  "buff",
-                        "name":  "Bless",
-                        "range_text":  "30 feet",
-                        "resource_cost":  "spell_slot_1",
-                        "rule_source":  null,
-                        "target_profile":  "multiple_creatures"
-                    }
-                ],
-    "level":  1,
-    "range_text":  "30 feet",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "enchantment",
-    "spell_id":  "bless",
-    "name":  "Bless",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": true,
+  "damage": null,
+  "description": "Add 1d4 to attacks and saving throws.",
+  "duration": "Concentration, up to 1 minute",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": null,
+      "duration": {
+        "amount": 1,
+        "kind": "concentration",
+        "text": "up to 1 minute"
+      },
+      "effect_id": "bless-buff",
+      "effect_kind": "buff",
+      "interactions": [
+        {
+          "interaction_id": "bless-attack-save-bonus",
+          "label": "Bless",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_buff",
+          "scaling": {},
+          "trigger": "on_cast",
+          "value": "+1d4 to attack rolls and saving throws"
+        },
+        {
+          "interaction_id": "bless-upcast-targets",
+          "label": "Higher Slot",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "narrate",
+          "scaling": {
+            "base_spell_level": 1,
+            "mode": "spell_slot",
+            "per_slot_level_above_base": "+1 target"
+          },
+          "trigger": "on_cast",
+          "value": "one additional target per slot level above 1"
+        }
+      ],
+      "name": "Bless",
+      "range_text": "30 feet",
+      "resource_cost": "spell_slot_1",
+      "rule_source": null,
+      "target_profile": "multiple_creatures"
+    }
+  ],
+  "level": 1,
+  "name": "Bless",
+  "range_text": "30 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "enchantment",
+  "spell_id": "bless"
 }

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from html import unescape
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from dnd_combat_engine.models import (
     AbilityScores,
@@ -66,8 +66,17 @@ class CharacterImportService:
         payload = self._fetch_url(url)
         if _looks_like_pdf(payload):
             text = self._extract_pdf_bytes(payload.content)
-        else:
-            text = _extract_url_text(payload)
+            return self.parse_text(text, source=payload.final_url)
+        dndbeyond_pdf_url = _dndbeyond_sheet_pdf_url(payload)
+        if dndbeyond_pdf_url is not None:
+            pdf_payload = self._fetch_url(dndbeyond_pdf_url)
+            if not _looks_like_pdf(pdf_payload):
+                raise CharacterImportError(
+                    "D&D Beyond character page linked a sheet export, but it was not a PDF"
+                )
+            text = self._extract_pdf_bytes(pdf_payload.content)
+            return self.parse_text(text, source=pdf_payload.final_url)
+        text = _extract_url_text(payload)
         return self.parse_text(text, source=payload.final_url)
 
     def parse_text(self, text: str, source: str = "pdf") -> CharacterImportDraft:
@@ -92,8 +101,15 @@ class CharacterImportService:
             inventory=_extract_inventory(normalized),
             weapons=weapons,
             armor=Armor("Imported armor", armor_class) if armor_class else None,
+            features=_extract_features(normalized),
             currency=_extract_currency(normalized),
             resources=_extract_resources(normalized, level),
+            saving_throw_proficiencies=_extract_saving_throw_proficiencies(normalized),
+            armor_proficiencies=_extract_named_proficiency_block(normalized, "armor"),
+            weapon_proficiencies=_extract_named_proficiency_block(normalized, "weapons"),
+            tool_proficiencies=_extract_named_proficiency_block(normalized, "tools"),
+            languages=_extract_named_proficiency_block(normalized, "languages"),
+            damage_resistances=_extract_damage_resistances(normalized),
             source=source,
         )
 
@@ -179,11 +195,55 @@ def _looks_like_pdf(payload: _UrlPayload) -> bool:
     )
 
 
+def _dndbeyond_sheet_pdf_url(payload: _UrlPayload) -> str | None:
+    """Return a linked D&D Beyond sheet PDF URL when a character page exposes one."""
+    if not _looks_like_dndbeyond_character_page(payload):
+        return None
+    html = _decode_payload_text(payload)
+    if not html.strip():
+        return None
+    candidates = _sheet_pdf_candidates(html)
+    return urljoin(payload.final_url, candidates[0]) if candidates else None
+
+
+def _looks_like_dndbeyond_character_page(payload: _UrlPayload) -> bool:
+    parsed = urlparse(payload.final_url)
+    host = parsed.netloc.lower()
+    return host.endswith("dndbeyond.com") and bool(
+        re.search(r"/(?:characters|profile/[^/]+/characters)/\d+\b", parsed.path)
+    )
+
+
+def _decode_payload_text(payload: _UrlPayload) -> str:
+    content_type = payload.content_type.lower()
+    return payload.content.decode(_charset_from_content_type(content_type), errors="replace")
+
+
+def _sheet_pdf_candidates(html: str) -> tuple[str, ...]:
+    normalized = (
+        unescape(html)
+        .replace(r"\\/", "/")
+        .replace(r"\/", "/")
+        .replace(r"\\u002F", "/")
+        .replace(r"\u002F", "/")
+    )
+    candidates: list[str] = []
+    patterns = (
+        r"https?://[^\"'<>\s]+/sheet-pdfs/[^\"'<>\s]+?\.pdf(?:\?[^\"'<>\s]*)?",
+        r"(?P<url>/sheet-pdfs/[^\"'<>\s]+?\.pdf(?:\?[^\"'<>\s]*)?)",
+    )
+    for pattern in patterns:
+        for match in re.finditer(pattern, normalized, flags=re.I):
+            candidate = match.groupdict().get("url") or match.group(0)
+            candidates.append(candidate.strip())
+    return tuple(dict.fromkeys(candidates))
+
+
 def _extract_url_text(payload: _UrlPayload) -> str:
     content_type = payload.content_type.lower()
     if "html" not in content_type and "text" not in content_type and content_type:
         raise CharacterImportError("character URL must point to a PDF, HTML, or text page")
-    text = payload.content.decode(_charset_from_content_type(content_type), errors="replace")
+    text = _decode_payload_text(payload)
     if "html" in content_type or "<html" in text[:500].lower():
         text = _html_to_text(text)
     if not text.strip():
@@ -303,7 +363,7 @@ def _inventory_entry_text(name: str, quantity: str, weight: str) -> str:
 
 
 def _repair_inventory_name(name: str) -> str:
-    clean_name = name.strip()
+    clean_name = name.strip().replace(r"\(", "(").replace(r"\)", ")")
     if clean_name.count("(") > clean_name.count(")"):
         clean_name += ")"
     return clean_name
@@ -313,6 +373,12 @@ def _dndbeyond_currency(values: list[str]) -> str | None:
     for value in values:
         if re.fullmatch(r"\d[\d,]*\s*(?:pp|gp|sp|cp)", value.strip(), flags=re.I):
             return value.strip()
+    for index in range(0, max(0, len(values) - 5)):
+        possible = values[index : index + 5]
+        if all(re.fullmatch(r"\d[\d,]*", value) for value in possible):
+            cp, _ep, pp, gp, sp = possible
+            if any(value != "0" for value in (cp, pp, gp, sp)):
+                return f"{pp}PP {gp}GP {sp}SP {cp}CP"
     return None
 
 
@@ -346,8 +412,11 @@ def _extract_name(text: str) -> str:
     label_below = _extract_value_before_label(text, "character name")
     if label_below:
         return _restore_name_case(_clean_name(label_below), text)
+    label_above = _extract_value_after_label(text, "character name")
+    if label_above:
+        return _restore_name_case(_clean_name(label_above), text)
     match = re.search(r"^([A-Za-z][A-Za-z '\-]{1,60})$", text, flags=re.MULTILINE)
-    if match:
+    if match and _looks_like_character_name(match.group(1)):
         return _restore_name_case(_clean_name(match.group(1)), text)
     return "Imported Character"
 
@@ -394,8 +463,21 @@ def _extract_value_before_label(text: str, label: str) -> str | None:
     return None
 
 
+def _extract_value_after_label(text: str, label: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    label_pattern = re.compile(rf"^{label}$", flags=re.IGNORECASE)
+    for index, line in enumerate(lines[:-1]):
+        if label_pattern.match(line):
+            value = lines[index + 1].strip()
+            if _looks_like_character_name(value):
+                return value
+    return None
+
+
 def _looks_like_character_name(value: str) -> bool:
     if not re.fullmatch(r"[A-Za-z][A-Za-z '\-]{1,60}", value):
+        return False
+    if re.search(r"\b(?:pdf|machine-readable|sheet|page)\b", value, flags=re.I):
         return False
     labels = {
         "background",
@@ -518,6 +600,9 @@ def _extract_abilities(text: str) -> AbilityScores:
 
 
 def _extract_skills(text: str) -> tuple[str, ...]:
+    proficient = _extract_machine_readable_skill_proficiencies(text)
+    if proficient:
+        return proficient
     match = re.search(
         r"^skills?\s*:?\s*(.+?)(?:\n(?:inventory|equipment|weapons?|features?|"
         r"saves?|hit dice|hit points|speed|armor|class|proficiency bonus)\b|$)",
@@ -535,7 +620,50 @@ def _extract_skills(text: str) -> tuple[str, ...]:
     return tuple(name for name in candidates if name)
 
 
+def _extract_machine_readable_skill_proficiencies(text: str) -> tuple[str, ...]:
+    match = re.search(
+        r"^Skill\s*$\n^Bonus\s*$\n^Proficient\s*$\n^Ability\s*$\n(.+?)(?:\n[^\n]*machine-readable|\nWeapons,|\nACTIONS\b|\Z)",
+        text,
+        flags=re.I | re.M | re.S,
+    )
+    if not match:
+        return ()
+    lines = _clean_lines(match.group(1))
+    skills = []
+    index = 0
+    while index + 3 < len(lines):
+        name, _bonus, proficient, _ability = lines[index : index + 4]
+        display = _SKILL_DISPLAY_NAMES.get(name.lower())
+        if display and proficient.lower() == "yes":
+            skills.append(display)
+        index += 4
+    return tuple(dict.fromkeys(skills))
+
+
+def _extract_saving_throw_proficiencies(text: str) -> tuple[str, ...]:
+    match = re.search(
+        r"^Saving Throw\s*$\n^Bonus\s*$\n^Proficient\s*$\n(.+?)(?:\nSkill\s*$|\Z)",
+        text,
+        flags=re.I | re.M | re.S,
+    )
+    if not match:
+        return ()
+    lines = _clean_lines(match.group(1))
+    proficiencies = []
+    index = 0
+    while index + 2 < len(lines):
+        ability, _bonus, proficient = lines[index : index + 3]
+        display = _ability_display_name(ability)
+        if display and proficient.lower() == "yes":
+            proficiencies.append(display)
+        index += 3
+    return tuple(dict.fromkeys(proficiencies))
+
+
 def _extract_currency(text: str) -> CurrencyPurse:
+    machine_readable = _extract_machine_readable_currency(text)
+    if machine_readable is not None:
+        return machine_readable
     labeled = re.findall(r"^currency\s*:?\s*(.+)$", text, flags=re.I | re.M)
     if labeled:
         return _currency_from_text(" ".join(labeled))
@@ -550,10 +678,25 @@ def _currency_from_text(text: str) -> CurrencyPurse:
     return CurrencyPurse.from_cp(total_cp)
 
 
+def _extract_machine_readable_currency(text: str) -> CurrencyPurse | None:
+    lines = _clean_lines(text)
+    values: dict[str, int] = {}
+    for index, line in enumerate(lines[:-1]):
+        label = line.lower()
+        if label in {"cp", "sp", "gp", "pp"} and re.fullmatch(r"\d[\d,]*", lines[index + 1]):
+            values[label] = int(lines[index + 1].replace(",", ""))
+    if not values:
+        return None
+    return CurrencyPurse.from_dict(values)
+
+
 def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
     line_match = re.search(r"^inventory\s*:?\s*(.+)$", text, flags=re.IGNORECASE | re.MULTILINE)
     if line_match:
         return _inventory_items_from_names(_split_inventory_line(line_match.group(1)))
+    table_items = _extract_machine_readable_inventory(text)
+    if table_items:
+        return table_items
     match = re.search(
         r"\b(?:inventory|equipment)\s*:?\s*(.+?)(?:\n(?:features?|attacks?|weapons?)\b|$)",
         text,
@@ -562,6 +705,48 @@ def _extract_inventory(text: str) -> tuple[InventoryItem, ...]:
     if not match:
         return ()
     return _inventory_items_from_names(_split_list(match.group(1)))
+
+
+def _extract_machine_readable_inventory(text: str) -> tuple[InventoryItem, ...]:
+    items: list[InventoryItem] = []
+    header = re.compile(r"^Item\s*\nQty\s*\nWeight\s*$", flags=re.I | re.M)
+    for match in header.finditer(text):
+        block = text[match.end() :]
+        block = re.split(
+            r"\n(?:[A-Za-z].*machine-readable.*|Page\s+\d+|Features and Traits|Spellcasting)\b",
+            block,
+            maxsplit=1,
+            flags=re.I,
+        )[0]
+        lines = _clean_lines(block)
+        index = 0
+        while index < len(lines):
+            name = lines[index]
+            if not _looks_like_inventory_name(name):
+                index += 1
+                continue
+            if index + 1 >= len(lines) or not re.fullmatch(r"\d+", lines[index + 1]):
+                index += 1
+                continue
+            quantity = lines[index + 1]
+            weight = "0"
+            index += 2
+            if index < len(lines) and re.fullmatch(r"\d+(?:\.\d+)?\s*lb\.?", lines[index], re.I):
+                weight = lines[index]
+                index += 1
+            parsed_name, parsed_quantity, parsed_weight = _parse_inventory_entry(
+                _inventory_entry_text(name, quantity, weight)
+            )
+            items.append(
+                InventoryItem(
+                    item_id=_slug(parsed_name),
+                    name=parsed_name,
+                    quantity=parsed_quantity,
+                    weight=parsed_weight,
+                    category=ItemCategory.OTHER,
+                )
+            )
+    return tuple(items)
 
 
 def _inventory_items_from_names(names: list[str]) -> tuple[InventoryItem, ...]:
@@ -600,7 +785,12 @@ def _parse_inventory_entry(value: str) -> tuple[str, int, float]:
 def _split_inventory_line(value: str) -> list[str]:
     if ";" in value:
         return [part.strip(" .:-") for part in value.split(";") if part.strip(" .:-")]
-    return _split_list(value)
+    protected = _protect_comma_item_names(value)
+    return [
+        _restore_protected_commas(part.strip(" .:-"))
+        for part in re.split(r",|\n", protected)
+        if part.strip(" .:-")
+    ]
 
 
 def _extract_weapons(text: str) -> tuple[Weapon, ...]:
@@ -672,6 +862,45 @@ _SKILL_DISPLAY_NAMES = {
     "survival": "Survival",
 }
 
+_ABILITY_DISPLAY_NAMES = {
+    "strength": "Strength",
+    "dexterity": "Dexterity",
+    "constitution": "Constitution",
+    "intelligence": "Intelligence",
+    "wisdom": "Wisdom",
+    "charisma": "Charisma",
+}
+
+_ABILITY_SHORT_NAMES = {
+    "str": "Strength",
+    "dex": "Dexterity",
+    "con": "Constitution",
+    "int": "Intelligence",
+    "wis": "Wisdom",
+    "cha": "Charisma",
+}
+
+_COMMA_ITEM_NAMES = (
+    "Clothes, Common",
+    "Clothes, Costume",
+    "Clothes, Fine",
+    "Clothes, Traveler's",
+)
+
+_KNOWN_IMPORT_SPELLS = (
+    "Beacon of Hope",
+    "Bless",
+    "Cure Wounds",
+    "Guiding Bolt",
+    "Hex",
+    "Lesser Restoration",
+    "Light",
+    "Revivify",
+    "Sacred Flame",
+    "Spiritual Weapon",
+    "Thaumaturgy",
+)
+
 
 def _known_skills_from_candidates(candidates: list[str]) -> tuple[str, ...]:
     skills = []
@@ -694,11 +923,173 @@ def _looks_like_noisy_skill_block(value: str) -> bool:
     return bool(
         re.search(
             r"\b(?:saves?|hit dice|hit points|speed|armor|class|proficiency bonus|"
-            r"wizards of the coast|d&d beyond)\b",
+            r"passive insight|passive investigation|wizards of the coast|d&d beyond)\b",
             value,
             flags=re.I,
         )
     )
+
+
+def _extract_named_proficiency_block(text: str, heading: str) -> tuple[str, ...]:
+    block = _extract_equals_heading_block(text, heading)
+    if block:
+        return _split_proficiency_values(block)
+    wrapped = _extract_wrapped_proficiency_block(text, heading)
+    known = _known_proficiency_values_in_text(text, heading)
+    return tuple(dict.fromkeys((*wrapped, *known)))
+
+
+def _extract_equals_heading_block(text: str, heading: str) -> str:
+    match = re.search(
+        rf"^===\s*{re.escape(heading)}\s*===\s*\n(.+?)"
+        r"(?:\n===|\n Item\b|\nFeatures and Traits\b|$)",
+        text,
+        flags=re.I | re.M | re.S,
+    )
+    return match.group(1).strip() if match else ""
+
+
+def _extract_wrapped_proficiency_block(text: str, heading: str) -> tuple[str, ...]:
+    match = re.search(
+        rf"^{re.escape(heading)}\s*\n(.+?)(?:\n(?:armor|weapons?|tools|languages|actions|special)\b|$)",
+        text,
+        flags=re.I | re.M | re.S,
+    )
+    if not match:
+        return ()
+    normalized = " ".join(_clean_lines(match.group(1)))
+    if _looks_like_noisy_proficiency_block(normalized):
+        return ()
+    if heading.lower() == "tools":
+        names = []
+        for pattern, display in (
+            (r"cook'?s\s+utensils", "Cook's Utensils"),
+            (r"mason'?s\s+tools", "Mason's Tools"),
+            (r"vehicles?(?:\s*\(land\))?|\bvehicles\b", "Vehicles (Land)"),
+            (r"thieves'? tools", "Thieves' Tools"),
+        ):
+            if re.search(pattern, normalized, flags=re.I):
+                names.append(display)
+        return tuple(dict.fromkeys(names))
+    return _split_proficiency_values(normalized)
+
+
+def _looks_like_noisy_proficiency_block(value: str) -> bool:
+    return bool(re.search(r"\b(?:class|hit points|speed|death saves|tm|d&d beyond)\b", value, re.I))
+
+
+def _known_proficiency_values_in_text(text: str, heading: str) -> tuple[str, ...]:
+    lowered = text.lower()
+    if heading == "armor":
+        candidates = ("Heavy Armor", "Light Armor", "Medium Armor", "Plate", "Shields")
+    elif heading == "weapons":
+        candidates = ("Battleaxe", "Handaxe", "Simple Weapons", "Warhammer")
+    elif heading == "tools":
+        candidates = ("Cook's Utensils", "Mason's Tools", "Thieves' Tools")
+    elif heading == "languages":
+        if not re.search(r"\blanguages?\b", lowered):
+            return ()
+        candidates = ("Common", "Dwarvish")
+    else:
+        candidates = ()
+    found = []
+    for candidate in candidates:
+        pattern = re.escape(candidate.lower()).replace(r"\ ", r"\s+")
+        if re.search(rf"\b{pattern}\b", lowered):
+            found.append(candidate)
+    if heading == "tools" and re.search(r"\bvehicles?(?:\s*\(land\))?\b", lowered):
+        found.append("Vehicles (Land)")
+    return tuple(found)
+
+
+def _split_proficiency_values(value: str) -> tuple[str, ...]:
+    parts = _split_inventory_line(re.sub(r"\s+", " ", value))
+    return tuple(dict.fromkeys(part.strip() for part in parts if part.strip()))
+
+
+def _extract_damage_resistances(text: str) -> tuple[DamageType, ...]:
+    values = []
+    for match in re.finditer(r"\bresistances?\s*-\s*(.+)$", text, flags=re.I | re.M):
+        values.extend(_split_list(match.group(1).replace("*", "")))
+    if re.search(r"\bresistance\s+against\s+poison\s+damage\b", text, flags=re.I):
+        values.append("poison")
+    resistances = []
+    for value in values:
+        normalized = value.strip().lower()
+        try:
+            resistances.append(DamageType(normalized))
+        except ValueError:
+            continue
+    return tuple(dict.fromkeys(resistances))
+
+
+def _extract_features(text: str) -> tuple[str, ...]:
+    features: list[str] = []
+    class_level = _extract_labeled_line(text, "class & level")
+    species = _extract_labeled_line(text, "species") or _extract_labeled_line(text, "species/race")
+    background = _extract_labeled_line(text, "background")
+    if class_level:
+        features.append(class_level)
+    if species:
+        features.append(species)
+    if background:
+        features.append(background)
+    features.extend(
+        match.strip()
+        for match in re.findall(r"^\*\s*([^-\n|]+?)(?:\s*-\s*[A-Z][A-Za-z]*\s+\d+)?$", text, re.M)
+    )
+    spells = _known_spell_names_in_text(text)
+    if spells:
+        features.append(f"Prepared Spells: {', '.join(spells)}")
+    return tuple(dict.fromkeys(feature for feature in features if feature))
+
+
+def _known_spell_names_in_text(text: str) -> tuple[str, ...]:
+    spells = []
+    for spell in _KNOWN_IMPORT_SPELLS:
+        if re.search(rf"\b{re.escape(spell)}\b", text, flags=re.I):
+            spells.append(spell)
+    return tuple(spells)
+
+
+def _extract_labeled_line(text: str, label: str) -> str | None:
+    match = re.search(
+        rf"^{re.escape(label)}\s*:\s*(.+)$",
+        text,
+        flags=re.I | re.M,
+    )
+    if match and match.group(1).strip():
+        return match.group(1).strip()
+    lines = _clean_lines(text)
+    for index, line in enumerate(lines[:-1]):
+        if line.lower() == label.lower():
+            return lines[index + 1]
+    return None
+
+
+def _ability_display_name(value: str) -> str | None:
+    normalized = value.strip().lower()
+    return _ABILITY_DISPLAY_NAMES.get(normalized) or _ABILITY_SHORT_NAMES.get(normalized[:3])
+
+
+def _clean_lines(value: str) -> list[str]:
+    return [line.strip() for line in value.splitlines() if line.strip()]
+
+
+def _protect_comma_item_names(value: str) -> str:
+    protected = value
+    for name in _COMMA_ITEM_NAMES:
+        protected = re.sub(
+            re.escape(name),
+            name.replace(",", "<comma>"),
+            protected,
+            flags=re.I,
+        )
+    return protected
+
+
+def _restore_protected_commas(value: str) -> str:
+    return value.replace("<comma>", ",")
 
 
 def _slug(value: str) -> str:

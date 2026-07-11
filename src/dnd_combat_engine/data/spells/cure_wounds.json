@@ -1,44 +1,61 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "S"
-                   ],
-    "concentration":  false,
-    "damage":  null,
-    "description":  "A creature you touch regains hit points.",
-    "duration":  "Instantaneous",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  "1d8+spellcasting_modifier",
-                        "duration":  {
-                                         "amount":  null,
-                                         "kind":  "instantaneous",
-                                         "text":  "Instantaneous"
-                                     },
-                        "effect_id":  "cure-wounds-healing",
-                        "effect_kind":  "healing",
-                        "name":  "Cure Wounds",
-                        "range_text":  "Touch",
-                        "resource_cost":  "spell_slot_1",
-                        "rule_source":  null,
-                        "target_profile":  "one_creature"
-                    }
-                ],
-    "level":  1,
-    "name":  "Cure Wounds",
-    "range_text":  "Touch",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "evocation",
-    "spell_id":  "cure_wounds",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S"
+  ],
+  "concentration": false,
+  "damage": null,
+  "description": "A creature you touch regains hit points.",
+  "duration": "Instantaneous",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": "1d8",
+      "duration": {
+        "amount": null,
+        "kind": "instantaneous",
+        "text": "Instantaneous"
+      },
+      "effect_id": "cure-wounds-healing",
+      "effect_kind": "healing",
+      "interactions": [
+        {
+          "interaction_id": "cure-wounds-heal",
+          "label": "Hit Points",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_healing",
+          "scaling": {
+            "base_spell_level": 1,
+            "mode": "spell_slot",
+            "per_slot_level_above_base": "+1d8 healing"
+          },
+          "trigger": "on_target",
+          "value": "1d8 + spellcasting modifier"
+        }
+      ],
+      "name": "Cure Wounds",
+      "range_text": "Touch",
+      "resource_cost": "spell_slot_1",
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 1,
+  "name": "Cure Wounds",
+  "range_text": "Touch",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "evocation",
+  "spell_id": "cure_wounds"
 }

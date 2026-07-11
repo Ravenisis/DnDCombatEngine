@@ -1,5 +1,5 @@
 #define MyAppName "DnDCombatEngine"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "Ravenisis"
 #define MyAppExeName "DnDCombatEngine.exe"
 

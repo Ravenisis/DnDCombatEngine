@@ -442,7 +442,7 @@ def _run_menu_action(
             window,
             qt,
             "About DnDCombatEngine",
-            "DnDCombatEngine 1.0.2\nLayered Dungeons & Dragons combat workspace.",
+            "DnDCombatEngine 1.0.3\nLayered Dungeons & Dragons combat workspace.",
         )
         return
     _set_status(window, f"{action_id} selected.")

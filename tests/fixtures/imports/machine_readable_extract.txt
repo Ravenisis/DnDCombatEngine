@@ -1,0 +1,125 @@
+Character Name
+Ravenisis
+Class & Level
+Cleric 6
+Player
+wazic
+Species/Race
+Hill Dwarf
+Background
+Folk Hero
+Defenses
+Resistances - Necrotic*, Poison
+Saving Throw
+Bonus
+Proficient
+Strength
++1
+No
+Dexterity
++1
+No
+Constitution
++4
+No
+Intelligence
++0
+No
+Wisdom
++5
+Yes
+Charisma
++2
+Yes
+Skill
+Bonus
+Proficient
+Ability
+Acrobatics
++1
+No
+DEX
+Animal Handling
++5
+Yes
+WIS
+Insight
++5
+Yes
+WIS
+Medicine
++5
+Yes
+WIS
+Survival
++5
+Yes
+WIS
+Weapons, Attacks, and Actions
+Name
+Attack Bonus
+Damage/Type
+Notes
+Handaxe
++4
+1d6+1 Slashing
+Simple, Light, Thrown, Vex, Range (20/60)
+Warhammer
++4
+1d8+1 Bludgeoning
+Martial, Versatile, Push
+Proficiencies, Currency, and Equipment
+CP
+0
+SP
+0
+EP
+0
+GP
+2,989
+PP
+0
+=== ARMOR ===
+Heavy Armor, Light Armor, Medium Armor, Plate, Shields
+=== WEAPONS ===
+Battleaxe, Simple Weapons, Warhammer
+=== TOOLS ===
+Cook's Utensils, Mason's Tools, Vehicles (Land)
+=== LANGUAGES ===
+Common, Dwarvish
+Item
+Qty
+Weight
+Bag of Holding
+1
+5 lb.
+Clothes, Common
+1
+3 lb.
+Playing Card Set
+1
+Healer's Kit
+3
+9 lb.
+Potion of Healing (Greater)
+1
+0.5 lb.
+Features and Traits
+* Spellcasting - PHB 58
+* Channel Divinity - PHB 58
+* Blessed Healer - PHB 60
+Spellcasting
+=== CANTRIPS ===
+Light
+Sacred Flame
+Thaumaturgy
+=== 1st LEVEL ===
+Guiding Bolt
+Bless
+Cure Wounds
+=== 2nd LEVEL ===
+Lesser Restoration
+Spiritual Weapon
+=== 3rd LEVEL ===
+Beacon of Hope
+Revivify

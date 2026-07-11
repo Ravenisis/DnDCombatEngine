@@ -5,6 +5,10 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## 1.0.3 - 2026-07-11
+
 ### Added
 
 - Expanded the SRD inventory catalog from 209 to 628 selectable entries.
@@ -25,6 +29,12 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
   amulets, manuals, tomes, cursed loot, and wearable magic items.
 - Added 6 more inventory SVG icons for figurines, force items, gauntlets,
   goggles, magic horns, and talismans.
+- Added data-driven spell/action interaction metadata for the resolver and GUI
+  action flow.
+- Added stronger D&D Beyond PDF and URL character-import fixtures for standard
+  and machine-readable sheets.
+- Added a separate hosted-campaign backend boundary for future multiplayer
+  hosting, joining, leaving, and closing sessions.
 
 ### Changed
 
@@ -35,6 +45,8 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
   inventory item resolves to a concrete icon in the inventory window.
 - Extended icon family matching for summoning figurines, force cubes, elemental
   command items, gauntlets, goggles, horns, and talismans.
+- Improved character import extraction for names, proficiencies, resistances,
+  inventory entries, quantities, currency, and D&D Beyond sheet links.
 
 ## 1.0.2 - 2026-07-10
 

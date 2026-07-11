@@ -8,6 +8,7 @@ from typing import Self
 from dnd_combat_engine.models.abilities import AbilityScores
 from dnd_combat_engine.models.conditions import Condition, ConditionName
 from dnd_combat_engine.models.currency import CurrencyPurse
+from dnd_combat_engine.models.damage import DamageType
 from dnd_combat_engine.models.equipment import Armor, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.inventory import InventoryItem
@@ -33,6 +34,11 @@ class Character:
     resources: dict[str, ResourcePool] = field(default_factory=dict)
     currency: CurrencyPurse = field(default_factory=CurrencyPurse)
     saving_throw_proficiencies: tuple[str, ...] = field(default_factory=tuple)
+    armor_proficiencies: tuple[str, ...] = field(default_factory=tuple)
+    weapon_proficiencies: tuple[str, ...] = field(default_factory=tuple)
+    tool_proficiencies: tuple[str, ...] = field(default_factory=tuple)
+    languages: tuple[str, ...] = field(default_factory=tuple)
+    damage_resistances: tuple[DamageType, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         """Validate character identity and level."""
@@ -63,6 +69,11 @@ class Character:
             },
             "currency": self.currency.to_dict(),
             "saving_throw_proficiencies": list(self.saving_throw_proficiencies),
+            "armor_proficiencies": list(self.armor_proficiencies),
+            "weapon_proficiencies": list(self.weapon_proficiencies),
+            "tool_proficiencies": list(self.tool_proficiencies),
+            "languages": list(self.languages),
+            "damage_resistances": [damage_type.value for damage_type in self.damage_resistances],
         }
 
     @classmethod
@@ -92,6 +103,18 @@ class Character:
             currency=CurrencyPurse.from_dict(data.get("currency", {})),  # type: ignore[arg-type]
             saving_throw_proficiencies=tuple(
                 str(item) for item in data.get("saving_throw_proficiencies", [])
+            ),
+            armor_proficiencies=tuple(
+                str(item) for item in data.get("armor_proficiencies", [])
+            ),
+            weapon_proficiencies=tuple(
+                str(item) for item in data.get("weapon_proficiencies", [])
+            ),
+            tool_proficiencies=tuple(str(item) for item in data.get("tool_proficiencies", [])),
+            languages=tuple(str(item) for item in data.get("languages", [])),
+            damage_resistances=tuple(
+                DamageType(str(damage_type))
+                for damage_type in data.get("damage_resistances", [])
             ),
         )
 

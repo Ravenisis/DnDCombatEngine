@@ -1,44 +1,69 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "M"
-                   ],
-    "concentration":  false,
-    "damage":  null,
-    "description":  "A touched object sheds bright light in a 20-foot radius and dim light for another 20 feet.",
-    "duration":  "1 hour",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  null,
-                        "duration":  {
-                                         "amount":  1,
-                                         "kind":  "hour_based",
-                                         "text":  "1 hour"
-                                     },
-                        "effect_id":  "light-utility",
-                        "effect_kind":  "utility",
-                        "name":  "Light",
-                        "range_text":  "Touch",
-                        "resource_cost":  null,
-                        "rule_source":  null,
-                        "target_profile":  "object"
-                    }
-                ],
-    "level":  0,
-    "name":  "Light",
-    "range_text":  "Touch",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "evocation",
-    "spell_id":  "light",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "M"
+  ],
+  "concentration": false,
+  "damage": null,
+  "description": "A touched object sheds bright light in a 20-foot radius and dim light for another 20 feet.",
+  "duration": "1 hour",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": null,
+      "duration": {
+        "amount": 1,
+        "kind": "hour_based",
+        "text": "1 hour"
+      },
+      "effect_id": "light-utility",
+      "effect_kind": "utility",
+      "interactions": [
+        {
+          "interaction_id": "light-object-glow",
+          "label": "Bright Light",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "create_light",
+          "scaling": {},
+          "trigger": "on_target",
+          "value": "20-foot bright light and 20-foot dim light"
+        },
+        {
+          "interaction_id": "light-hostile-object-save",
+          "label": "Dexterity Save",
+          "metadata": {
+            "ability": "dexterity",
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "force_save",
+          "scaling": {},
+          "trigger": "on_target",
+          "value": "held or worn hostile objects can resist"
+        }
+      ],
+      "name": "Light",
+      "range_text": "Touch",
+      "resource_cost": null,
+      "rule_source": null,
+      "target_profile": "object"
+    }
+  ],
+  "level": 0,
+  "name": "Light",
+  "range_text": "Touch",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "evocation",
+  "spell_id": "light"
 }

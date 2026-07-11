@@ -1,24 +1,78 @@
 {
-    "casting_time":  "1 bonus action",
-    "components":  [
-                       "V",
-                       "S"
-                   ],
-    "concentration":  false,
-    "damage":  [
-                   {
-                       "damage_type":  "force",
-                       "dice":  "1d8"
-                   }
-               ],
-    "description":  "Create a spectral weapon that strikes foes.",
-    "duration":  "1 minute",
-    "level":  2,
-    "name":  "Spiritual Weapon",
-    "range_text":  "60 feet",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "evocation",
-    "spell_id":  "spiritual_weapon",
-    "schema_version":  1
+  "casting_time": "1 bonus action",
+  "components": [
+    "V",
+    "S"
+  ],
+  "concentration": false,
+  "damage": [
+    {
+      "damage_type": "force",
+      "dice": "1d8"
+    }
+  ],
+  "description": "Create a spectral weapon that strikes foes.",
+  "duration": "1 minute",
+  "effects": [
+    {
+      "action_cost": "bonus_action",
+      "check": {
+        "ability": "spellcasting",
+        "bonus": 0,
+        "dc": null,
+        "kind": "attack_roll",
+        "proficiency_applies": true
+      },
+      "dice": "1d8",
+      "duration": {
+        "amount": 1,
+        "kind": "minute_based",
+        "text": "1 minute"
+      },
+      "effect_id": "spiritual-weapon-attack",
+      "effect_kind": "attack",
+      "interactions": [
+        {
+          "interaction_id": "spiritual-weapon-create",
+          "label": "Spectral Weapon",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_buff",
+          "scaling": {},
+          "trigger": "on_cast",
+          "value": "creates a weapon-shaped magical force"
+        },
+        {
+          "interaction_id": "spiritual-weapon-force-damage",
+          "label": "Force",
+          "metadata": {
+            "damage_type": "force",
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_damage",
+          "scaling": {
+            "base_spell_level": 2,
+            "mode": "spell_slot",
+            "per_slot_level_above_base": "+1d8 damage"
+          },
+          "trigger": "on_hit",
+          "value": "1d8 + spellcasting modifier force damage"
+        }
+      ],
+      "name": "Spiritual Weapon",
+      "range_text": "60 feet",
+      "resource_cost": "spell_slot_2",
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 2,
+  "name": "Spiritual Weapon",
+  "range_text": "60 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "evocation",
+  "spell_id": "spiritual_weapon"
 }

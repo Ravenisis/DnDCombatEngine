@@ -1,43 +1,64 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V"
-                   ],
-    "concentration":  false,
-    "damage":  null,
-    "description":  "Create minor divine signs and sensory effects.",
-    "duration":  "1 minute",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  null,
-                        "duration":  {
-                                         "amount":  1,
-                                         "kind":  "minute_based",
-                                         "text":  "up to 1 minute"
-                                     },
-                        "effect_id":  "thaumaturgy-utility",
-                        "effect_kind":  "utility",
-                        "name":  "Thaumaturgy",
-                        "range_text":  "30 feet",
-                        "resource_cost":  null,
-                        "rule_source":  null,
-                        "target_profile":  "special"
-                    }
-                ],
-    "level":  0,
-    "name":  "Thaumaturgy",
-    "range_text":  "30 feet",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "transmutation",
-    "spell_id":  "thaumaturgy",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V"
+  ],
+  "concentration": false,
+  "damage": null,
+  "description": "Create minor divine signs and sensory effects.",
+  "duration": "1 minute",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": null,
+      "duration": {
+        "amount": 1,
+        "kind": "minute_based",
+        "text": "up to 1 minute"
+      },
+      "effect_id": "thaumaturgy-utility",
+      "effect_kind": "utility",
+      "interactions": [
+        {
+          "interaction_id": "thaumaturgy-choose-effect",
+          "label": "Minor Wonder",
+          "metadata": {
+            "choices": [
+              "booming voice",
+              "flames flicker",
+              "minor tremors",
+              "instant sound",
+              "door or window opens or shuts",
+              "altered eye appearance"
+            ],
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "create_choice",
+          "scaling": {},
+          "trigger": "on_choice",
+          "value": "choose a harmless magical effect"
+        }
+      ],
+      "name": "Thaumaturgy",
+      "range_text": "30 feet",
+      "resource_cost": null,
+      "rule_source": null,
+      "target_profile": "special"
+    }
+  ],
+  "level": 0,
+  "name": "Thaumaturgy",
+  "range_text": "30 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "transmutation",
+  "spell_id": "thaumaturgy"
 }

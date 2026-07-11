@@ -1,72 +1,114 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "S"
-                   ],
-    "concentration":  false,
-    "damage":  [
-                   {
-                       "damage_type":  "radiant",
-                       "dice":  "4d6"
-                   }
-               ],
-    "description":  "A flash of light streaks toward a creature and leaves the next attack against it with advantage.",
-    "duration":  "1 round",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  "spellcasting",
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "attack_roll",
-                                      "proficiency_applies":  true
-                                  },
-                        "dice":  "4d6",
-                        "duration":  {
-                                         "amount":  null,
-                                         "kind":  "instantaneous",
-                                         "text":  "Instantaneous"
-                                     },
-                        "effect_id":  "guiding-bolt-damage",
-                        "effect_kind":  "damage",
-                        "name":  "Guiding Bolt",
-                        "range_text":  "120 feet",
-                        "resource_cost":  "spell_slot_1",
-                        "rule_source":  null,
-                        "target_profile":  "one_creature"
-                    },
-                    {
-                        "action_cost":  "free",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  null,
-                        "duration":  {
-                                         "amount":  1,
-                                         "kind":  "round_based",
-                                         "text":  "until the end of your next turn"
-                                     },
-                        "effect_id":  "guiding-bolt-advantage",
-                        "effect_kind":  "buff",
-                        "name":  "Guiding Bolt Advantage",
-                        "range_text":  "120 feet",
-                        "resource_cost":  null,
-                        "rule_source":  null,
-                        "target_profile":  "one_creature"
-                    }
-                ],
-    "level":  1,
-    "name":  "Guiding Bolt",
-    "range_text":  "120 feet",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "evocation",
-    "spell_id":  "guiding_bolt",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S"
+  ],
+  "concentration": false,
+  "damage": [
+    {
+      "damage_type": "radiant",
+      "dice": "4d6"
+    }
+  ],
+  "description": "A flash of light streaks toward a creature and leaves the next attack against it with advantage.",
+  "duration": "1 round",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": "spellcasting",
+        "bonus": 0,
+        "dc": null,
+        "kind": "attack_roll",
+        "proficiency_applies": true
+      },
+      "dice": "4d6",
+      "duration": {
+        "amount": null,
+        "kind": "instantaneous",
+        "text": "Instantaneous"
+      },
+      "effect_id": "guiding-bolt-damage",
+      "effect_kind": "damage",
+      "interactions": [
+        {
+          "interaction_id": "guiding-bolt-radiant-damage",
+          "label": "Radiant",
+          "metadata": {
+            "damage_type": "radiant",
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_damage",
+          "scaling": {
+            "base_spell_level": 1,
+            "mode": "spell_slot",
+            "per_slot_level_above_base": "+1d6 damage"
+          },
+          "trigger": "on_hit",
+          "value": "4d6 radiant damage"
+        },
+        {
+          "interaction_id": "guiding-bolt-next-attack",
+          "label": "Revealing Light",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "grant_advantage",
+          "scaling": {},
+          "trigger": "on_hit",
+          "value": "next attack against the target has advantage"
+        }
+      ],
+      "name": "Guiding Bolt",
+      "range_text": "120 feet",
+      "resource_cost": "spell_slot_1",
+      "rule_source": null,
+      "target_profile": "one_creature"
+    },
+    {
+      "action_cost": "free",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": null,
+      "duration": {
+        "amount": 1,
+        "kind": "round_based",
+        "text": "until the end of your next turn"
+      },
+      "effect_id": "guiding-bolt-advantage",
+      "effect_kind": "buff",
+      "interactions": [
+        {
+          "interaction_id": "guiding-bolt-advantage-marker",
+          "label": "Revealing Light",
+          "metadata": {
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "apply_buff",
+          "scaling": {},
+          "trigger": "on_hit",
+          "value": "next attack against the target has advantage"
+        }
+      ],
+      "name": "Guiding Bolt Advantage",
+      "range_text": "120 feet",
+      "resource_cost": null,
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 1,
+  "name": "Guiding Bolt",
+  "range_text": "120 feet",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "evocation",
+  "spell_id": "guiding_bolt"
 }

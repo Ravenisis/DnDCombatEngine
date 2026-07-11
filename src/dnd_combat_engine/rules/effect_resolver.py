@@ -101,7 +101,7 @@ def _resolution_detail(plan: EffectPlan, resource_spent: str | None) -> str:
         details.append(f"Spent {resource_spent}.")
     if plan.definition.dice:
         details.append(f"Dice {plan.definition.dice}.")
+    details.extend(interaction.summary() for interaction in plan.definition.interactions)
     if plan.detail:
         details.append(plan.detail)
     return " ".join(details)
-

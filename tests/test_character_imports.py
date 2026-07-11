@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from dnd_combat_engine.controllers import CharacterImportController
-from dnd_combat_engine.models import Campaign, HitPoints, RuleSource
+from dnd_combat_engine.models import Campaign, DamageType, HitPoints, RuleSource
 from dnd_combat_engine.models.imports import CharacterImportDraft
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import (
@@ -14,6 +14,8 @@ from dnd_combat_engine.services import (
     PersistenceService,
 )
 from dnd_combat_engine.services.character_import_service import _extract_pdf_literal_text
+
+FIXTURES = Path(__file__).parent / "fixtures" / "imports"
 
 SHEET_TEXT = """
 Character Name: Lyra Thorn
@@ -210,6 +212,59 @@ def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
     assert draft.currency.gp == 9
 
 
+def test_character_import_service_parses_standard_dndbeyond_fixture() -> None:
+    text = (FIXTURES / "dndbeyond_standard_extract.txt").read_text(encoding="utf-8")
+
+    draft = CharacterImportService().parse_text(text, source="fixture")
+    items = {item.name: item for item in draft.inventory}
+    character = draft.to_character("ravenisis")
+
+    assert draft.name == "Ravenisis"
+    assert draft.level == 6
+    assert items["Clothes, Common"].quantity == 1
+    assert items["Clothes, Common"].weight == 3.0
+    assert items["Healer's Kit"].quantity == 3
+    assert items["Rations (1 day)"].quantity == 8
+    assert items["Potion of Healing (Greater)"].weight == 0.5
+    assert draft.currency.pp == 298
+    assert draft.currency.gp == 9
+    assert draft.tool_proficiencies == ("Cook's Utensils", "Mason's Tools", "Vehicles (Land)")
+    assert draft.damage_resistances == (DamageType.NECROTIC, DamageType.POISON)
+    assert "Prepared Spells: Beacon of Hope, Bless" in draft.features[-1]
+    assert character.tool_proficiencies == draft.tool_proficiencies
+    assert character.damage_resistances == draft.damage_resistances
+
+
+def test_character_import_service_parses_machine_readable_fixture() -> None:
+    text = (FIXTURES / "machine_readable_extract.txt").read_text(encoding="utf-8")
+
+    draft = CharacterImportService().parse_text(text, source="fixture")
+    items = {item.name: item for item in draft.inventory}
+
+    assert draft.name == "Ravenisis"
+    assert draft.skills == ("Animal Handling", "Insight", "Medicine", "Survival")
+    assert draft.saving_throw_proficiencies == ("Wisdom", "Charisma")
+    assert draft.armor_proficiencies == (
+        "Heavy Armor",
+        "Light Armor",
+        "Medium Armor",
+        "Plate",
+        "Shields",
+    )
+    assert draft.weapon_proficiencies == ("Battleaxe", "Simple Weapons", "Warhammer")
+    assert draft.tool_proficiencies == ("Cook's Utensils", "Mason's Tools", "Vehicles (Land)")
+    assert draft.languages == ("Common", "Dwarvish")
+    assert draft.damage_resistances == (DamageType.NECROTIC, DamageType.POISON)
+    assert draft.currency.pp == 298
+    assert draft.currency.gp == 9
+    assert items["Clothes, Common"].quantity == 1
+    assert items["Playing Card Set"].weight == 0.0
+    assert items["Healer's Kit"].quantity == 3
+    assert items["Potion of Healing (Greater)"].weight == 0.5
+    assert "Channel Divinity" in draft.features
+    assert "Prepared Spells: Beacon of Hope, Bless" in draft.features[-1]
+
+
 def test_character_import_service_parses_public_html_url(monkeypatch) -> None:
     service = CharacterImportService()
 
@@ -236,6 +291,91 @@ def test_character_import_service_parses_public_html_url(monkeypatch) -> None:
     assert draft.level == 3
     assert draft.hit_points.maximum == 19
     assert draft.abilities.dexterity == 16
+
+
+def test_character_import_service_follows_dndbeyond_character_page_pdf_link(
+    monkeypatch,
+) -> None:
+    service = CharacterImportService()
+    calls = []
+
+    def fake_fetch(url: str):
+        calls.append(url)
+        if url == "https://www.dndbeyond.com/characters/92446074":
+            return SimpleNamespace(
+                content=(
+                    b'<html><a href="/sheet-pdfs/wazic_92446074.pdf">'
+                    b"Export PDF</a></html>"
+                ),
+                content_type="text/html; charset=utf-8",
+                final_url=url,
+            )
+        if url == "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf":
+            return SimpleNamespace(
+                content=b"%PDF test",
+                content_type="application/pdf",
+                final_url=url,
+            )
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(service, "_fetch_url", fake_fetch)
+    monkeypatch.setattr(
+        service,
+        "_extract_pdf_bytes",
+        lambda content: """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        Current HP: 63
+        """,
+    )
+
+    draft = service.import_url("https://www.dndbeyond.com/characters/92446074")
+
+    assert calls == [
+        "https://www.dndbeyond.com/characters/92446074",
+        "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf",
+    ]
+    assert draft.name == "Ravenisis"
+    assert draft.level == 6
+    assert draft.source == "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf"
+
+
+def test_character_import_service_follows_escaped_dndbeyond_pdf_link(monkeypatch) -> None:
+    service = CharacterImportService()
+
+    def fake_fetch(url: str):
+        if url == "https://www.dndbeyond.com/profile/wazic/characters/92446074":
+            return SimpleNamespace(
+                content=(
+                    b"<script>"
+                    b'"pdfUrl":"https:\\\\/\\\\/www.dndbeyond.com\\\\/sheet-pdfs'
+                    b"\\\\/wazic_92446074.pdf\""
+                    b"</script>"
+                ),
+                content_type="text/html; charset=utf-8",
+                final_url=url,
+            )
+        if url == "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf":
+            return SimpleNamespace(
+                content=b"%PDF test",
+                content_type="application/pdf",
+                final_url=url,
+            )
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(service, "_fetch_url", fake_fetch)
+    monkeypatch.setattr(
+        service,
+        "_extract_pdf_bytes",
+        lambda content: "Character Name: Ravenisis\nClass & Level: Cleric 6",
+    )
+
+    draft = service.import_url(
+        "https://www.dndbeyond.com/profile/wazic/characters/92446074"
+    )
+
+    assert draft.name == "Ravenisis"
+    assert draft.source == "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf"
 
 
 def test_character_import_controller_saves_character_and_campaign_reference(tmp_path) -> None:

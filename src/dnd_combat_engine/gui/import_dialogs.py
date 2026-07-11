@@ -135,7 +135,17 @@ def character_import_review_rows(draft: CharacterImportDraft) -> list[tuple[str,
         ("Wisdom", str(draft.abilities.wisdom)),
         ("Charisma", str(draft.abilities.charisma)),
         ("Skills", ", ".join(draft.skills)),
-        ("Inventory", ", ".join(item.name for item in draft.inventory)),
+        ("Saving Throw Proficiencies", ", ".join(draft.saving_throw_proficiencies)),
+        ("Armor Proficiencies", ", ".join(draft.armor_proficiencies)),
+        ("Weapon Proficiencies", ", ".join(draft.weapon_proficiencies)),
+        ("Tool Proficiencies", ", ".join(draft.tool_proficiencies)),
+        ("Languages", ", ".join(draft.languages)),
+        (
+            "Damage Resistances",
+            ", ".join(damage_type.value.title() for damage_type in draft.damage_resistances),
+        ),
+        ("Features", "; ".join(draft.features)),
+        ("Inventory", "; ".join(_inventory_text(item) for item in draft.inventory)),
         ("Currency", _currency_review_text(draft.currency)),
         ("Weapons", "; ".join(_weapon_text(weapon) for weapon in draft.weapons)),
         ("Source", draft.source),
@@ -165,8 +175,22 @@ def draft_from_review_rows(rows: list[tuple[str, str]]) -> CharacterImportDraft:
             charisma=_ability_score(values.get("charisma"), "Charisma"),
         ),
         skills=tuple(_split_review_list(values.get("skills", ""))),
+        saving_throw_proficiencies=tuple(
+            _split_review_list(values.get("saving_throw_proficiencies", ""))
+        ),
+        armor_proficiencies=tuple(_split_review_list(values.get("armor_proficiencies", ""))),
+        weapon_proficiencies=tuple(_split_review_list(values.get("weapon_proficiencies", ""))),
+        tool_proficiencies=tuple(_split_review_list(values.get("tool_proficiencies", ""))),
+        languages=tuple(_split_review_list(values.get("languages", ""))),
+        damage_resistances=tuple(
+            DamageType(value.lower())
+            for value in _split_review_list(values.get("damage_resistances", ""))
+        ),
+        features=tuple(_split_review_feature_list(values.get("features", ""))),
         inventory=tuple(
-            _inventory_item(name) for name in _split_review_list(values.get("inventory", ""))
+            _inventory_item(entry) for entry in _split_inventory_review_list(
+                values.get("inventory", "")
+            )
         ),
         currency=_parse_currency_review(values.get("currency", "")),
         weapons=tuple(
@@ -291,12 +315,75 @@ def _split_review_list(value: str) -> list[str]:
     return [part.strip() for part in re.split(r";|\n|,", value) if part.strip()]
 
 
-def _inventory_item(name: str) -> InventoryItem:
+def _split_review_feature_list(value: str) -> list[str]:
+    return [part.strip() for part in re.split(r";|\n", value) if part.strip()]
+
+
+def _split_inventory_review_list(value: str) -> list[str]:
+    if ";" in value:
+        return [part.strip() for part in value.split(";") if part.strip()]
+    protected = _protect_comma_item_names(value)
+    return [
+        _restore_protected_commas(part.strip())
+        for part in re.split(r",|\n", protected)
+        if part.strip()
+    ]
+
+
+def _inventory_item(entry: str) -> InventoryItem:
+    name, quantity, weight = _parse_inventory_entry(entry)
     return InventoryItem(
         item_id=_slug(name),
         name=name,
+        quantity=quantity,
+        weight=weight,
         category=ItemCategory.OTHER,
     )
+
+
+def _inventory_text(item: InventoryItem) -> str:
+    weight = _format_weight(item.weight)
+    return f"{item.quantity} x {item.name} ({weight} lb)"
+
+
+def _parse_inventory_entry(value: str) -> tuple[str, int, float]:
+    text = value.strip()
+    quantity = 1
+    weight = 0.0
+    quantity_match = re.match(r"(?P<quantity>\d+)\s*x\s+(?P<name>.+)", text, flags=re.I)
+    if quantity_match:
+        quantity = max(int(quantity_match.group("quantity")), 1)
+        text = quantity_match.group("name").strip()
+    weight_match = re.search(r"\((?P<weight>\d+(?:\.\d+)?)\s*lb\.?\)$", text, flags=re.I)
+    if weight_match:
+        weight = float(weight_match.group("weight"))
+        text = text[: weight_match.start()].strip()
+    return text.strip(" .:-"), quantity, weight
+
+
+def _format_weight(value: float) -> str:
+    return str(int(value)) if value.is_integer() else str(value)
+
+
+def _protect_comma_item_names(value: str) -> str:
+    protected = value
+    for name in (
+        "Clothes, Common",
+        "Clothes, Costume",
+        "Clothes, Fine",
+        "Clothes, Traveler's",
+    ):
+        protected = re.sub(
+            re.escape(name),
+            name.replace(",", "<comma>"),
+            protected,
+            flags=re.I,
+        )
+    return protected
+
+
+def _restore_protected_commas(value: str) -> str:
+    return value.replace("<comma>", ",")
 
 
 def _parse_weapon(value: str) -> Weapon:

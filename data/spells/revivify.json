@@ -1,45 +1,59 @@
 {
-    "casting_time":  "1 action",
-    "components":  [
-                       "V",
-                       "S",
-                       "M"
-                   ],
-    "concentration":  false,
-    "damage":  null,
-    "description":  "Return a creature that died within the last minute to life with 1 hit point.",
-    "duration":  "Instantaneous",
-    "effects":  [
-                    {
-                        "action_cost":  "action",
-                        "check":  {
-                                      "ability":  null,
-                                      "bonus":  0,
-                                      "dc":  null,
-                                      "kind":  "none",
-                                      "proficiency_applies":  false
-                                  },
-                        "dice":  "1",
-                        "duration":  {
-                                         "amount":  null,
-                                         "kind":  "instantaneous",
-                                         "text":  "Instantaneous"
-                                     },
-                        "effect_id":  "revivify-healing",
-                        "effect_kind":  "healing",
-                        "name":  "Revivify",
-                        "range_text":  "Touch",
-                        "resource_cost":  "spell_slot_3",
-                        "rule_source":  null,
-                        "target_profile":  "one_creature"
-                    }
-                ],
-    "level":  3,
-    "name":  "Revivify",
-    "range_text":  "Touch",
-    "ritual":  false,
-    "saving_throw":  null,
-    "school":  "necromancy",
-    "spell_id":  "revivify",
-    "schema_version":  1
+  "casting_time": "1 action",
+  "components": [
+    "V",
+    "S",
+    "M"
+  ],
+  "concentration": false,
+  "damage": null,
+  "description": "Return a creature that died within the last minute to life with 1 hit point.",
+  "duration": "Instantaneous",
+  "effects": [
+    {
+      "action_cost": "action",
+      "check": {
+        "ability": null,
+        "bonus": 0,
+        "dc": null,
+        "kind": "none",
+        "proficiency_applies": false
+      },
+      "dice": null,
+      "duration": {
+        "amount": null,
+        "kind": "instantaneous",
+        "text": "Instantaneous"
+      },
+      "effect_id": "revivify-healing",
+      "effect_kind": "healing",
+      "interactions": [
+        {
+          "interaction_id": "revivify-return-life",
+          "label": "Return to Life",
+          "metadata": {
+            "component_cost_gp": 300,
+            "ruleset": "SRD 5.2.1 / 2024 framework"
+          },
+          "outcome_kind": "revive",
+          "scaling": {},
+          "trigger": "on_target",
+          "value": "revive a recently dead creature with 1 hit point"
+        }
+      ],
+      "name": "Revivify",
+      "range_text": "Touch",
+      "resource_cost": "spell_slot_3",
+      "rule_source": null,
+      "target_profile": "one_creature"
+    }
+  ],
+  "level": 3,
+  "name": "Revivify",
+  "range_text": "Touch",
+  "ritual": false,
+  "saving_throw": null,
+  "schema_version": 1,
+  "school": "necromancy",
+  "spell_id": "revivify"
 }

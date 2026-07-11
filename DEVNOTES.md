@@ -145,10 +145,10 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,322,554 bytes
-- `dist/installer/DnDCombatEngine-1.0.1-Setup.exe` - 51,230,209 bytes
-- `dist/msi/DnDCombatEngine-1.0.1-x64.msi` - 60,244,221 bytes
-- Verified with `python -m ruff check .`, `python -m pytest`, `python -m build`,
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,357,230 bytes
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,305,439 bytes
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,326,502 bytes
+- Verified with `python -m ruff check src tests`, `python -m pytest --no-cov`,
   a PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
 
 Latest verified local install smoke test:

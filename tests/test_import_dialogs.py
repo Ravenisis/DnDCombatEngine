@@ -169,12 +169,19 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
             ),
         ),
         armor=Armor("Leather", 14),
+        features=("Blessed Healer",),
+        saving_throw_proficiencies=("Wisdom", "Charisma"),
+        armor_proficiencies=("Light Armor",),
+        weapon_proficiencies=("Simple Weapons",),
+        tool_proficiencies=("Mason's Tools",),
+        languages=("Common", "Dwarvish"),
+        damage_resistances=(DamageType.POISON,),
         currency=CurrencyPurse(gp=12, sp=3),
         source="sheet.pdf",
     )
     rows = dict(character_import_review_rows(draft))
     rows["Name"] = "Lyra Thorn"
-    rows["Inventory"] = "Rope, Torch"
+    rows["Inventory"] = "1 x Rope (10 lb); 1 x Clothes, Common (3 lb); Torch"
     rows["Currency"] = "1PP 100GP"
     rows["Weapons"] = "Rapier | 1d8 | piercing; Dagger 1d4 piercing"
 
@@ -184,12 +191,17 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
     assert reviewed.level == 3
     assert reviewed.hit_points.maximum == 12
     assert reviewed.abilities.dexterity == 16
-    assert [item.name for item in reviewed.inventory] == ["Rope", "Torch"]
+    assert [item.name for item in reviewed.inventory] == ["Rope", "Clothes, Common", "Torch"]
+    assert [item.weight for item in reviewed.inventory] == [10.0, 3.0, 0.0]
     assert reviewed.currency.pp == 11
     assert reviewed.currency.gp == 0
     assert [weapon.name for weapon in reviewed.weapons] == ["Rapier", "Dagger"]
     assert reviewed.armor is not None
     assert reviewed.armor.armor_class == 14
+    assert reviewed.features == ("Blessed Healer",)
+    assert reviewed.saving_throw_proficiencies == ("Wisdom", "Charisma")
+    assert reviewed.tool_proficiencies == ("Mason's Tools",)
+    assert reviewed.damage_resistances == (DamageType.POISON,)
 
 
 def test_import_review_requires_valid_name_and_numbers() -> None:

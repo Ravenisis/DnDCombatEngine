@@ -70,6 +70,36 @@ class DurationKind(StrEnum):
     SPECIAL = "special"
 
 
+class InteractionTrigger(StrEnum):
+    """Moments when a data-defined effect interaction applies."""
+
+    ON_CAST = "on_cast"
+    ON_HIT = "on_hit"
+    ON_MISS = "on_miss"
+    ON_FAILED_SAVE = "on_failed_save"
+    ON_SUCCESSFUL_SAVE = "on_successful_save"
+    ON_TARGET = "on_target"
+    ON_CHOICE = "on_choice"
+    ON_CONSUME = "on_consume"
+
+
+class InteractionOutcomeKind(StrEnum):
+    """Structured outcomes a resolver can apply or explain."""
+
+    APPLY_DAMAGE = "apply_damage"
+    APPLY_HEALING = "apply_healing"
+    APPLY_BUFF = "apply_buff"
+    APPLY_CONDITION = "apply_condition"
+    REMOVE_CONDITION = "remove_condition"
+    REVIVE = "revive"
+    CREATE_LIGHT = "create_light"
+    CREATE_CHOICE = "create_choice"
+    GRANT_ADVANTAGE = "grant_advantage"
+    FORCE_SAVE = "force_save"
+    APPLY_ATTACK = "apply_attack"
+    NARRATE = "narrate"
+
+
 @dataclass(frozen=True, slots=True)
 class TargetReference:
     """A selected target reference independent of storage details."""
@@ -181,6 +211,60 @@ class DurationProfile:
 
 
 @dataclass(frozen=True, slots=True)
+class EffectInteraction:
+    """A data-backed rule outcome attached to an effect definition."""
+
+    interaction_id: str
+    trigger: InteractionTrigger
+    outcome_kind: InteractionOutcomeKind
+    label: str = ""
+    value: str | None = None
+    scaling: dict[str, object] = field(default_factory=dict)
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate interaction identity and value."""
+        if not self.interaction_id:
+            raise ValueError("interaction_id is required")
+        if self.value is not None and not self.value:
+            raise ValueError("interaction value cannot be blank")
+
+    def summary(self) -> str:
+        """Return a compact rules summary for combat log detail."""
+        trigger = self.trigger.value.replace("_", " ")
+        kind = self.outcome_kind.value.replace("_", " ")
+        label = f" {self.label}" if self.label else ""
+        value = f" {self.value}" if self.value else ""
+        scaling = _scaling_summary(self.scaling)
+        return f"{trigger}: {kind}{label}{value}{scaling}."
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize the interaction to JSON-compatible data."""
+        return {
+            "interaction_id": self.interaction_id,
+            "trigger": self.trigger.value,
+            "outcome_kind": self.outcome_kind.value,
+            "label": self.label,
+            "value": self.value,
+            "scaling": dict(self.scaling),
+            "metadata": dict(self.metadata),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Self:
+        """Build an effect interaction from JSON-compatible data."""
+        return cls(
+            interaction_id=str(data["interaction_id"]),
+            trigger=InteractionTrigger(str(data["trigger"])),
+            outcome_kind=InteractionOutcomeKind(str(data["outcome_kind"])),
+            label=str(data.get("label", "")),
+            value=str(data["value"]) if data.get("value") is not None else None,
+            scaling=_dict_from_data(data.get("scaling")),
+            metadata=_dict_from_data(data.get("metadata")),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EffectDefinition:
     """A rule-defined effect before it is resolved against targets."""
 
@@ -196,6 +280,7 @@ class EffectDefinition:
     check: CheckDefinition = field(default_factory=lambda: CheckDefinition(CheckKind.NONE))
     resource_cost: str | None = None
     dice: str | None = None
+    interactions: tuple[EffectInteraction, ...] = field(default_factory=tuple)
     rule_source: RuleSource | None = None
 
     def __post_init__(self) -> None:
@@ -230,6 +315,7 @@ class EffectDefinition:
             "check": self.check.to_dict(),
             "resource_cost": self.resource_cost,
             "dice": self.dice,
+            "interactions": [interaction.to_dict() for interaction in self.interactions],
             "rule_source": self.rule_source.to_dict() if self.rule_source else None,
         }
 
@@ -249,6 +335,11 @@ class EffectDefinition:
                 str(data["resource_cost"]) if data.get("resource_cost") is not None else None
             ),
             dice=str(data["dice"]) if data.get("dice") is not None else None,
+            interactions=tuple(
+                EffectInteraction.from_dict(interaction)
+                for interaction in data.get("interactions", [])
+                if isinstance(interaction, dict)
+            ),
             rule_source=_rule_source_from_data(data.get("rule_source")),
         )
 
@@ -291,3 +382,23 @@ def _rule_source_from_data(data: object) -> RuleSource | None:
     if isinstance(data, dict):
         return RuleSource.from_dict(data)
     return None
+
+
+def _dict_from_data(data: object) -> dict[str, object]:
+    if isinstance(data, dict):
+        return dict(data)
+    return {}
+
+
+def _scaling_summary(scaling: dict[str, object]) -> str:
+    if not scaling:
+        return ""
+    mode = scaling.get("mode")
+    per_level = scaling.get("per_slot_level_above_base")
+    if mode == "spell_slot" and per_level:
+        base = scaling.get("base_spell_level")
+        base_text = f" above level {base}" if base is not None else ""
+        return f" (scales {per_level}{base_text})"
+    if mode:
+        return f" (scales by {mode})"
+    return ""

@@ -38,8 +38,10 @@ from dnd_combat_engine.services import (
     CombatService,
     DiceService,
     EncounterService,
+    HostedCampaignBackend,
     InitiativeService,
     InventoryService,
+    LocalHostedCampaignBackend,
     MonsterService,
     PersistenceService,
     SpellService,
@@ -61,6 +63,7 @@ class DnDCombatEngineApp:
     encounters: EncounterController
     inventory: InventoryController
     beta_reports: BetaReportController
+    hosted_campaigns: HostedCampaignBackend
 
 
 def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
@@ -102,6 +105,7 @@ def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
             BetaReportService(),
             _default_beta_report_path(resolved_data_root),
         ),
+        hosted_campaigns=LocalHostedCampaignBackend(persistence_service),
     )
 
 
