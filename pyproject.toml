@@ -22,6 +22,7 @@ dev = [
   "pytest>=8.2",
   "pytest-cov>=5.0",
   "ruff>=0.5",
+  "mypy>=1.10,<2",
 ]
 gui = [
   "PySide6>=6.7",
@@ -48,8 +49,17 @@ pythonpath = ["src"]
 [tool.coverage.run]
 omit = [
   "src/dnd_combat_engine/__main__.py",
-  "src/dnd_combat_engine/gui/*",
   "src/dnd_combat_engine/gui_app.py",
+]
+
+[tool.coverage.report]
+exclude_also = [
+  # Qt widget construction is covered by GUI smoke tests; keep domain and
+  # interaction helpers in the measured coverage set.
+  '^\s*class .*Widget:',
+  '^\s*class _FallbackTabs:',
+  '^\s*def (create_main_window|run_gui|_set_window_icon|_main_workspace|_set_size_constraint|_scroll_area|_add_left_panel|_panel_host|_layout_add_widget|_add_dock|_add_bottom_dock|_configure_dock|_dock_features|_configure_menus|_run_menu_action|_clear_combat_workspace|_report_bug_from_menu|_ask_bug_report|_combo_box|_add_form_row|_add_labeled_text|_bug_report_dialog_buttons|_connect_bug_report_dialog_buttons|_show_dialog_warning|_bug_report_dialog_accepted|_refresh_campaign_docks|_open_campaign|_close_campaign|_begin_new_campaign|_add_party_member_from_menu|_set_party_leader_from_menu|_open_spellbook_window|_open_abilities_window|_open_inventory_window|_add_inventory_item_from_dialog|_ask_inventory_item|_connect_srd_inventory_selection|_populate_srd_item_tooltips|_standard_dialog_buttons|_generic_dialog_accepted|_open_key_binds_window|_open_preferences_window|_choose_party_targets|_choose_string|_dialog_buttons|_dialog_accepted|_replace_party_member_sheet|_remove_party_member|_set_party_initiative|_campaign_widget|_activity_widget|_party_widget|_target_widget|_set_active_target|_campaign_editor_widget|_character_widget|_spellbook_widget|_abilities_widget|_action_bar_widget|_label|_show_message|_set_status|_consume_inventory_item|_sell_inventory_item|_change_character_currency|_consume_known_item|_healing_potion_notation|_break_concentration_from_menu|_roll_saving_throw)\b',
+  '^\s*def (_inventory_header|_show_money_log|_currency_boxes|_currency_box_grid|_inventory_section|_inventory_item_button|_inventory_button_class|_show_inventory_item_menu|_add_initiative_entry|_install_party_context_menu|_show_party_context_menu|_action_bar_button_class)\b',
 ]
 
 [tool.ruff]
@@ -62,3 +72,23 @@ ignore = ["D203", "D213"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]
+
+[tool.mypy]
+python_version = "3.11"
+files = [
+  "src/dnd_combat_engine/gui/action_bar.py",
+  "src/dnd_combat_engine/gui/actions.py",
+  "src/dnd_combat_engine/gui/campaign.py",
+  "src/dnd_combat_engine/gui/campaign_panels.py",
+  "src/dnd_combat_engine/gui/inventory.py",
+  "src/dnd_combat_engine/gui/spellbook.py",
+  "src/dnd_combat_engine/gui/targeting.py",
+]
+follow_imports = "skip"
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+no_implicit_optional = true
+show_error_codes = true

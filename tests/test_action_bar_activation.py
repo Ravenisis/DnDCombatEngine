@@ -980,6 +980,105 @@ def test_shift_action_bar_activation_rolls_attack_with_modifier(monkeypatch) -> 
     assert "modifier +6" in message
 
 
+def test_shift_critical_hit_doubles_follow_up_damage_dice(monkeypatch) -> None:
+    class SequenceDice:
+        def __init__(self) -> None:
+            self.notations = []
+            self.results = [
+                SimpleNamespace(notation="1d20+6", total=26, rolls=(20,)),
+                SimpleNamespace(notation="2d8+1", total=15, rolls=(7, 7)),
+            ]
+
+        def roll(self, notation: str):
+            self.notations.append(notation)
+            result = self.results.pop(0)
+            assert result.notation == notation
+            return result
+
+    window = FakeWindow()
+    character = Character(
+        "fighter",
+        "Fighter",
+        HitPoints(20, 20),
+        abilities=AbilityScores(strength=16),
+        level=5,
+        weapons=(
+            Weapon(
+                "Warhammer",
+                DamageProfile((DamageComponent("1d8+1", DamageType.BLUDGEONING),)),
+            ),
+        ),
+    )
+    app = _app(character)
+    app.dice = SequenceDice()
+    state = main_window.GuiCampaignState(
+        selected_character_id="fighter",
+        party_leader_character_id="fighter",
+    )
+    session = ActionBarSession(
+        ActionBar(
+            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),)
+        )
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    check = main_window._activate_action_bar_slot(
+        window, object(), app, state, session, 1, True
+    )
+    damage = main_window._activate_action_bar_slot(
+        window, object(), app, state, session, 1, False
+    )
+
+    assert "Critical hit!" in check
+    assert app.dice.notations == ["1d20+6", "2d8+1"]
+    assert "Damage 15" in damage
+    assert state.pending_action_check is None
+
+
+def test_shift_critical_miss_prevents_follow_up_damage(monkeypatch) -> None:
+    class CriticalMissDice:
+        def __init__(self) -> None:
+            self.notations = []
+
+        def roll(self, notation: str):
+            self.notations.append(notation)
+            return SimpleNamespace(notation=notation, total=1, rolls=(1,))
+
+    window = FakeWindow()
+    character = Character(
+        "fighter",
+        "Fighter",
+        HitPoints(20, 20),
+        weapons=(
+            Weapon(
+                "Warhammer",
+                DamageProfile((DamageComponent("1d8", DamageType.BLUDGEONING),)),
+            ),
+        ),
+    )
+    app = _app(character)
+    app.dice = CriticalMissDice()
+    state = main_window.GuiCampaignState(
+        selected_character_id="fighter",
+        party_leader_character_id="fighter",
+    )
+    session = ActionBarSession(
+        ActionBar(
+            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),)
+        )
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    main_window._activate_action_bar_slot(window, object(), app, state, session, 1, True)
+    message = main_window._activate_action_bar_slot(
+        window, object(), app, state, session, 1, False
+    )
+
+    assert app.dice.notations == ["1d20+2"]
+    assert message == "Fighter uses Warhammer. Critical miss: no damage applied."
+    assert state.pending_action_check is None
+
+
 def test_normal_action_bar_activation_logs_result_and_refreshes(monkeypatch) -> None:
     window = FakeWindow()
     character = Character(

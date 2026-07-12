@@ -46,7 +46,7 @@ class ActionBarSession:
 
     def activate(self, slot: int) -> str:
         """Activate a slot and return a user-facing message."""
-        return self.bar.activate(slot)
+        return str(self.bar.activate(slot))
 
     def remove(self, slot: int) -> str:
         """Remove a button from a slot and notify listeners when changed."""

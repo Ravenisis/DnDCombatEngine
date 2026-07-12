@@ -7,37 +7,60 @@ import textwrap
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp
+from dnd_combat_engine.gui import campaign_panels as _campaign_panels
+from dnd_combat_engine.gui import combat_panels as _combat_panels
+from dnd_combat_engine.gui import inventory as _inventory
+from dnd_combat_engine.gui import spellbook as _spellbook
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.editors import (
     add_character_to_encounter,
-    add_encounter_to_campaign,
     add_monster_to_encounter,
     advance_encounter_round,
     complete_encounter,
-    remove_character_from_campaign,
-    remove_encounter_from_campaign,
     remove_participant_from_encounter,
     start_encounter,
 )
 from dnd_combat_engine.gui.panels import (
-    attack_summary_text,
-    campaign_reference_rows,
-    campaign_rows,
-    character_sheet_rows,
     encounter_participant_rows,
     encounter_rows,
-    initiative_rows,
 )
-from dnd_combat_engine.models import CombatLog
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
 from dnd_combat_engine.models.currency import CurrencyPurse
-from dnd_combat_engine.models.effects import TargetKind, TargetReference
-from dnd_combat_engine.models.encounters import ParticipantKind
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.spell_slots import (
     ensure_spell_slot_resources,
     ensure_spell_slot_resources_for_level,
 )
+
+CampaignEditorWidget = _campaign_panels.CampaignEditorWidget
+CampaignWidget = _campaign_panels.CampaignWidget
+PartyFramesWidget = _campaign_panels.PartyFramesWidget
+TargetPanelWidget = _campaign_panels.TargetPanelWidget
+_campaign_character_selector = _campaign_panels._campaign_character_selector
+_monster_target_current_hp = _campaign_panels._monster_target_current_hp
+_selector_text = _campaign_panels._selector_text
+_target_button_text = _campaign_panels._target_button_text
+_target_panel_references = _campaign_panels._target_panel_references
+InventoryWidget = _inventory.InventoryWidget
+AttackPanelWidget = _combat_panels.AttackPanelWidget
+CampaignActivityWidget = _combat_panels.CampaignActivityWidget
+CharacterSheetWidget = _combat_panels.CharacterSheetWidget
+CombatLogWidget = _combat_panels.CombatLogWidget
+DiceTrayWidget = _combat_panels.DiceTrayWidget
+EncounterEditorWidget = _combat_panels.EncounterEditorWidget
+EncounterTrackerWidget = _combat_panels.EncounterTrackerWidget
+InitiativeWidget = _combat_panels.InitiativeWidget
+_quick_attack_message = _combat_panels._quick_attack_message
+AbilitiesWidget = _spellbook.AbilitiesWidget
+SpellbookWidget = _spellbook.SpellbookWidget
+_actionable_ability_names_for_tab = _spellbook._actionable_ability_names_for_tab
+_add_spellbook_tab = _spellbook._add_spellbook_tab
+_attack_names_for_character = _spellbook._attack_names_for_character
+_is_channel_divinity_name = _spellbook._is_channel_divinity_name
+_spellbook_tab = _spellbook._spellbook_tab
+_spellbook_tab_add_widget = _spellbook._spellbook_tab_add_widget
+_spellbook_tab_finish = _spellbook._spellbook_tab_finish
+_spellbook_tabs = _spellbook._spellbook_tabs
 
 ACTION_BAR_HOTKEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=")
 PARTY_FRAME_FEATURES = (
@@ -64,337 +87,23 @@ ACTIONABLE_ABILITY_FEATURES = (
 CONTAINER_ITEM_IDS = {"bag_of_holding", "backpack", "pouch"}
 
 
-class DiceTrayWidget:
-    """Factory for the dice tray widget."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt):
-        """Create a dice tray widget."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        input_box = qt.QtWidgets.QLineEdit("1d20")
-        button = qt.QtWidgets.QPushButton("Roll")
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-
-        def roll() -> None:
-            result = app.dice.roll(input_box.text())
-            output.append(f"{result.notation}: {result.total} {result.rolls}")
-
-        button.clicked.connect(roll)
-        layout.addWidget(input_box)
-        layout.addWidget(button)
-        layout.addWidget(output)
-        return widget
 
 
-class CombatLogWidget:
-    """Factory for the combat log widget."""
-
-    @staticmethod
-    def create(qt, log: CombatLog | None = None):
-        """Create a combat log widget."""
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-        for entry in (log or CombatLog()).entries:
-            output.append(entry.message)
-        return output
 
 
-class CampaignActivityWidget:
-    """Factory for persisted campaign activity rows."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, campaign_id: str | None = None):
-        """Create a compact persisted campaign activity widget."""
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-        if campaign_id is None:
-            output.append("No campaign open")
-            return output
-        try:
-            campaign = app.campaigns.load(campaign_id)
-        except KeyError:
-            output.append("Campaign activity unavailable")
-            return output
-        if not campaign.activity_log:
-            output.append("No campaign activity yet.")
-            return output
-        for entry in campaign.activity_log[-12:]:
-            output.append(f"[{entry.category}] {entry.message}")
-        return output
 
 
-class CharacterSheetWidget:
-    """Factory for the character sheet widget."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, character_id: str = "vale"):
-        """Create a compact character sheet widget."""
-        character = app.characters.load(character_id)
-        rows = character_sheet_rows(character)
-        table = qt.QtWidgets.QTableWidget(len(rows), 2)
-        table.setHorizontalHeaderLabels(["Field", "Value"])
-        for row, (field, value) in enumerate(rows):
-            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
-            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
-        return table
 
 
-class CampaignWidget:
-    """Factory for the campaign workspace widget."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, campaign_id: str = "starter_campaign"):
-        """Create a compact campaign workspace widget."""
-        campaign = app.campaigns.load(campaign_id)
-        rows = campaign_rows(campaign)
-        table = qt.QtWidgets.QTableWidget(len(rows), 2)
-        table.setHorizontalHeaderLabels(["Field", "Value"])
-        for row, (field, value) in enumerate(rows):
-            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
-            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
-        return table
 
 
-class PartyFramesWidget:
-    """Factory for framed party member summaries."""
-
-    @staticmethod
-    def create(
-        app: DnDCombatEngineApp,
-        qt,
-        campaign_id: str = "starter_campaign",
-        initiative_results: dict[str, int] | None = None,
-        beacon_of_hope_targets: tuple[str, ...] = (),
-        bless_targets: tuple[str, ...] = (),
-        on_upload_sheet=None,
-        on_remove_member=None,
-        on_set_initiative=None,
-    ):
-        """Create party frames for every character in a campaign."""
-        campaign = app.campaigns.load(campaign_id)
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        if not campaign.character_ids:
-            layout.addWidget(qt.QtWidgets.QLabel("No party members"))
-            return widget
-        for character_id in campaign.character_ids:
-            layout.addWidget(
-                _party_member_frame(
-                    app,
-                    qt,
-                    character_id,
-                    initiative_results or {},
-                    beacon_of_hope_targets,
-                    bless_targets,
-                    on_upload_sheet,
-                    on_remove_member,
-                    on_set_initiative,
-                )
-            )
-        if hasattr(layout, "addStretch"):
-            layout.addStretch(1)
-        return widget
 
 
-class TargetPanelWidget:
-    """Factory for active target selection controls."""
-
-    @staticmethod
-    def create(
-        app: DnDCombatEngineApp,
-        qt,
-        campaign_id: str | None,
-        active_target: TargetReference | None = None,
-        on_select=None,
-    ):
-        """Create a target selector for party and encounter participants."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        active_text = "No target selected"
-        if active_target is not None:
-            active_text = f"Target: {active_target.name} ({active_target.kind.value})"
-        layout.addWidget(qt.QtWidgets.QLabel(active_text))
-        targets = _target_panel_references(app, campaign_id)
-        if not targets:
-            layout.addWidget(qt.QtWidgets.QLabel("No targets available"))
-            return widget
-        for target in targets:
-            button = qt.QtWidgets.QPushButton(_target_button_text(app, target))
-            if hasattr(button, "setToolTip"):
-                button.setToolTip(f"Set active target to {target.name}")
-            if (
-                active_target is not None
-                and target.target_id == active_target.target_id
-                and hasattr(button, "setStyleSheet")
-            ):
-                button.setStyleSheet("border:2px solid #4f8cff; text-align:left;")
-            button.clicked.connect(
-                lambda checked=False, item=target: on_select(item)
-                if on_select is not None
-                else None
-            )
-            layout.addWidget(button)
-        if hasattr(layout, "addStretch"):
-            layout.addStretch(1)
-        return widget
 
 
-def _target_panel_references(
-    app: DnDCombatEngineApp,
-    campaign_id: str | None,
-) -> tuple[TargetReference, ...]:
-    if campaign_id is None:
-        return ()
-    try:
-        campaign = app.campaigns.load(campaign_id)
-    except KeyError:
-        return ()
-    targets: list[TargetReference] = []
-    for character_id in campaign.character_ids:
-        try:
-            character = app.characters.load(character_id)
-        except KeyError:
-            continue
-        targets.append(
-            TargetReference(
-                target_id=character.character_id,
-                name=character.name,
-                kind=TargetKind.CHARACTER,
-                source_id=character.character_id,
-            )
-        )
-    for encounter_id in campaign.encounter_ids:
-        try:
-            encounter = app.encounters.load(encounter_id)
-        except KeyError:
-            continue
-        for participant in encounter.participants:
-            if participant.kind is ParticipantKind.MONSTER:
-                targets.append(
-                    TargetReference(
-                        target_id=participant.participant_id,
-                        name=participant.name,
-                        kind=TargetKind.MONSTER,
-                        source_id=participant.source_id,
-                    )
-                )
-    return tuple(targets)
 
 
-def _target_button_text(app: DnDCombatEngineApp, target: TargetReference) -> str:
-    if target.kind is TargetKind.CHARACTER:
-        try:
-            character = app.characters.load(target.source_id)
-        except KeyError:
-            return f"{target.name}\nMissing character"
-        return (
-            f"{character.name}\n"
-            f"HP {character.hit_points.current}/{character.hit_points.maximum} "
-            f"THP {character.hit_points.temporary}"
-        )
-    if target.kind is TargetKind.MONSTER:
-        try:
-            monster = app.compendium.load_monster(target.source_id)
-        except KeyError:
-            return f"{target.name}\nMissing monster"
-        current_hp = _monster_target_current_hp(app, target, monster.hit_points.maximum)
-        return f"{target.name}\nHP {current_hp}/{monster.hit_points.maximum}"
-    return target.name
 
-
-def _monster_target_current_hp(
-    app: DnDCombatEngineApp,
-    target: TargetReference,
-    default_hp: int,
-) -> int:
-    try:
-        encounter_ids = app.encounters.persistence_service.list_encounter_ids()
-    except AttributeError:
-        return default_hp
-    for encounter_id in encounter_ids:
-        try:
-            encounter = app.encounters.load(encounter_id)
-        except KeyError:
-            continue
-        for participant in encounter.participants:
-            if participant.participant_id == target.target_id:
-                return participant.current_hit_points or default_hp * participant.quantity
-    return default_hp
-
-
-class CampaignEditorWidget:
-    """Factory for campaign editing controls."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, campaign_id: str = "starter_campaign"):
-        """Create a campaign editor widget."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        campaign = app.campaigns.load(campaign_id)
-        character_input = _campaign_character_selector(qt, campaign.character_ids)
-        encounter_input = qt.QtWidgets.QLineEdit("roadside_ambush")
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-
-        _add_rows(output, campaign_reference_rows(campaign))
-
-        def run(action) -> None:
-            try:
-                message = action()
-            except ValueError as exc:
-                message = str(exc)
-            except KeyError as exc:
-                message = str(exc)
-            output.append(message)
-
-        remove_character = qt.QtWidgets.QPushButton("Remove Character")
-        remove_character.clicked.connect(
-            lambda: run(
-                lambda: remove_character_from_campaign(
-                    app,
-                    campaign_id,
-                    _selector_text(character_input),
-                )
-            )
-        )
-        add_encounter = qt.QtWidgets.QPushButton("Add Encounter")
-        add_encounter.clicked.connect(
-            lambda: run(lambda: add_encounter_to_campaign(app, campaign_id, encounter_input.text()))
-        )
-        remove_encounter = qt.QtWidgets.QPushButton("Remove Encounter")
-        remove_encounter.clicked.connect(
-            lambda: run(
-                lambda: remove_encounter_from_campaign(app, campaign_id, encounter_input.text())
-            )
-        )
-
-        layout.addWidget(character_input)
-        layout.addWidget(remove_character)
-        layout.addWidget(encounter_input)
-        layout.addWidget(add_encounter)
-        layout.addWidget(remove_encounter)
-        layout.addWidget(output)
-        return widget
-
-
-def _campaign_character_selector(qt, character_ids: tuple[str, ...]):
-    combo_class = getattr(qt.QtWidgets, "QComboBox", None)
-    if combo_class is None:
-        return qt.QtWidgets.QLineEdit(character_ids[0] if character_ids else "")
-    combo = combo_class()
-    for character_id in character_ids:
-        combo.addItem(character_id)
-    return combo
-
-
-def _selector_text(widget) -> str:
-    if hasattr(widget, "currentText"):
-        return str(widget.currentText()).strip()
-    if hasattr(widget, "text"):
-        return str(widget.text()).strip()
-    return ""
 
 
 class ActionBarWidget:
@@ -570,265 +279,28 @@ class SavingThrowWidget:
         return widget
 
 
-class SpellbookWidget:
-    """Factory for the spellbook source window."""
-
-    @staticmethod
-    def create(
-        app: DnDCombatEngineApp,
-        qt,
-        session: ActionBarSession,
-        character_id: str | None = None,
-    ):
-        """Create a spellbook widget that can place spells on the action bar."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-        layout.addWidget(qt.QtWidgets.QLabel(_spellbook_title(app, character_id)))
-        tabs = _spellbook_tabs(qt)
-        layout.addWidget(tabs)
-        attacks_tab = _spellbook_tab(qt)
-        spells_tab = _spellbook_tab(qt)
-        cantrips_tab = _spellbook_tab(qt)
-        abilities_tab = _spellbook_tab(qt)
-        channel_tab = _spellbook_tab(qt)
-        _add_spellbook_tab(tabs, spells_tab, "Spells")
-        _add_spellbook_tab(tabs, abilities_tab, "Abilities")
-        _add_spellbook_tab(tabs, cantrips_tab, "Cantrips")
-        _add_spellbook_tab(tabs, attacks_tab, "Attacks")
-        _add_spellbook_tab(tabs, channel_tab, "Channel Divinity")
-        for attack_name in _attack_names_for_character(app, character_id):
-            button = qt.QtWidgets.QPushButton(f"{attack_name} (Attack)")
-            if hasattr(button, "setToolTip"):
-                button.setToolTip(f"Place {attack_name} on the action bar.")
-            button.clicked.connect(
-                lambda checked=False, name=attack_name: output.append(
-                    session.place_next(
-                        ActionBarButton(
-                            slot=1,
-                            kind=ActionBarActionKind.ABILITY,
-                            action_id=_action_id(name),
-                            name=name,
-                            rank=1,
-                            uses_highest_rank=True,
-                        )
-                    )
-                )
-            )
-            _spellbook_tab_add_widget(attacks_tab, button)
-        for spell_id in _spell_ids_for_character(app, character_id):
-            spell = app.compendium.load_spell(spell_id)
-            rank_options = _spell_rank_options(app, character_id, spell)
-            highest_rank = max(rank_options)
-            for rank in rank_options:
-                button = qt.QtWidgets.QPushButton(
-                    _spell_rank_button_text(spell.name, rank, spell.level)
-                )
-                if hasattr(button, "setToolTip"):
-                    button.setToolTip(_spell_tooltip(spell, rank))
-                button.clicked.connect(
-                    lambda checked=False,
-                    item=spell,
-                    item_rank=rank,
-                    item_highest=highest_rank: output.append(
-                        session.place_next(
-                            ActionBarButton(
-                                slot=1,
-                                kind=ActionBarActionKind.SPELL,
-                                action_id=item.spell_id,
-                                name=item.name,
-                                rank=item_rank,
-                                uses_highest_rank=item_rank == item_highest,
-                            )
-                        )
-                    )
-                )
-                target_tab = cantrips_tab if spell.level == 0 else spells_tab
-                _spellbook_tab_add_widget(target_tab, button)
-        for feature in _actionable_ability_names_for_tab(app, character_id):
-            button = qt.QtWidgets.QPushButton(feature)
-            if hasattr(button, "setToolTip"):
-                button.setToolTip(_ability_tooltip(feature))
-            button.clicked.connect(
-                lambda checked=False, name=feature: output.append(
-                    session.place_next(
-                        ActionBarButton(
-                            slot=1,
-                            kind=ActionBarActionKind.ABILITY,
-                            action_id=_action_id(name),
-                            name=name,
-                            rank=1,
-                            uses_highest_rank=True,
-                        )
-                    )
-                )
-            )
-            target_tab = channel_tab if _is_channel_divinity_name(feature) else abilities_tab
-            _spellbook_tab_add_widget(target_tab, button)
-        for tab in (spells_tab, abilities_tab, cantrips_tab, attacks_tab, channel_tab):
-            _spellbook_tab_finish(qt, tab)
-        layout.addWidget(output)
-        return widget
 
 
-def _attack_names_for_character(
-    app: DnDCombatEngineApp,
-    character_id: str | None,
-) -> tuple[str, ...]:
-    if character_id is None:
-        return ()
-    try:
-        character = app.characters.load(character_id)
-    except KeyError:
-        return ()
-    names = [weapon.name for weapon in character.weapons if _is_valid_attack_name(weapon.name)]
-    if "Unarmed Strike" not in names:
-        names.append("Unarmed Strike")
-    return tuple(names)
 
 
-class AbilitiesWidget:
-    """Factory for the abilities source window."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, session: ActionBarSession, character_id: str = "vale"):
-        """Create an abilities widget that can place character features on the action bar."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-        character = app.characters.load(character_id)
-        features = _actionable_ability_names(character.features)
-        for feature in features:
-            button = qt.QtWidgets.QPushButton(feature)
-            if hasattr(button, "setToolTip"):
-                button.setToolTip(_ability_tooltip(feature))
-            button.clicked.connect(
-                lambda checked=False, name=feature: output.append(
-                    session.place_next(
-                        ActionBarButton(
-                            slot=1,
-                            kind=ActionBarActionKind.ABILITY,
-                            action_id=_action_id(name),
-                            name=name,
-                            rank=1,
-                            uses_highest_rank=True,
-                        )
-                    )
-                )
-            )
-            layout.addWidget(button)
-        layout.addWidget(output)
-        return widget
 
 
-def _spellbook_tabs(qt):
-    tab_class = getattr(qt.QtWidgets, "QTabWidget", None)
-    if tab_class is None:
-        return _FallbackTabs(qt)
-    tabs = tab_class()
-    tab_position = getattr(tab_class, "TabPosition", tab_class)
-    east = getattr(tab_position, "East", None)
-    if east is not None and hasattr(tabs, "setTabPosition"):
-        tabs.setTabPosition(east)
-    return tabs
 
 
-class _FallbackTabs:
-    def __init__(self, qt) -> None:
-        self.widget = qt.QtWidgets.QWidget()
-        self.layout = qt.QtWidgets.QVBoxLayout(self.widget)
-
-    def addTab(self, widget, title: str) -> None:  # noqa: N802
-        self.layout.addWidget(widget)
 
 
-def _spellbook_tab(qt):
-    widget = qt.QtWidgets.QWidget()
-    layout = qt.QtWidgets.QVBoxLayout(widget)
-    widget._dnd_spellbook_tab_layout = layout  # noqa: SLF001
-    widget._dnd_spellbook_tab_count = 0  # noqa: SLF001
-    return widget
 
 
-def _add_spellbook_tab(tabs, tab, title: str) -> None:
-    if hasattr(tabs, "addTab"):
-        tabs.addTab(tab, title)
 
 
-def _spellbook_tab_add_widget(tab, widget) -> None:
-    layout = getattr(tab, "_dnd_spellbook_tab_layout", None)
-    if layout is None:
-        return
-    layout.addWidget(widget)
-    tab._dnd_spellbook_tab_count = getattr(tab, "_dnd_spellbook_tab_count", 0) + 1  # noqa: SLF001
 
 
-def _spellbook_tab_finish(qt, tab) -> None:
-    layout = getattr(tab, "_dnd_spellbook_tab_layout", None)
-    if layout is None:
-        return
-    if getattr(tab, "_dnd_spellbook_tab_count", 0) == 0:
-        layout.addWidget(qt.QtWidgets.QLabel("None available"))
-    if hasattr(layout, "addStretch"):
-        layout.addStretch(1)
 
 
-def _actionable_ability_names_for_tab(
-    app: DnDCombatEngineApp,
-    character_id: str | None,
-) -> tuple[str, ...]:
-    if character_id is None:
-        return ()
-    try:
-        character = app.characters.load(character_id)
-    except KeyError:
-        return ()
-    return _actionable_ability_names(character.features)
 
 
-def _is_channel_divinity_name(name: str) -> bool:
-    return name.lower().startswith("channel divinity")
 
 
-class InventoryWidget:
-    """Factory for an RPG-style inventory window."""
-
-    @staticmethod
-    def create(
-        app: DnDCombatEngineApp,
-        qt,
-        character_id: str,
-        on_consume=None,
-        on_sell=None,
-        on_currency_change=None,
-        on_add_item=None,
-        money_log_entries: list[str] | None = None,
-        money_log_current: dict | None = None,
-    ):
-        """Create an icon inventory grouped by carried containers."""
-        character = app.characters.load(character_id)
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        layout.addWidget(
-            _inventory_header(
-                qt,
-                character.name,
-                character.currency,
-                on_currency_change,
-                on_add_item,
-                money_log_entries,
-                money_log_current,
-            )
-        )
-        sections = _inventory_sections(character.inventory)
-        for section_name, items in sections:
-            section = _inventory_section(qt, section_name, items, on_consume, on_sell)
-            layout.addWidget(section)
-        if hasattr(layout, "addStretch"):
-            layout.addStretch(1)
-        return widget
 
 
 def _inventory_header(
@@ -1403,7 +875,7 @@ def _is_right_click(qt, event) -> bool:
     return mouse_button is not None and button == mouse_button
 
 
-class EncounterTrackerWidget:
+class _LegacyEncounterTrackerWidget:
     """Factory for the encounter tracker widget."""
 
     @staticmethod
@@ -1419,7 +891,7 @@ class EncounterTrackerWidget:
         return table
 
 
-class EncounterEditorWidget:
+class _LegacyEncounterEditorWidget:
     """Factory for encounter editing controls."""
 
     @staticmethod
@@ -1493,99 +965,6 @@ class EncounterEditorWidget:
         layout.addWidget(complete_button)
         layout.addWidget(output)
         return widget
-
-
-class InitiativeWidget:
-    """Factory for the initiative widget."""
-
-    @staticmethod
-    def create(app: DnDCombatEngineApp, qt, character_id: str = "vale"):
-        """Create a compact initiative widget."""
-        character = app.characters.load(character_id)
-        encounter = app.encounters.add_character(app.encounters.load("roadside_ambush"), character)
-        _, tracker = app.encounters.start_and_roll_initiative(encounter, (character,))
-        rows = initiative_rows(tracker)
-        table = qt.QtWidgets.QTableWidget(len(rows), 2)
-        table.setHorizontalHeaderLabels(["Position", "Combatant"])
-        for row, (field, value) in enumerate(rows):
-            table.setItem(row, 0, qt.QtWidgets.QTableWidgetItem(field))
-            table.setItem(row, 1, qt.QtWidgets.QTableWidgetItem(value))
-        return table
-
-
-class AttackPanelWidget:
-    """Factory for the quick attack widget."""
-
-    @staticmethod
-    def create(
-        app: DnDCombatEngineApp,
-        qt,
-        character_id: str | None = None,
-        campaign_id: str = "starter_campaign",
-    ):
-        """Create a quick attack widget backed by controllers."""
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        button = qt.QtWidgets.QPushButton("Quick Attack")
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-
-        def attack() -> None:
-            output.append(_quick_attack_message(app, character_id, campaign_id))
-
-        button.clicked.connect(attack)
-        layout.addWidget(button)
-        layout.addWidget(output)
-        return widget
-
-
-def _quick_attack_message(
-    app: DnDCombatEngineApp,
-    character_id: str | None = None,
-    campaign_id: str = "starter_campaign",
-) -> str:
-    """Resolve a quick attack and return a panel-safe message."""
-    try:
-        attacker_id = character_id or _first_campaign_character_id(app, campaign_id)
-        attacker = app.characters.load(attacker_id)
-        if not attacker.weapons:
-            return f"{attacker.name} has no weapon configured for Quick Attack."
-        monster = app.compendium.load_monster("goblin")
-        target = attacker.__class__(
-            character_id=monster.monster_id,
-            name=monster.name,
-            hit_points=monster.hit_points,
-            abilities=monster.abilities,
-        )
-        result = app.combat.attack_with_weapon(
-            attacker=attacker,
-            target=target,
-            weapon=attacker.weapons[0],
-            target_armor_class=monster.armor_class,
-            attack_bonus=5,
-            active_features=_quick_attack_features(attacker.features),
-        )
-    except (KeyError, ValueError, IndexError) as exc:
-        return f"Quick Attack failed: {exc}"
-    return attack_summary_text(result)
-
-
-def _first_campaign_character_id(app: DnDCombatEngineApp, campaign_id: str) -> str:
-    try:
-        campaign = app.campaigns.load(campaign_id)
-    except KeyError:
-        return "vale"
-    return campaign.character_ids[0] if campaign.character_ids else "vale"
-
-
-def _quick_attack_features(features: tuple[str, ...]) -> tuple[str, ...]:
-    feature_names = {feature.lower() for feature in _party_frame_feature_candidates(features)}
-    active = [
-        feature
-        for feature in ("Sneak Attack", "Bless", "Rage", "Hex")
-        if feature.lower() in feature_names
-    ]
-    return tuple(active)
 
 
 def _add_rows(output, rows: list[tuple[str, str]]) -> None:

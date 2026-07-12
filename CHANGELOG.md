@@ -5,7 +5,23 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ## Unreleased
 
-No unreleased changes yet.
+### Added
+
+- Added a mypy type-checking baseline for the extracted GUI feature modules and
+  action/state boundaries.
+- Added focused campaign, targeting, inventory, spellbook, and combat-panel GUI
+  modules to keep feature ownership outside the main window.
+- Added a regression check that exercises the live quick-attack panel path.
+
+### Changed
+
+- Added mypy to the development dependencies, CI matrix, developer notes, and
+  release test plan.
+- Strengthened annotations in the extracted campaign, inventory, spellbook,
+  and targeting GUI modules.
+- Added a Core Session Reliability Gate to the release test plan: automated
+  checks, clean-profile startup/persistence, and a documented manual session
+  pass are required before new gameplay content resumes.
 
 ## 1.0.3 - 2026-07-11
 

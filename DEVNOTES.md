@@ -4,6 +4,14 @@ This file keeps development, architecture, and packaging notes. For player and
 DM usage, start with [README.md](README.md). For release history, see
 [CHANGELOG.md](CHANGELOG.md).
 
+## Current Development Focus
+
+The project is in a reliability pass. Do not add new gameplay content until the
+Core Session Reliability Gate in [docs/release-test-plan.md](docs/release-test-plan.md)
+is complete: automated checks, a clean-profile startup and persistence check,
+and a documented manual session pass. Capture any observed failure in a
+regression test before implementing its fix.
+
 A professional, open-source Dungeons & Dragons combat engine built in layers:
 
 ```text
@@ -32,6 +40,7 @@ the planned rules-to-engine architecture.
 python -m pip install -e ".[dev]"
 python -m pytest
 python -m ruff check .
+python -m mypy
 ```
 
 Run the sample attack:
@@ -113,6 +122,7 @@ Milestone code should pass:
 ```bash
 python -m ruff check .
 python -m pytest
+python -m mypy
 ```
 
 ## Windows Installer
@@ -171,6 +181,7 @@ dnd-combat-engine init-user-data
 
 - Run `python -m ruff check .`.
 - Run `python -m pytest`.
+- Run `python -m mypy`.
 - Build Python distributions with `python -m build`.
 - Build the Windows executable with `.\scripts\build_windows.ps1 -SkipInstall`.
 - Build the Windows installer with `.\scripts\build_installer.ps1 -SkipExecutableBuild`.

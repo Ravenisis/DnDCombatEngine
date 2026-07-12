@@ -2,6 +2,7 @@
 .coverage.*
 .pytest_cache/
 .pytest_tmp/
+.pytest-validation-tmp/
 .ruff_cache/
 .tmp/
 .tools/

@@ -4,13 +4,31 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field, replace
+from dataclasses import replace
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
 from dnd_combat_engine.controllers import CombatActionRequest
 from dnd_combat_engine.gui.action_bar import ActionBarSession
 from dnd_combat_engine.gui.actions import action_specs_by_menu, default_action_specs
+from dnd_combat_engine.gui.campaign import (
+    GuiCampaignState,
+    active_character_id,
+    slug,
+    unique_campaign_id,
+)
+from dnd_combat_engine.gui.campaign_panels import (
+    CampaignEditorWidget,
+    CampaignWidget,
+    PartyFramesWidget,
+    TargetPanelWidget,
+)
+from dnd_combat_engine.gui.combat_panels import (
+    AttackPanelWidget,
+    CampaignActivityWidget,
+    CombatLogWidget,
+    EncounterTrackerWidget,
+)
 from dnd_combat_engine.gui.import_dialogs import (
     ask_campaign_name,
     ask_character_id,
@@ -18,29 +36,29 @@ from dnd_combat_engine.gui.import_dialogs import (
     choose_character_pdf,
     review_character_import,
 )
+from dnd_combat_engine.gui.inventory import InventoryWidget
 from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
+from dnd_combat_engine.gui.spellbook import AbilitiesWidget, SpellbookWidget
+from dnd_combat_engine.gui.targeting import (
+    active_character_target_id,
+    active_target_for_effect,
+    apply_damage_to_monster_target,
+    apply_damage_to_target,
+    character_target_reference,
+    character_target_reference_with_name,
+    target_references_for_character_ids,
+)
 from dnd_combat_engine.gui.theme import (
     dark_theme_stylesheet,
     high_contrast_theme_stylesheet,
     parchment_theme_stylesheet,
 )
 from dnd_combat_engine.gui.widgets import (
-    AbilitiesWidget,
     ActionBarWidget,
-    AttackPanelWidget,
-    CampaignActivityWidget,
-    CampaignEditorWidget,
-    CampaignWidget,
     CharacterSheetWidget,
-    CombatLogWidget,
-    EncounterTrackerWidget,
-    InventoryWidget,
-    PartyFramesWidget,
     SavingThrowWidget,
-    SpellbookWidget,
     SpellSlotTrackerWidget,
-    TargetPanelWidget,
 )
 from dnd_combat_engine.models import (
     ActionBarActionKind,
@@ -55,7 +73,6 @@ from dnd_combat_engine.models import (
     EffectResolution,
     InventoryItem,
     ItemCategory,
-    ParticipantKind,
     TargetKind,
     TargetProfile,
     TargetReference,
@@ -66,22 +83,16 @@ from dnd_combat_engine.models.damage import DamageProfile
 from dnd_combat_engine.rules import EffectPlan, EffectResolver
 from dnd_combat_engine.utils.paths import bundled_data_root
 
-
-@dataclass(slots=True)
-class GuiCampaignState:
-    """Mutable GUI state for the currently open campaign workspace."""
-
-    active_campaign_id: str | None = "starter_campaign"
-    selected_character_id: str | None = "ravenisis"
-    party_leader_character_id: str | None = "ravenisis"
-    party_initiative: dict[str, int] = field(default_factory=dict)
-    concentration_character_id: str | None = None
-    concentration_spell_id: str | None = None
-    active_concentration: ConcentrationState | None = None
-    beacon_of_hope_targets: tuple[str, ...] = field(default_factory=tuple)
-    bless_targets: tuple[str, ...] = field(default_factory=tuple)
-    active_target: TargetReference | None = None
-    last_dice_notation: str = "1d20"
+_active_character_id = active_character_id
+_slug = slug
+_unique_campaign_id = unique_campaign_id
+_active_target_for_effect = active_target_for_effect
+_active_character_target_id = active_character_target_id
+_apply_damage_to_target = apply_damage_to_target
+_apply_damage_to_monster_target = apply_damage_to_monster_target
+_character_target_reference = character_target_reference
+_character_target_reference_with_name = character_target_reference_with_name
+_target_references_for_character_ids = target_references_for_character_ids
 
 
 def create_main_window(app: DnDCombatEngineApp | None = None):
@@ -1762,7 +1773,16 @@ def _activate_action_bar_slot(
         message = _roll_action_bar_check(app, state, button, slot)
     else:
         button = session.bar.button_at(slot)
-        message = _activate_action_button(app, state, button, window=window, qt=qt)
+        critical, critical_miss = _consume_pending_action_check(state, button, slot)
+        message = _activate_action_button(
+            app,
+            state,
+            button,
+            window=window,
+            qt=qt,
+            critical=critical,
+            critical_miss=critical_miss,
+        )
     _append_workspace(window, message)
     _record_campaign_activity(app, state, message, "action")
     _refresh_campaign_docks(window, qt, app, state)
@@ -1777,6 +1797,7 @@ def _roll_action_bar_check(
     slot: int,
 ) -> str:
     """Roll the action's d20 check with its best available modifier."""
+    state.pending_action_check = None
     if button is None:
         result = app.dice.roll("1d20")
         return f"Slot {slot} d20: {result.total} rolls={result.rolls}"
@@ -1791,11 +1812,32 @@ def _roll_action_bar_check(
     notation = f"1d20{modifier:+d}"
     result = app.dice.roll(notation)
     natural = result.rolls[0] if result.rolls else None
+    state.pending_action_check = (
+        (slot, button.action_id, natural == 20, natural == 1)
+        if natural in {1, 20}
+        else None
+    )
     outcome = " Critical hit!" if natural == 20 else " Critical miss!" if natural == 1 else ""
     return (
         f"{character.name} rolls {button.name} {check_name}: {result.total} "
         f"({notation} rolls={result.rolls}, modifier {modifier:+d}).{outcome}"
     )
+
+
+def _consume_pending_action_check(
+    state: GuiCampaignState,
+    button: ActionBarButton | None,
+    slot: int,
+) -> tuple[bool, bool]:
+    """Consume a matching Shift-click result before normal activation."""
+    pending = state.pending_action_check
+    state.pending_action_check = None
+    if button is None or pending is None:
+        return False, False
+    pending_slot, action_id, critical, critical_miss = pending
+    if pending_slot != slot or action_id != button.action_id:
+        return False, False
+    return critical, critical_miss
 
 
 def _action_bar_check_modifier(
@@ -1857,6 +1899,8 @@ def _activate_action_button(
     button: ActionBarButton | None,
     window=None,
     qt=None,
+    critical: bool = False,
+    critical_miss: bool = False,
 ) -> str:
     if button is None:
         return "Action slot is empty."
@@ -1867,9 +1911,22 @@ def _activate_action_button(
         character = app.characters.load(character_id)
     except KeyError:
         return f"Selected character {character_id} could not be loaded."
+    if critical_miss and (
+        button.kind == ActionBarActionKind.SPELL
+        or _ability_uses_weapon_damage(character, button)
+    ):
+        return f"{character.name} uses {button.name}. Critical miss: no damage applied."
     if button.kind == ActionBarActionKind.SPELL:
-        return _activate_spell_button(app, character, button, state=state, window=window, qt=qt)
-    return _activate_ability_button(app, character, button, state=state)
+        return _activate_spell_button(
+            app,
+            character,
+            button,
+            state=state,
+            window=window,
+            qt=qt,
+            critical=critical,
+        )
+    return _activate_ability_button(app, character, button, state=state, critical=critical)
 
 
 def _activate_spell_button(
@@ -1879,6 +1936,7 @@ def _activate_spell_button(
     state: GuiCampaignState | None = None,
     window=None,
     qt=None,
+    critical: bool = False,
 ) -> str:
     try:
         spell = app.compendium.load_spell(button.action_id)
@@ -1980,7 +2038,12 @@ def _activate_spell_button(
             f"{character.name} casts {spell.name}. {special_choice} "
             f"The divine sign lingers for {effect.duration.text or spell.duration}. {slot_message}"
         )
-    damage_message, damage_total = _roll_spell_effect_damage(app, spell.damage, runtime_effect)
+    damage_message, damage_total = _roll_spell_effect_damage(
+        app,
+        spell.damage,
+        runtime_effect,
+        critical=critical,
+    )
     target = _active_target_for_effect(app, state)
     if target is not None and damage_total > 0 and runtime_effect.effect_kind == EffectKind.DAMAGE:
         applied = _apply_damage_to_target(app, target, damage_total)
@@ -2125,6 +2188,14 @@ def _add_same_die_count(notation: str, additional_dice: int) -> str:
     return f"{count}d{match.group('sides')}{modifier}"
 
 
+def _critical_damage_notation(notation: str) -> str:
+    """Double the dice portion of a damage expression for a critical hit."""
+    match = re.fullmatch(r"(?P<count>\d+)d(?P<sides>\d+)(?P<modifier>[+-]\d+)?", notation)
+    if match is None:
+        return notation
+    return _add_same_die_count(notation, int(match.group("count")))
+
+
 def _resolve_gui_combat_action(
     app: DnDCombatEngineApp,
     character: Character,
@@ -2176,23 +2247,8 @@ def _resolve_gui_combat_action(
     return resolution
 
 
-def _target_references_for_character_ids(
-    app: DnDCombatEngineApp,
-    character_ids: tuple[str, ...],
-) -> tuple[TargetReference, ...]:
-    return tuple(_character_target_reference_with_name(app, item) for item in character_ids)
 
 
-def _character_target_reference_with_name(
-    app: DnDCombatEngineApp,
-    character_id: str,
-) -> TargetReference:
-    return TargetReference(
-        target_id=character_id,
-        name=_character_name(app, character_id),
-        kind=TargetKind.CHARACTER,
-        source_id=character_id,
-    )
 
 
 def _choose_spell_effect_targets(
@@ -2229,12 +2285,15 @@ def _roll_spell_effect_damage(
     app: DnDCombatEngineApp,
     damage: DamageProfile | None,
     effect: EffectDefinition,
+    *,
+    critical: bool = False,
 ) -> tuple[str, int]:
     if damage is not None:
-        return _roll_damage_profile(app, damage)
+        return _roll_damage_profile(app, damage, critical=critical)
     if effect.effect_kind != EffectKind.DAMAGE or effect.dice is None:
         return "No damage dice configured.", 0
-    result = app.dice.roll(effect.dice)
+    notation = _critical_damage_notation(effect.dice) if critical else effect.dice
+    result = app.dice.roll(notation)
     return f"Damage {result.total} ({result.notation}: rolls={result.rolls}).", result.total
 
 
@@ -2608,13 +2667,6 @@ def _concentration_broken_message(
     )
 
 
-def _character_target_reference(character_id: str) -> TargetReference:
-    return TargetReference(
-        target_id=character_id,
-        name=character_id,
-        kind=TargetKind.CHARACTER,
-        source_id=character_id,
-    )
 
 
 def _spell_display_name(spell_id: str) -> str:
@@ -2644,6 +2696,7 @@ def _activate_ability_button(
     character: Character,
     button: ActionBarButton,
     state: GuiCampaignState | None = None,
+    critical: bool = False,
 ) -> str:
     if not _ability_uses_weapon_damage(character, button):
         return f"{button.name} is character sheet information, not a configured combat action."
@@ -2676,7 +2729,11 @@ def _activate_ability_button(
     weapon = _weapon_for_button(character, button)
     if weapon is None:
         return f"{character.name} uses {button.name}. No attack damage dice configured."
-    damage_message, damage_total = _roll_damage_profile(app, weapon.damage)
+    damage_message, damage_total = _roll_damage_profile(
+        app,
+        weapon.damage,
+        critical=critical,
+    )
     target = _active_target_for_effect(app, state)
     if target is not None:
         applied = _apply_damage_to_target(app, target, damage_total)
@@ -2770,13 +2827,19 @@ def _action_identifier(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
-def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) -> tuple[str, int]:
+def _roll_damage_profile(
+    app: DnDCombatEngineApp,
+    damage: DamageProfile | None,
+    *,
+    critical: bool = False,
+) -> tuple[str, int]:
     if damage is None:
         return "No damage dice configured.", 0
     parts = []
     total = 0
     for component in damage.components:
-        result = app.dice.roll(component.dice)
+        notation = _critical_damage_notation(component.dice) if critical else component.dice
+        result = app.dice.roll(notation)
         total += result.total
         parts.append(
             f"{result.notation} {component.damage_type.value}: "
@@ -2785,95 +2848,12 @@ def _roll_damage_profile(app: DnDCombatEngineApp, damage: DamageProfile | None) 
     return f"Damage {total} ({'; '.join(parts)}).", total
 
 
-def _active_target_for_effect(
-    app: DnDCombatEngineApp,
-    state: GuiCampaignState | None,
-) -> TargetReference | None:
-    if state is None or state.active_target is None:
-        return None
-    target = state.active_target
-    if target.kind is TargetKind.CHARACTER:
-        try:
-            character = app.characters.load(target.source_id)
-        except KeyError:
-            return None
-        return TargetReference(
-            target_id=character.character_id,
-            name=character.name,
-            kind=TargetKind.CHARACTER,
-            source_id=character.character_id,
-        )
-    if target.kind is TargetKind.MONSTER:
-        try:
-            monster = app.compendium.load_monster(target.source_id)
-        except KeyError:
-            return None
-        return TargetReference(
-            target_id=target.target_id,
-            name=monster.name,
-            kind=TargetKind.MONSTER,
-            source_id=monster.monster_id,
-        )
-    return target
 
 
-def _active_character_target_id(
-    app: DnDCombatEngineApp,
-    state: GuiCampaignState | None,
-) -> str | None:
-    target = _active_target_for_effect(app, state)
-    if target is None or target.kind is not TargetKind.CHARACTER:
-        return None
-    return target.source_id
 
 
-def _apply_damage_to_target(
-    app: DnDCombatEngineApp,
-    target: TargetReference,
-    damage_total: int,
-) -> str:
-    if target.kind is TargetKind.MONSTER:
-        return _apply_damage_to_monster_target(app, target, damage_total)
-    character = app.characters.load(target.source_id)
-    dealt = character.hit_points.apply_damage(damage_total)
-    app.characters.save(character)
-    return (
-        f"Applied {dealt} damage; HP "
-        f"{character.hit_points.current}/{character.hit_points.maximum}."
-    )
 
 
-def _apply_damage_to_monster_target(
-    app: DnDCombatEngineApp,
-    target: TargetReference,
-    damage_total: int,
-) -> str:
-    try:
-        encounter_ids = app.encounters.persistence_service.list_encounter_ids()
-    except AttributeError:
-        return "Encounter target HP tracking is unavailable."
-    for encounter_id in encounter_ids:
-        try:
-            encounter = app.encounters.load(encounter_id)
-        except KeyError:
-            continue
-        for participant in encounter.participants:
-            if (
-                participant.kind is ParticipantKind.MONSTER
-                or getattr(participant.kind, "value", None) == ParticipantKind.MONSTER.value
-            ) and (
-                participant.participant_id == target.target_id
-                and participant.source_id == target.source_id
-            ):
-                monster = app.compendium.load_monster(participant.source_id)
-                maximum_hp = monster.hit_points.maximum * participant.quantity
-                updated_participant, dealt = participant.apply_damage(damage_total, maximum_hp)
-                app.encounters.save(encounter.with_participant(updated_participant))
-                return (
-                    f"Applied {dealt} damage; HP "
-                    f"{updated_participant.current_hit_points}/{maximum_hp}."
-                )
-    return "Encounter target could not be found."
 
 
 def _roll_saving_throw(
@@ -3204,10 +3184,6 @@ def _action_bar_widget(
     return widget
 
 
-def _active_character_id(state: GuiCampaignState) -> str | None:
-    return state.party_leader_character_id or state.selected_character_id
-
-
 def _label(qt, text: str):
     widget = qt.QtWidgets.QLabel(text)
     widget.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -3218,21 +3194,6 @@ def _central_text(app: DnDCombatEngineApp, state: GuiCampaignState) -> str:
     if state.active_campaign_id is None:
         return "No campaign open"
     return "Combat Workspace"
-
-
-def _unique_campaign_id(app: DnDCombatEngineApp, name: str) -> str:
-    base = _slug(name) or "campaign"
-    existing = set(app.campaigns.list_ids())
-    if base not in existing:
-        return base
-    counter = 2
-    while f"{base}_{counter}" in existing:
-        counter += 1
-    return f"{base}_{counter}"
-
-
-def _slug(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
 def _show_message(window, qt, title: str, message: str, error: bool = False) -> None:

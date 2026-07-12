@@ -2,6 +2,7 @@ from fractions import Fraction
 
 from dnd_combat_engine.controllers import CombatController
 from dnd_combat_engine.engine import AttackRequest
+from dnd_combat_engine.gui import combat_panels, widgets
 from dnd_combat_engine.gui.panels import (
     attack_summary_text,
     campaign_reference_rows,
@@ -11,7 +12,6 @@ from dnd_combat_engine.gui.panels import (
     encounter_rows,
     initiative_rows,
 )
-from dnd_combat_engine.gui.widgets import _quick_attack_message
 from dnd_combat_engine.models import (
     Campaign,
     Character,
@@ -111,9 +111,10 @@ def test_quick_attack_uses_first_campaign_character() -> None:
     )
     app = _quick_attack_app(ravenisis, goblin)
 
-    message = _quick_attack_message(app, campaign_id="starter_campaign")
+    message = combat_panels._quick_attack_message(app, campaign_id="starter_campaign")
 
     assert "Ravenisis -> Goblin" in message
+    assert widgets._quick_attack_message is combat_panels._quick_attack_message
 
 
 def test_quick_attack_reports_missing_weapon() -> None:
@@ -128,7 +129,7 @@ def test_quick_attack_reports_missing_weapon() -> None:
     )
     app = _quick_attack_app(ravenisis, goblin)
 
-    assert _quick_attack_message(app, campaign_id="starter_campaign") == (
+    assert combat_panels._quick_attack_message(app, campaign_id="starter_campaign") == (
         "Ravenisis has no weapon configured for Quick Attack."
     )
 

@@ -9,11 +9,27 @@ Run:
 ```powershell
 python -m ruff check .
 python -m pytest --basetemp .\tmp\pytest
+python -m mypy
 ```
 
 If local coverage is below the configured release gate, note the exact coverage
 result and decide whether the release is a development preview or a gated
 release.
+
+## Core Session Reliability Gate
+
+Do not begin or merge new gameplay content until this gate is complete:
+
+- `ruff`, `pytest`, coverage, and mypy pass on the candidate worktree.
+- A clean user-data profile initializes seed data, persists a campaign change,
+  and starts the packaged executable successfully.
+- A tester completes the Import, GUI, Combat, Inventory, and Rest smoke tests
+  below in one session without a crash, lost save, or incorrect action result.
+- Any failure observed during that session is captured as a regression test
+  before its fix is implemented.
+
+Record the build version, tester, date, and any known limitations with the
+release notes. A passing automated run alone does not clear this gate.
 
 ## Import Smoke Tests
 
