@@ -215,6 +215,72 @@ def test_action_bar_remove_gesture_requires_shift_right_click() -> None:
     assert _is_shift_left_click(FakeQt, FakeEvent(2, 1)) is False
 
 
+def test_inventory_shift_right_click_sells_one_item() -> None:
+    from dnd_combat_engine.gui import widgets
+    from dnd_combat_engine.models import InventoryItem
+
+    class FakeMouseButton:
+        RightButton = 2
+
+    class FakeKeyboardModifier:
+        ShiftModifier = 1
+
+    class FakeQtNamespace:
+        MouseButton = FakeMouseButton
+        KeyboardModifier = FakeKeyboardModifier
+
+    class FakeQtCore:
+        Qt = FakeQtNamespace
+
+    class FakeButton:
+        def __init__(self, *args) -> None:
+            self.text = args[0] if args else ""
+            self.enabled = True
+
+        def setText(self, value: str) -> None:  # noqa: N802
+            self.text = value
+
+        def setEnabled(self, value: bool) -> None:  # noqa: N802
+            self.enabled = value
+
+        def mousePressEvent(self, event) -> None:  # noqa: N802
+            raise AssertionError("the base button should not receive Shift+right-click")
+
+    class FakeQtWidgets:
+        QPushButton = FakeButton
+
+    class FakeQt:
+        QtCore = FakeQtCore
+        QtWidgets = FakeQtWidgets
+
+    class FakeEvent:
+        def button(self) -> int:
+            return 2
+
+        def modifiers(self) -> int:
+            return 1
+
+        def accept(self) -> None:
+            self.accepted = True
+
+    item = InventoryItem("potion", "Potion", quantity=2)
+    sold = []
+    button_class = widgets._inventory_button_class(
+        FakeQt,
+        item,
+        on_consume=None,
+        on_sell=lambda item_id: sold.append(item_id) or 1,
+    )
+    button = button_class("")
+    event = FakeEvent()
+
+    button.mousePressEvent(event)
+
+    assert sold == ["potion"]
+    assert button.text == ""
+    assert event.accepted is True
+
+
 def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
     from dnd_combat_engine.gui.widgets import _action_bar_tooltip, _action_button_text
     from dnd_combat_engine.models import ActionBarActionKind, ActionBarButton
@@ -238,7 +304,7 @@ def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
             "Mass Healing Word rank 3",
             "Type: Spell",
             "Shortcut: 1",
-            "Click to cast; Shift+click rolls 1d20.",
+            "Click to cast; Shift+click rolls the action check with its modifier.",
             "Shift+right-click to remove.",
         )
     )
@@ -663,6 +729,44 @@ def test_party_frame_feature_text_filters_import_metadata() -> None:
     assert _party_frame_condition_text((Condition(ConditionName.POISONED),)) == (
         "Conditions: Poisoned"
     )
+
+
+def test_saving_throw_roll_uses_imported_modifier_and_advantage() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui.main_window import GuiCampaignState, _roll_saving_throw
+    from dnd_combat_engine.models import Character, HitPoints
+
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(10, 10),
+        saving_throw_modifiers={"wisdom": 5},
+    )
+    messages = []
+    window = SimpleNamespace(
+        _dnd_central=SimpleNamespace(append=messages.append),
+        statusBar=lambda: SimpleNamespace(showMessage=lambda message: None),
+    )
+    app = SimpleNamespace(
+        characters=SimpleNamespace(load=lambda character_id: character),
+        dice=SimpleNamespace(
+            roll=lambda notation: SimpleNamespace(
+                notation=notation,
+                total=17,
+                rolls=(12, 17),
+            )
+        ),
+    )
+    state = GuiCampaignState(party_leader_character_id="ravenisis")
+
+    message = _roll_saving_throw(window, app, state, "wisdom", advantage=True)
+
+    assert message == (
+        "Ravenisis Wisdom save with advantage: 22 "
+        "(2d20kh1 17 rolls=(12, 17), modifier +5)."
+    )
+    assert messages == [message]
 
 
 def test_party_context_menu_wires_actions(monkeypatch) -> None:

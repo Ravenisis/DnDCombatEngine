@@ -23,11 +23,24 @@ class CharacterImportDraft:
     level: int = 1
     hit_points: HitPoints = field(default_factory=lambda: HitPoints(1, 1))
     abilities: AbilityScores = field(default_factory=AbilityScores)
+    character_class: str = ""
+    race: str = ""
+    senses: tuple[str, ...] = field(default_factory=tuple)
+    initiative_modifier: int | None = None
+    heroic_inspiration: bool = False
+    proficiency_bonus: int | None = None
+    ability_save_dc: int | None = None
+    walking_speed: int | None = None
+    spellcasting_ability: str = ""
+    spell_save_dc: int | None = None
+    spell_attack_bonus: int | None = None
+    saving_throw_modifiers: dict[str, int] = field(default_factory=dict)
     skills: tuple[str, ...] = field(default_factory=tuple)
     inventory: tuple[InventoryItem, ...] = field(default_factory=tuple)
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
     features: tuple[str, ...] = field(default_factory=tuple)
+    spells: tuple[str, ...] = field(default_factory=tuple)
     currency: CurrencyPurse = field(default_factory=CurrencyPurse)
     resources: dict[str, ResourcePool] = field(default_factory=dict)
     saving_throw_proficiencies: tuple[str, ...] = field(default_factory=tuple)
@@ -47,11 +60,24 @@ class CharacterImportDraft:
             hit_points=self.hit_points,
             abilities=self.abilities,
             level=self.level,
+            character_class=self.character_class,
+            race=self.race,
+            senses=self.senses,
+            initiative_modifier=self.initiative_modifier,
+            heroic_inspiration=self.heroic_inspiration,
+            proficiency_bonus=self.proficiency_bonus,
+            ability_save_dc=self.ability_save_dc,
+            walking_speed=self.walking_speed,
+            spellcasting_ability=self.spellcasting_ability,
+            spell_save_dc=self.spell_save_dc,
+            spell_attack_bonus=self.spell_attack_bonus,
+            saving_throw_modifiers=dict(self.saving_throw_modifiers),
             skills=self.skills,
             inventory=self.inventory,
             weapons=self.weapons,
             armor=self.armor,
             features=self.features,
+            spells=self.spells,
             currency=self.currency,
             resources=dict(self.resources),
             saving_throw_proficiencies=self.saving_throw_proficiencies,

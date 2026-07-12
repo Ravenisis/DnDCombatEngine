@@ -164,11 +164,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
             campaign_state,
             action_bar_session,
             window._dnd_action_bar_on_activate,  # noqa: SLF001
-            on_save=lambda ability: _roll_saving_throw(
+            on_save=lambda ability, advantage=False: _roll_saving_throw(
                 window,
                 application,
                 campaign_state,
                 ability,
+                advantage=advantage,
             ),
         ),
     )
@@ -335,6 +336,7 @@ def _configure_menus(window, qt, app: DnDCombatEngineApp, state: GuiCampaignStat
         action_class = qt.QtWidgets.QAction
     for menu_name, specs in action_specs_by_menu(default_action_specs()).items():
         menu = menu_bar.addMenu(menu_name)
+        _set_menu_minimum_width(menu, 260)
         submenus = {}
         for spec in specs:
             action = action_class(spec.text, window)
@@ -357,8 +359,15 @@ def _configure_menus(window, qt, app: DnDCombatEngineApp, state: GuiCampaignStat
                 target_menu = submenus.get(spec.submenu)
                 if target_menu is None:
                     target_menu = menu.addMenu(spec.submenu)
+                    _set_menu_minimum_width(target_menu, 300)
                     submenus[spec.submenu] = target_menu
             target_menu.addAction(action)
+
+
+def _set_menu_minimum_width(menu, width: int) -> None:
+    """Keep long command labels and nested menus readable."""
+    if hasattr(menu, "setMinimumWidth"):
+        menu.setMinimumWidth(width)
 
 
 def _run_menu_action(
@@ -808,11 +817,12 @@ def _refresh_campaign_docks(
                     state,
                     session,
                     on_activate,
-                    on_save=lambda ability: _roll_saving_throw(
+                    on_save=lambda ability, advantage=False: _roll_saving_throw(
                         window,
                         app,
                         state,
                         ability,
+                        advantage=advantage,
                     ),
                 ),
             )
@@ -1748,8 +1758,8 @@ def _activate_action_bar_slot(
     shift_pressed: bool,
 ) -> str:
     if shift_pressed:
-        result = app.dice.roll("1d20")
-        message = f"Slot {slot} d20: {result.total} rolls={result.rolls}"
+        button = session.bar.button_at(slot)
+        message = _roll_action_bar_check(app, state, button, slot)
     else:
         button = session.bar.button_at(slot)
         message = _activate_action_button(app, state, button, window=window, qt=qt)
@@ -1758,6 +1768,87 @@ def _activate_action_bar_slot(
     _refresh_campaign_docks(window, qt, app, state)
     _set_status(window, message)
     return message
+
+
+def _roll_action_bar_check(
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    button: ActionBarButton | None,
+    slot: int,
+) -> str:
+    """Roll the action's d20 check with its best available modifier."""
+    if button is None:
+        result = app.dice.roll("1d20")
+        return f"Slot {slot} d20: {result.total} rolls={result.rolls}"
+    character_id = _active_character_id(state)
+    if character_id is None:
+        return f"Select a party leader or character before rolling {button.name}."
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        return f"Selected character {character_id} could not be loaded."
+    modifier, check_name = _action_bar_check_modifier(app, character, button)
+    notation = f"1d20{modifier:+d}"
+    result = app.dice.roll(notation)
+    natural = result.rolls[0] if result.rolls else None
+    outcome = " Critical hit!" if natural == 20 else " Critical miss!" if natural == 1 else ""
+    return (
+        f"{character.name} rolls {button.name} {check_name}: {result.total} "
+        f"({notation} rolls={result.rolls}, modifier {modifier:+d}).{outcome}"
+    )
+
+
+def _action_bar_check_modifier(
+    app: DnDCombatEngineApp,
+    character: Character,
+    button: ActionBarButton,
+) -> tuple[int, str]:
+    """Return a modifier and description for an action-bar check."""
+    if button.kind == ActionBarActionKind.SPELL:
+        try:
+            spell = app.compendium.load_spell(button.action_id)
+        except KeyError:
+            spell = None
+        if character.spell_attack_bonus is not None:
+            return character.spell_attack_bonus, "spell attack"
+        ability = _character_spellcasting_ability(character, spell)
+        return (
+            character.abilities.modifier(ability) + _proficiency_bonus(character.level),
+            "spell attack",
+        )
+    if _ability_uses_weapon_damage(character, button):
+        ability = "dexterity" if "ranged" in button.name.casefold() else "strength"
+        return (
+            character.abilities.modifier(ability) + _proficiency_bonus(character.level),
+            "attack",
+        )
+    ability = _ability_for_action_name(button.name, character)
+    return character.abilities.modifier(ability), f"{ability} ability"
+
+
+def _character_spellcasting_ability(character: Character, spell=None) -> str:
+    value = character.spellcasting_ability.casefold().strip()
+    if value in {"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}:
+        return value
+    if character.character_class.casefold().startswith(("cleric", "druid", "ranger")):
+        return "wisdom"
+    if character.character_class.casefold().startswith(("wizard", "artificer")):
+        return "intelligence"
+    return (
+        "charisma"
+        if character.character_class.casefold().startswith(("bard", "sorcerer", "warlock"))
+        else "wisdom"
+    )
+
+
+def _ability_for_action_name(name: str, character: Character) -> str:
+    lowered = name.casefold()
+    for ability in ("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"):
+        if ability in lowered:
+            return ability
+    if lowered.startswith("channel divinity") or lowered in {"divine smite", "spellcasting"}:
+        return _character_spellcasting_ability(character)
+    return "strength"
 
 
 def _activate_action_button(
@@ -2790,6 +2881,8 @@ def _roll_saving_throw(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
     ability: str,
+    *,
+    advantage: bool = False,
 ) -> str:
     character_id = _active_character_id(state)
     if character_id is None:
@@ -2802,17 +2895,14 @@ def _roll_saving_throw(
         message = f"Party leader {character_id} could not be loaded."
         _set_status(window, message)
         return message
-    modifier = character.abilities.modifier(ability)  # type: ignore[arg-type]
-    proficient = ability.lower() in {
-        name.lower() for name in character.saving_throw_proficiencies
-    }
-    proficiency = _proficiency_bonus(character.level) if proficient else 0
-    result = app.dice.roll("1d20")
-    total = result.total + modifier + proficiency
+    modifier = _saving_throw_modifier(character, ability)
+    notation = "2d20kh1" if advantage else "1d20"
+    result = app.dice.roll(notation)
+    total = result.total + modifier
+    advantage_text = " with advantage" if advantage else ""
     message = (
-        f"{character.name} {ability.title()} save: {total} "
-        f"(d20 {result.total} rolls={result.rolls}, modifier {modifier:+d}"
-        f"{', proficiency +' + str(proficiency) if proficient else ''})."
+        f"{character.name} {ability.title()} save{advantage_text}: {total} "
+        f"({notation} {result.total} rolls={result.rolls}, modifier {modifier:+d})."
     )
     _append_workspace(window, message)
     _set_status(window, message)
@@ -2821,6 +2911,17 @@ def _roll_saving_throw(
 
 def _proficiency_bonus(level: int) -> int:
     return 2 + max(level - 1, 0) // 4
+
+
+def _saving_throw_modifier(character: Character, ability: str) -> int:
+    imported = character.saving_throw_modifiers.get(ability.lower())
+    if imported is not None:
+        return imported
+    proficient = ability.lower() in {
+        name.lower() for name in character.saving_throw_proficiencies
+    }
+    proficiency = _proficiency_bonus(character.level) if proficient else 0
+    return character.abilities.modifier(ability) + proficiency
 
 
 def _append_workspace(window, message: str) -> None:

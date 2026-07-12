@@ -124,18 +124,33 @@ def character_import_review_rows(draft: CharacterImportDraft) -> list[tuple[str,
     return [
         ("Name", draft.name),
         ("Level", str(draft.level)),
+        ("Class", draft.character_class),
+        ("Race", draft.race),
         ("Current HP", str(draft.hit_points.current)),
         ("Maximum HP", str(draft.hit_points.maximum)),
         ("Temporary HP", str(draft.hit_points.temporary)),
         ("Armor Class", "" if draft.armor is None else str(draft.armor.armor_class)),
+        ("Senses", ", ".join(draft.senses)),
+        ("Initiative", _optional_signed_text(draft.initiative_modifier)),
         ("Strength", str(draft.abilities.strength)),
         ("Dexterity", str(draft.abilities.dexterity)),
         ("Constitution", str(draft.abilities.constitution)),
         ("Intelligence", str(draft.abilities.intelligence)),
         ("Wisdom", str(draft.abilities.wisdom)),
         ("Charisma", str(draft.abilities.charisma)),
-        ("Skills", ", ".join(draft.skills)),
-        ("Saving Throw Proficiencies", ", ".join(draft.saving_throw_proficiencies)),
+        ("Strength Save Modifier", _saving_throw_modifier_text(draft, "strength")),
+        ("Dexterity Save Modifier", _saving_throw_modifier_text(draft, "dexterity")),
+        ("Constitution Save Modifier", _saving_throw_modifier_text(draft, "constitution")),
+        ("Intelligence Save Modifier", _saving_throw_modifier_text(draft, "intelligence")),
+        ("Wisdom Save Modifier", _saving_throw_modifier_text(draft, "wisdom")),
+        ("Charisma Save Modifier", _saving_throw_modifier_text(draft, "charisma")),
+        ("Heroic Inspiration", "Yes" if draft.heroic_inspiration else "No"),
+        ("Proficiency Bonus", _optional_signed_text(draft.proficiency_bonus)),
+        ("Ability Save DC", "" if draft.ability_save_dc is None else str(draft.ability_save_dc)),
+        ("Walking Speed", "" if draft.walking_speed is None else str(draft.walking_speed)),
+        ("Spellcasting Ability", draft.spellcasting_ability),
+        ("Spell Save DC", "" if draft.spell_save_dc is None else str(draft.spell_save_dc)),
+        ("Spell Attack Bonus", _optional_signed_text(draft.spell_attack_bonus)),
         ("Armor Proficiencies", ", ".join(draft.armor_proficiencies)),
         ("Weapon Proficiencies", ", ".join(draft.weapon_proficiencies)),
         ("Tool Proficiencies", ", ".join(draft.tool_proficiencies)),
@@ -145,6 +160,7 @@ def character_import_review_rows(draft: CharacterImportDraft) -> list[tuple[str,
             ", ".join(damage_type.value.title() for damage_type in draft.damage_resistances),
         ),
         ("Features", "; ".join(draft.features)),
+        ("Spells", "; ".join(draft.spells)),
         ("Inventory", "; ".join(_inventory_text(item) for item in draft.inventory)),
         ("Currency", _currency_review_text(draft.currency)),
         ("Weapons", "; ".join(_weapon_text(weapon) for weapon in draft.weapons)),
@@ -174,6 +190,24 @@ def draft_from_review_rows(rows: list[tuple[str, str]]) -> CharacterImportDraft:
             wisdom=_ability_score(values.get("wisdom"), "Wisdom"),
             charisma=_ability_score(values.get("charisma"), "Charisma"),
         ),
+        character_class=values.get("class", ""),
+        race=values.get("race", ""),
+        senses=tuple(_split_review_list(values.get("senses", ""))),
+        initiative_modifier=_optional_signed_int(values.get("initiative"), "Initiative"),
+        heroic_inspiration=_review_bool(values.get("heroic_inspiration", "")),
+        proficiency_bonus=_optional_signed_int(
+            values.get("proficiency_bonus"),
+            "Proficiency Bonus",
+        ),
+        ability_save_dc=_optional_positive_int(values.get("ability_save_dc"), "Ability Save DC"),
+        walking_speed=_optional_positive_int(values.get("walking_speed"), "Walking Speed"),
+        spellcasting_ability=values.get("spellcasting_ability", ""),
+        spell_save_dc=_optional_positive_int(values.get("spell_save_dc"), "Spell Save DC"),
+        spell_attack_bonus=_optional_signed_int(
+            values.get("spell_attack_bonus"),
+            "Spell Attack Bonus",
+        ),
+        saving_throw_modifiers=_review_saving_throw_modifiers(values),
         skills=tuple(_split_review_list(values.get("skills", ""))),
         saving_throw_proficiencies=tuple(
             _split_review_list(values.get("saving_throw_proficiencies", ""))
@@ -187,6 +221,7 @@ def draft_from_review_rows(rows: list[tuple[str, str]]) -> CharacterImportDraft:
             for value in _split_review_list(values.get("damage_resistances", ""))
         ),
         features=tuple(_split_review_feature_list(values.get("features", ""))),
+        spells=tuple(_split_review_list(values.get("spells", ""))),
         inventory=tuple(
             _inventory_item(entry) for entry in _split_inventory_review_list(
                 values.get("inventory", "")
@@ -222,6 +257,34 @@ def _currency_review_text(currency: CurrencyPurse) -> str:
         if value:
             parts.append(f"{value}{label}")
     return " ".join(parts)
+
+
+def _saving_throw_modifier_text(draft: CharacterImportDraft, ability: str) -> str:
+    value = draft.saving_throw_modifiers.get(ability.lower())
+    return _optional_signed_text(value)
+
+
+def _optional_signed_text(value: int | None) -> str:
+    return "" if value is None else f"{value:+d}"
+
+
+def _review_saving_throw_modifiers(values: dict[str, str]) -> dict[str, int]:
+    modifiers = {}
+    for ability in (
+        "strength",
+        "dexterity",
+        "constitution",
+        "intelligence",
+        "wisdom",
+        "charisma",
+    ):
+        value = _optional_signed_int(
+            values.get(f"{ability}_save_modifier"),
+            f"{ability.title()} Save Modifier",
+        )
+        if value is not None:
+            modifiers[ability] = value
+    return modifiers
 
 
 def _parse_currency_review(value: str) -> CurrencyPurse:
@@ -302,6 +365,19 @@ def _optional_positive_int(value: str | None, label: str) -> int | None:
     if value is None or not value.strip():
         return None
     return _positive_int(value, label, 1)
+
+
+def _optional_signed_int(value: str | None, label: str) -> int | None:
+    if value is None or not value.strip():
+        return None
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be a whole number.") from exc
+
+
+def _review_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "y", "checked", "x"}
 
 
 def _ability_score(value: str | None, label: str) -> int:

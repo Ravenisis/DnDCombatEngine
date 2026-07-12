@@ -25,11 +25,24 @@ class Character:
     hit_points: HitPoints
     abilities: AbilityScores = field(default_factory=AbilityScores)
     level: int = 1
+    character_class: str = ""
+    race: str = ""
+    senses: tuple[str, ...] = field(default_factory=tuple)
+    initiative_modifier: int | None = None
+    heroic_inspiration: bool = False
+    proficiency_bonus: int | None = None
+    ability_save_dc: int | None = None
+    walking_speed: int | None = None
+    spellcasting_ability: str = ""
+    spell_save_dc: int | None = None
+    spell_attack_bonus: int | None = None
+    saving_throw_modifiers: dict[str, int] = field(default_factory=dict)
     skills: tuple[str, ...] = field(default_factory=tuple)
     inventory: tuple[InventoryItem, ...] = field(default_factory=tuple)
     weapons: tuple[Weapon, ...] = field(default_factory=tuple)
     armor: Armor | None = None
     features: tuple[str, ...] = field(default_factory=tuple)
+    spells: tuple[str, ...] = field(default_factory=tuple)
     conditions: tuple[Condition, ...] = field(default_factory=tuple)
     resources: dict[str, ResourcePool] = field(default_factory=dict)
     currency: CurrencyPurse = field(default_factory=CurrencyPurse)
@@ -58,11 +71,24 @@ class Character:
             "hit_points": self.hit_points.to_dict(),
             "abilities": self.abilities.to_dict(),
             "level": self.level,
+            "character_class": self.character_class,
+            "race": self.race,
+            "senses": list(self.senses),
+            "initiative_modifier": self.initiative_modifier,
+            "heroic_inspiration": self.heroic_inspiration,
+            "proficiency_bonus": self.proficiency_bonus,
+            "ability_save_dc": self.ability_save_dc,
+            "walking_speed": self.walking_speed,
+            "spellcasting_ability": self.spellcasting_ability,
+            "spell_save_dc": self.spell_save_dc,
+            "spell_attack_bonus": self.spell_attack_bonus,
+            "saving_throw_modifiers": self.saving_throw_modifiers,
             "skills": list(self.skills),
             "inventory": [item.to_dict() for item in self.inventory],
             "weapons": [weapon.to_dict() for weapon in self.weapons],
             "armor": self.armor.to_dict() if self.armor else None,
             "features": list(self.features),
+            "spells": list(self.spells),
             "conditions": [condition.to_dict() for condition in self.conditions],
             "resources": {
                 name: resource.to_dict() for name, resource in self.resources.items()
@@ -86,6 +112,21 @@ class Character:
             hit_points=HitPoints.from_dict(data["hit_points"]),  # type: ignore[arg-type]
             abilities=AbilityScores.from_dict(data["abilities"]),  # type: ignore[arg-type]
             level=int(data.get("level", 1)),
+            character_class=str(data.get("character_class", "")),
+            race=str(data.get("race", "")),
+            senses=tuple(str(item) for item in data.get("senses", [])),
+            initiative_modifier=_optional_int(data.get("initiative_modifier")),
+            heroic_inspiration=bool(data.get("heroic_inspiration", False)),
+            proficiency_bonus=_optional_int(data.get("proficiency_bonus")),
+            ability_save_dc=_optional_int(data.get("ability_save_dc")),
+            walking_speed=_optional_int(data.get("walking_speed")),
+            spellcasting_ability=str(data.get("spellcasting_ability", "")),
+            spell_save_dc=_optional_int(data.get("spell_save_dc")),
+            spell_attack_bonus=_optional_int(data.get("spell_attack_bonus")),
+            saving_throw_modifiers={
+                str(key): int(value)
+                for key, value in data.get("saving_throw_modifiers", {}).items()
+            },
             skills=tuple(str(item) for item in data.get("skills", [])),
             inventory=tuple(_inventory_item_from_data(item) for item in data.get("inventory", [])),
             weapons=tuple(
@@ -93,6 +134,7 @@ class Character:
             ),
             armor=Armor.from_dict(armor_data) if isinstance(armor_data, dict) else None,
             features=tuple(str(item) for item in data.get("features", [])),
+            spells=tuple(str(item) for item in data.get("spells", [])),
             conditions=tuple(
                 _condition_from_data(item) for item in data.get("conditions", [])
             ),
@@ -137,3 +179,9 @@ def _resource_from_data(name: str, data: object) -> ResourcePool:
         return ResourcePool.from_dict(data)
     value = int(data)
     return ResourcePool(name=name, current=value, maximum=value)
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None or value == "":
+        return None
+    return int(value)

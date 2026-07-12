@@ -537,19 +537,29 @@ class SavingThrowWidget:
         )
         proficiencies = {name.lower() for name in character.saving_throw_proficiencies}
         for ability, label, row, column in saves:
-            button = qt.QtWidgets.QPushButton(label)
+            modifier = _saving_throw_modifier(character, ability)
+            button = qt.QtWidgets.QPushButton(f"{label}\n{modifier:+d}")
             proficient = ability in proficiencies
             if proficient and hasattr(button, "setStyleSheet"):
                 button.setStyleSheet("border-left: 4px solid #4f8cff;")
             if hasattr(button, "setToolTip"):
-                modifier = character.abilities.modifier(ability)  # type: ignore[arg-type]
-                bonus = _proficiency_bonus(character.level) if proficient else 0
+                bonus_text = (
+                    "Imported sheet modifier"
+                    if ability in character.saving_throw_modifiers
+                    else "Ability modifier plus proficiency"
+                    if proficient
+                    else "Ability modifier"
+                )
                 button.setToolTip(
-                    f"{ability.title()} save: d20 {modifier:+d}"
-                    f"{' + proficiency ' + str(bonus) if proficient else ''}"
+                    f"{ability.title()} save: d20 {modifier:+d}. "
+                    f"{bonus_text}. Shift-click to roll with advantage."
                 )
             button.clicked.connect(
-                lambda checked=False, save=ability: on_roll(save)
+                lambda checked=False, save=ability: _trigger_saving_throw(
+                    on_roll,
+                    save,
+                    _shift_pressed(qt),
+                )
                 if on_roll is not None
                 else None
             )
@@ -1075,6 +1085,11 @@ def _inventory_button_class(qt, item: InventoryItem, on_consume, on_sell):
     class ConsumableInventoryButton(base_class):
         def mousePressEvent(self, event) -> None:  # noqa: N802
             if _is_right_click(qt, event) and any((on_consume, on_sell)):
+                if _is_shift_right_click(qt, event) and on_sell is not None:
+                    _sell_inventory_button_item(self, item, on_sell)
+                    if hasattr(event, "accept"):
+                        event.accept()
+                    return
                 _show_inventory_item_menu(qt, self, item, on_consume, on_sell, event)
                 if hasattr(event, "accept"):
                     event.accept()
@@ -1097,12 +1112,6 @@ def _show_inventory_item_menu(qt, button, item: InventoryItem, on_consume, on_se
         if hasattr(consume_action, "triggered"):
             consume_action.triggered.connect(
                 lambda checked=False: _consume_inventory_button_item(button, item, on_consume)
-            )
-    if on_sell is not None:
-        sell_action = menu.addAction(f"Sell ({_currency_price_text(_sell_price_cp(item))})")
-        if hasattr(sell_action, "triggered"):
-            sell_action.triggered.connect(
-                lambda checked=False: _sell_inventory_button_item(button, item, on_sell)
             )
     position = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else None
     if position is None:
@@ -1631,7 +1640,7 @@ def _action_bar_tooltip(
                 (
                     spell_tooltip,
                     f"Shortcut: {hotkey}",
-                    "Click to cast; Shift+click rolls 1d20.",
+                    "Click to cast; Shift+click rolls the action check with its modifier.",
                     "Shift+right-click to remove.",
                 )
             )
@@ -1641,9 +1650,9 @@ def _action_bar_tooltip(
         f"Shortcut: {hotkey}",
     ]
     if action.kind == ActionBarActionKind.SPELL:
-        lines.append("Click to cast; Shift+click rolls 1d20.")
+        lines.append("Click to cast; Shift+click rolls the action check with its modifier.")
     else:
-        lines.append("Click to use; Shift+click rolls 1d20.")
+        lines.append("Click to use; Shift+click rolls the action check with its modifier.")
     lines.append("Shift+right-click to remove.")
     return "\n".join(lines)
 
@@ -1719,12 +1728,15 @@ def _spell_ids_for_character(
         character = app.characters.load(character_id)
     except KeyError:
         return spell_ids
+    imported_spell_names = {name.casefold() for name in character.spells}
     feature_text = " ".join(character.features).lower()
     matching_ids = []
     for spell_id in spell_ids:
         spell = app.compendium.load_spell(spell_id)
-        if spell.name.lower() in feature_text:
+        if spell.name.casefold() in imported_spell_names or spell.name.casefold() in feature_text:
             matching_ids.append(spell_id)
+    if character.spells:
+        return tuple(matching_ids)
     return tuple(matching_ids) or spell_ids
 
 
@@ -1998,6 +2010,7 @@ def _inventory_item_tooltip(item: InventoryItem) -> str:
         lines.append(_wrap_tooltip_text(item.notes))
     if item.category.value == "consumable" or "potion" in item.tags or "potion" in item.item_id:
         lines.append("Right-click to consume one.")
+        lines.append("Shift+right-click to sell one.")
     return "\n".join(lines)
 
 
@@ -2020,6 +2033,35 @@ def _currency_price_text(amount_cp: int) -> str:
 
 def _proficiency_bonus(level: int) -> int:
     return 2 + max(level - 1, 0) // 4
+
+
+def _saving_throw_modifier(character, ability: str) -> int:
+    imported = character.saving_throw_modifiers.get(ability.lower())
+    if imported is not None:
+        return imported
+    proficient = ability.lower() in {
+        name.lower() for name in character.saving_throw_proficiencies
+    }
+    proficiency = _proficiency_bonus(character.level) if proficient else 0
+    return character.abilities.modifier(ability) + proficiency
+
+
+def _trigger_saving_throw(on_roll, ability: str, advantage: bool):
+    try:
+        return on_roll(ability, advantage)
+    except TypeError:
+        return on_roll(ability)
+
+
+def _shift_pressed(qt) -> bool:
+    application = getattr(qt.QtWidgets, "QApplication", None)
+    if application is None or not hasattr(application, "keyboardModifiers"):
+        return False
+    modifiers = application.keyboardModifiers()
+    shift = getattr(getattr(qt.QtCore.Qt, "KeyboardModifier", None), "ShiftModifier", None)
+    if shift is None:
+        shift = getattr(qt.QtCore.Qt, "ShiftModifier", None)
+    return bool(shift is not None and modifiers & shift)
 
 
 def _damage_profile_text(damage) -> str:

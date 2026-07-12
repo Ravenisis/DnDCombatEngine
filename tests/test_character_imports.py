@@ -176,6 +176,60 @@ def test_character_import_service_adds_spell_slots_for_cleric_sheet() -> None:
     assert character.resources["hit_dice"].maximum == 6
 
 
+def test_character_import_service_infers_core_cleric_armor_proficiencies() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        ARMOR
+        Heavy
+        Armor,
+        Plate,
+        Shields
+        WEAPONS
+        Battleaxe,
+        Simple
+        Weapons,
+        """,
+        source="test",
+    )
+
+    assert draft.armor_proficiencies == (
+        "Heavy Armor",
+        "Light Armor",
+        "Medium Armor",
+        "Plate",
+        "Shields",
+    )
+
+
+def test_character_import_service_prefers_class_feature_section() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        Species: Hill Dwarf
+        Background: Folk Hero
+        === CLERIC FEATURES ===
+        Spellcasting
+        Channel Divinity
+        Blessed Healer
+        === CANTRIPS ===
+        Light
+        Sacred Flame
+        """,
+        source="test",
+    )
+
+    assert draft.features == (
+        "Spellcasting",
+        "Channel Divinity",
+        "Blessed Healer",
+        "Channel Divinity: Turn Undead",
+        "Channel Divinity: Preserve Life",
+    )
+
+
 def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
     literal_pdf = b"".join(
         [
@@ -202,6 +256,9 @@ def test_character_import_service_labels_dnd_beyond_literal_values() -> None:
     assert draft.hit_points.maximum == 63
     assert draft.armor is not None
     assert draft.armor.armor_class == 20
+    assert draft.senses == ("Darkvision 60 ft.",)
+    assert draft.proficiency_bonus == 3
+    assert draft.walking_speed == 25
     assert [item.name for item in draft.inventory] == [
         "Bag of Holding",
         "Potion of Healing (Greater)",
@@ -221,16 +278,42 @@ def test_character_import_service_parses_standard_dndbeyond_fixture() -> None:
 
     assert draft.name == "Ravenisis"
     assert draft.level == 6
+    assert draft.character_class == "Cleric 6"
+    assert draft.race == "Hill Dwarf"
+    assert draft.senses == ()
+    assert draft.initiative_modifier == 1
+    assert draft.proficiency_bonus == 3
+    assert draft.ability_save_dc == 13
+    assert draft.walking_speed is None
+    assert draft.spellcasting_ability == "Wisdom"
+    assert draft.spell_save_dc == 13
+    assert draft.spell_attack_bonus == 5
+    assert draft.saving_throw_modifiers == {
+        "strength": 1,
+        "dexterity": 1,
+        "constitution": 4,
+        "intelligence": 0,
+        "wisdom": 5,
+        "charisma": 2,
+    }
     assert items["Clothes, Common"].quantity == 1
     assert items["Clothes, Common"].weight == 3.0
     assert items["Healer's Kit"].quantity == 3
     assert items["Rations (1 day)"].quantity == 8
     assert items["Potion of Healing (Greater)"].weight == 0.5
+    assert items["Potion of Healing (Greater)"].category.value == "consumable"
+    assert "restore" in (items["Potion of Healing (Greater)"].notes or "").lower()
+    assert items["Healer's Kit"].category.value == "adventuring_gear"
+    assert items["Healer's Kit"].purchase_price_cp > 0
     assert draft.currency.pp == 298
     assert draft.currency.gp == 9
     assert draft.tool_proficiencies == ("Cook's Utensils", "Mason's Tools", "Vehicles (Land)")
     assert draft.damage_resistances == (DamageType.NECROTIC, DamageType.POISON)
-    assert "Prepared Spells: Beacon of Hope, Bless" in draft.features[-1]
+    assert draft.features == ()
+    assert "Guiding Bolt" in draft.spells
+    assert "Light" not in draft.spells
+    assert "Sacred Flame" not in draft.spells
+    assert "Thaumaturgy" not in draft.spells
     assert character.tool_proficiencies == draft.tool_proficiencies
     assert character.damage_resistances == draft.damage_resistances
 
@@ -244,6 +327,14 @@ def test_character_import_service_parses_machine_readable_fixture() -> None:
     assert draft.name == "Ravenisis"
     assert draft.skills == ("Animal Handling", "Insight", "Medicine", "Survival")
     assert draft.saving_throw_proficiencies == ("Wisdom", "Charisma")
+    assert draft.saving_throw_modifiers == {
+        "strength": 1,
+        "dexterity": 1,
+        "constitution": 4,
+        "intelligence": 0,
+        "wisdom": 5,
+        "charisma": 2,
+    }
     assert draft.armor_proficiencies == (
         "Heavy Armor",
         "Light Armor",
@@ -257,12 +348,60 @@ def test_character_import_service_parses_machine_readable_fixture() -> None:
     assert draft.damage_resistances == (DamageType.NECROTIC, DamageType.POISON)
     assert draft.currency.pp == 298
     assert draft.currency.gp == 9
+    assert draft.character_class == "Cleric 6"
+    assert draft.race == "Hill Dwarf"
+    assert draft.senses == ()
+    assert draft.initiative_modifier == 0
+    assert draft.proficiency_bonus == 3
+    assert draft.ability_save_dc == 11
+    assert draft.spellcasting_ability == "Wisdom"
+    assert draft.spell_save_dc == 11
+    assert draft.spell_attack_bonus == 3
     assert items["Clothes, Common"].quantity == 1
     assert items["Playing Card Set"].weight == 0.0
     assert items["Healer's Kit"].quantity == 3
     assert items["Potion of Healing (Greater)"].weight == 0.5
     assert "Channel Divinity" in draft.features
-    assert "Prepared Spells: Beacon of Hope, Bless" in draft.features[-1]
+    assert "Channel Divinity: Turn Undead" in draft.features
+    assert "Channel Divinity: Preserve Life" in draft.features
+    assert "Blessed Healer" in draft.features
+    assert "Guiding Bolt" in draft.spells
+    assert "Lesser Restoration" in draft.spells
+    assert "Beacon of Hope" in draft.spells
+    assert "Light" not in draft.spells
+
+
+def test_character_import_service_extracts_numbered_spells_but_skips_cantrips() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        === CANTRIPS ===
+        Light
+        Sacred Flame
+        Thaumaturgy
+        === 1st LEVEL ===
+        Healing Word
+        Guiding Bolt
+        === 2nd LEVEL ===
+        Aid
+        Lesser Restoration
+        === 3rd LEVEL ===
+        Spirit Guardians
+        Beacon of Hope
+        """,
+        source="test",
+    )
+
+    assert draft.spells == (
+        "Guiding Bolt",
+        "Healing Word",
+        "Aid",
+        "Lesser Restoration",
+        "Beacon of Hope",
+        "Spirit Guardians",
+    )
+    assert not {"Light", "Sacred Flame", "Thaumaturgy"}.intersection(draft.spells)
 
 
 def test_character_import_service_parses_public_html_url(monkeypatch) -> None:

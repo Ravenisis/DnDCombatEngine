@@ -154,6 +154,18 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
         level=3,
         hit_points=HitPoints(7, 12, temporary=2),
         abilities=AbilityScores(dexterity=16),
+        character_class="Rogue 3",
+        race="Human",
+        senses=("Darkvision 60 ft.",),
+        initiative_modifier=3,
+        heroic_inspiration=True,
+        proficiency_bonus=2,
+        ability_save_dc=13,
+        walking_speed=30,
+        spellcasting_ability="Charisma",
+        spell_save_dc=13,
+        spell_attack_bonus=5,
+        saving_throw_modifiers={"dexterity": 5, "wisdom": 2},
         skills=("Stealth", "Perception"),
         inventory=(
             InventoryItem(
@@ -170,6 +182,7 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
         ),
         armor=Armor("Leather", 14),
         features=("Blessed Healer",),
+        spells=("Guiding Bolt", "Cure Wounds"),
         saving_throw_proficiencies=("Wisdom", "Charisma"),
         armor_proficiencies=("Light Armor",),
         weapon_proficiencies=("Simple Weapons",),
@@ -180,15 +193,33 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
         source="sheet.pdf",
     )
     rows = dict(character_import_review_rows(draft))
+
+    assert "Skills" not in rows
+    assert "Saving Throw Proficiencies" not in rows
+
     rows["Name"] = "Lyra Thorn"
     rows["Inventory"] = "1 x Rope (10 lb); 1 x Clothes, Common (3 lb); Torch"
     rows["Currency"] = "1PP 100GP"
     rows["Weapons"] = "Rapier | 1d8 | piercing; Dagger 1d4 piercing"
+    rows["Strength Save Modifier"] = "+1"
 
     reviewed = draft_from_review_rows(list(rows.items()))
 
     assert reviewed.name == "Lyra Thorn"
     assert reviewed.level == 3
+    assert reviewed.character_class == "Rogue 3"
+    assert reviewed.race == "Human"
+    assert reviewed.senses == ("Darkvision 60 ft.",)
+    assert reviewed.initiative_modifier == 3
+    assert reviewed.heroic_inspiration is True
+    assert reviewed.proficiency_bonus == 2
+    assert reviewed.ability_save_dc == 13
+    assert reviewed.walking_speed == 30
+    assert reviewed.spellcasting_ability == "Charisma"
+    assert reviewed.spell_save_dc == 13
+    assert reviewed.spell_attack_bonus == 5
+    assert reviewed.saving_throw_modifiers["strength"] == 1
+    assert reviewed.saving_throw_modifiers["dexterity"] == 5
     assert reviewed.hit_points.maximum == 12
     assert reviewed.abilities.dexterity == 16
     assert [item.name for item in reviewed.inventory] == ["Rope", "Clothes, Common", "Torch"]
@@ -199,7 +230,8 @@ def test_import_review_rows_round_trip_editable_character_values() -> None:
     assert reviewed.armor is not None
     assert reviewed.armor.armor_class == 14
     assert reviewed.features == ("Blessed Healer",)
-    assert reviewed.saving_throw_proficiencies == ("Wisdom", "Charisma")
+    assert reviewed.spells == ("Guiding Bolt", "Cure Wounds")
+    assert reviewed.saving_throw_proficiencies == ()
     assert reviewed.tool_proficiencies == ("Mason's Tools",)
     assert reviewed.damage_resistances == (DamageType.POISON,)
 

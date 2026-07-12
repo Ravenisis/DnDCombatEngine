@@ -938,6 +938,48 @@ def test_shift_action_bar_activation_rolls_d20_in_workspace(monkeypatch) -> None
     assert window.status.message == message
 
 
+def test_shift_action_bar_activation_rolls_attack_with_modifier(monkeypatch) -> None:
+    window = FakeWindow()
+    character = Character(
+        "fighter",
+        "Fighter",
+        HitPoints(20, 20),
+        abilities=AbilityScores(strength=16),
+        level=5,
+        weapons=(
+            Weapon(
+                "Longsword",
+                DamageProfile((DamageComponent("1d8", DamageType.SLASHING),)),
+            ),
+        ),
+    )
+    app = _app(character, total=13)
+    state = main_window.GuiCampaignState(
+        selected_character_id="fighter",
+        party_leader_character_id="fighter",
+    )
+    session = ActionBarSession(
+        ActionBar(
+            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),)
+        )
+    )
+    monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
+
+    message = main_window._activate_action_bar_slot(
+        window,
+        object(),
+        app,
+        state,
+        session,
+        1,
+        True,
+    )
+
+    assert app.dice.notations == ["1d20+6"]
+    assert "Attack attack: 13" in message
+    assert "modifier +6" in message
+
+
 def test_normal_action_bar_activation_logs_result_and_refreshes(monkeypatch) -> None:
     window = FakeWindow()
     character = Character(
