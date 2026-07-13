@@ -41,13 +41,6 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "K",
         ),
         GuiActionSpec(
-            "character.abilities",
-            "Character",
-            "Abilities",
-            "Open the party leader abilities",
-            "N",
-        ),
-        GuiActionSpec(
             "character.inventory",
             "Character",
             "Inventory",

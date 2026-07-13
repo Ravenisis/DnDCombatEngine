@@ -132,48 +132,6 @@ def _attack_names_for_character(app: Any, character_id: str | None) -> tuple[str
     return tuple(names)
 
 
-class AbilitiesWidget:
-    """Factory for the abilities source window."""
-
-    @staticmethod
-    def create(
-        app: Any,
-        qt: Any,
-        session: ActionBarSession,
-        character_id: str = "vale",
-    ) -> Any:
-        """Create an abilities widget that can place character features on the action bar."""
-        from dnd_combat_engine.gui import widgets
-
-        widget = qt.QtWidgets.QWidget()
-        layout = qt.QtWidgets.QVBoxLayout(widget)
-        output = qt.QtWidgets.QTextEdit()
-        output.setReadOnly(True)
-        character = app.characters.load(character_id)
-        features = widgets._actionable_ability_names(character.features)
-        for feature in features:
-            button = qt.QtWidgets.QPushButton(feature)
-            if hasattr(button, "setToolTip"):
-                button.setToolTip(widgets._ability_tooltip(feature))
-            button.clicked.connect(
-                lambda checked=False, name=feature: output.append(
-                    session.place_next(
-                        ActionBarButton(
-                            slot=1,
-                            kind=ActionBarActionKind.ABILITY,
-                            action_id=widgets._action_id(name),
-                            name=name,
-                            rank=1,
-                            uses_highest_rank=True,
-                        )
-                    )
-                )
-            )
-            layout.addWidget(button)
-        layout.addWidget(output)
-        return widget
-
-
 def _spellbook_tabs(qt: Any) -> Any:
     tab_class = getattr(qt.QtWidgets, "QTabWidget", None)
     if tab_class is None:

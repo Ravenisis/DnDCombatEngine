@@ -14,7 +14,6 @@ def test_default_action_specs_include_core_commands() -> None:
         "file.exit",
         "view.reset_layout",
         "character.spellbook",
-        "character.abilities",
         "character.inventory",
         "character.break_concentration",
         "campaign.load_starter",
@@ -43,7 +42,6 @@ def test_default_action_specs_include_core_commands() -> None:
     }
     assert next(spec for spec in specs if spec.action_id == "character.inventory").shortcut == "B"
     assert next(spec for spec in specs if spec.action_id == "character.spellbook").shortcut == "K"
-    assert next(spec for spec in specs if spec.action_id == "character.abilities").shortcut == "N"
     assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut is None
     assert next(spec for spec in specs if spec.action_id == "dice.repeat_last").shortcut == "Ctrl+R"
     assert next(spec for spec in specs if spec.action_id == "campaign.import_pdf").submenu == (
@@ -66,9 +64,8 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
         "Help",
     )
     assert grouped["Character"][0].action_id == "character.spellbook"
-    assert grouped["Character"][1].action_id == "character.abilities"
-    assert grouped["Character"][2].action_id == "character.inventory"
-    assert grouped["Character"][3].action_id == "character.break_concentration"
+    assert grouped["Character"][1].action_id == "character.inventory"
+    assert grouped["Character"][2].action_id == "character.break_concentration"
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
     assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
     assert grouped["Campaign"][6].action_id == "campaign.long_rest"

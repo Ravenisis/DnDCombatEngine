@@ -25,6 +25,10 @@ QTextEdit, QListWidget, QTableWidget {
     border: 1px solid #303849;
     selection-background-color: #365a9c;
 }
+QFrame#EmbeddedPopup {
+    background: #171b23;
+    border: 1px solid #3a4863;
+}
 QPushButton {
     background: #253149;
     border: 1px solid #3a4863;
@@ -54,6 +58,10 @@ QTextEdit, QListWidget, QTableWidget {
     border: 1px solid #b59d78;
     selection-background-color: #b88746;
 }
+QFrame#EmbeddedPopup {
+    background: #fffaf0;
+    border: 1px solid #8b7047;
+}
 QPushButton {
     background: #d1b47e;
     border: 1px solid #8b7047;
@@ -82,6 +90,10 @@ QTextEdit, QListWidget, QTableWidget {
     background: #050505;
     border: 1px solid #ffffff;
     selection-background-color: #005bbb;
+}
+QFrame#EmbeddedPopup {
+    background: #050505;
+    border: 1px solid #ffffff;
 }
 QPushButton {
     background: #1d3557;

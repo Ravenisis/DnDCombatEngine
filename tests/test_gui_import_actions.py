@@ -116,6 +116,7 @@ class FakeButton(FakeWidget):
 
 class FakePopupQtWidgets(FakeQtWidgets):
     QDialog = FakeDialog
+    QFrame = FakeDialog
     QLabel = FakeWidget
     QPushButton = FakeButton
     QTextEdit = FakeWidget

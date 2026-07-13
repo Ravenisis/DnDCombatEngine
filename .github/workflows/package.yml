@@ -53,8 +53,11 @@ jobs:
         run: .\scripts\build_msi.ps1 -SkipExecutableBuild
 
       - name: Archive Windows executable folder
+        id: package_version
         shell: pwsh
-        run: Compress-Archive -Path dist\DnDCombatEngine\* -DestinationPath dist\DnDCombatEngine-1.0.1-windows.zip -Force
+        run: |
+          $version = python -c "from importlib.metadata import version; print(version('dnd-combat-engine'))"
+          Compress-Archive -Path dist\DnDCombatEngine\* -DestinationPath "dist\DnDCombatEngine-$version-windows.zip" -Force
 
       - name: Upload Python distributions
         uses: actions/upload-artifact@v4

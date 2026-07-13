@@ -7,6 +7,14 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added a local hosted-campaign loopback smoke test covering host discovery,
+  joining by code, activation, disconnect, and close lifecycle persistence.
+- Added the first WebSocket relay transport for hosted-campaign lifecycle
+  messages: host, find, join, activate, leave, and close.
+- Added compact Campaign, Combat, and Manage tabs for the left-side command
+  area, with independent scrolling for each workflow.
+- Added embedded main-window overlays for Spellbook, Inventory, Key Binds,
+  Preferences, and Money Log so window-only streaming captures their contents.
 - Added a mypy type-checking baseline for the extracted GUI feature modules and
   action/state boundaries.
 - Added focused campaign, targeting, inventory, spellbook, and combat-panel GUI
@@ -15,6 +23,13 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Removed the separate Abilities menu and `N` shortcut. Abilities remain in the
+  Spellbook's existing tab alongside spells, cantrips, attacks, and channel
+  divinity.
+- Made popup shortcuts application-wide so pressing `K` or `B` a second time
+  closes the focused Spellbook or Inventory overlay.
+- Made the Windows executable ZIP artifact name derive from the package version
+  during GitHub Actions packaging.
 - Added mypy to the development dependencies, CI matrix, developer notes, and
   release test plan.
 - Strengthened annotations in the extracted campaign, inventory, spellbook,

@@ -47,8 +47,10 @@ Test both import paths:
 Launch the app and verify:
 
 - Campaign menu opens.
-- Character menu opens Spellbook, Abilities, and Inventory.
-- `K`, `N`, and `B` toggle their windows open and closed.
+- Character menu opens Spellbook and Inventory.
+- `K` and `B` toggle their windows open and closed.
+- Share only the DnDCombatEngine window and confirm Spellbook and Inventory
+  remain visible in the stream as embedded overlays.
 - Target panel can select a party member or monster.
 - Action bar hotkeys `1` through `=` activate slots.
 - Shift-click on an action-bar slot rolls a d20.
@@ -103,8 +105,8 @@ Build:
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/installer/DnDCombatEngine-0.1.2-Setup.exe`
-- `dist/msi/DnDCombatEngine-0.1.2-x64.msi`
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe`
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi`
 
 ## Installer Smoke Test
 

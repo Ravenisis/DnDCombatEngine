@@ -24,8 +24,8 @@ Click a slot or press its hotkey to activate the assigned action.
 
 ## Adding Actions
 
-Open the party leader's Spellbook with `K` or Abilities window with `N`. Choose a
-spell, attack, or ability to place it onto the action bar.
+Open the party leader's Spellbook with `K`. Its tabs include spells, cantrips,
+attacks, channel divinity, and abilities that can be placed onto the action bar.
 
 Spellbook entries include available spell levels so downranked or upranked
 casting can be represented as distinct buttons where the sheet supports it.

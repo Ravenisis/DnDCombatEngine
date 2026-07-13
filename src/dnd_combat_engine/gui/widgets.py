@@ -20,6 +20,10 @@ from dnd_combat_engine.gui.editors import (
     remove_participant_from_encounter,
     start_encounter,
 )
+from dnd_combat_engine.gui.overlays import (
+    create_embedded_popup,
+    show_embedded_popup,
+)
 from dnd_combat_engine.gui.panels import (
     encounter_participant_rows,
     encounter_rows,
@@ -51,7 +55,6 @@ EncounterEditorWidget = _combat_panels.EncounterEditorWidget
 EncounterTrackerWidget = _combat_panels.EncounterTrackerWidget
 InitiativeWidget = _combat_panels.InitiativeWidget
 _quick_attack_message = _combat_panels._quick_attack_message
-AbilitiesWidget = _spellbook.AbilitiesWidget
 SpellbookWidget = _spellbook.SpellbookWidget
 _actionable_ability_names_for_tab = _spellbook._actionable_ability_names_for_tab
 _add_spellbook_tab = _spellbook._add_spellbook_tab
@@ -407,10 +410,9 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
     dialog_class = getattr(qt.QtWidgets, "QDialog", None)
     if dialog_class is None:
         return None
-    try:
-        dialog = dialog_class(parent)
-    except TypeError:
-        dialog = dialog_class()
+    dialog = create_embedded_popup(qt, parent)
+    if dialog is None:
+        return None
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle(f"{character_name} Money Log")
     if hasattr(dialog, "resize"):
@@ -429,8 +431,7 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
     dialogs = getattr(parent, "_dnd_money_log_dialogs", [])
     dialogs.append(dialog)
     parent._dnd_money_log_dialogs = dialogs  # noqa: SLF001
-    if hasattr(dialog, "show"):
-        dialog.show()
+    show_embedded_popup(parent, dialog)
     return dialog
 
 

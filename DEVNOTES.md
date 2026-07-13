@@ -12,6 +12,19 @@ is complete: automated checks, a clean-profile startup and persistence check,
 and a documented manual session pass. Capture any observed failure in a
 regression test before implementing its fix.
 
+## Current Candidate Changes
+
+- The command side of the desktop UI is organized into Campaign, Combat, and
+  Manage tabs to keep workflow controls reachable without a single tall panel.
+- Spellbook, Inventory, Key Binds, Preferences, and Money Log are child
+  overlays within the main window, allowing window-only streaming to capture
+  them alongside the Combat Workspace.
+- The standalone Abilities popup and `N` shortcut were removed; abilities are
+  selected from the Spellbook tab.
+- Hosted campaigns have a persisted local-loopback smoke test and the first
+  WebSocket lifecycle relay transport. A relay-backed desktop client and live
+  action synchronization are still future slices.
+
 A professional, open-source Dungeons & Dragons combat engine built in layers:
 
 ```text
@@ -143,9 +156,9 @@ python -m pytest
 Expected outputs:
 
 - `dist/DnDCombatEngine/DnDCombatEngine.exe`
-- `dist/DnDCombatEngine-1.0.1-windows.zip`
-- `dist/installer/DnDCombatEngine-1.0.1-Setup.exe`
-- `dist/msi/DnDCombatEngine-1.0.1-x64.msi`
+- `dist/DnDCombatEngine-1.0.3-windows.zip`
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe`
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi`
 
 The MSI build requires WiX Toolset command-line tools. On a local Windows machine:
 
@@ -155,11 +168,11 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,357,230 bytes
-- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,305,439 bytes
-- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,326,502 bytes
-- Verified with `python -m ruff check src tests`, `python -m pytest --no-cov`,
-  a PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 4,202,962 bytes
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 38,408,297 bytes
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 43,904,954 bytes
+- Verified with `ruff`, `370` coverage-enforced tests at `90.14%`, mypy, a
+  PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
 
 Latest verified local install smoke test:
 
@@ -167,8 +180,10 @@ Latest verified local install smoke test:
   install into a controlled test directory, installed app launch, startup
   stability check, and user data initialization under
   `%LOCALAPPDATA%\DnDCombatEngine\data`.
-- The rebuilt `1.0.1` executable, Inno installer, and MSI were produced locally
-  and synchronized to the user's Downloads folder.
+- The rebuilt `1.0.3` executable, Inno installer, and MSI were produced locally.
+  The Inno installer was then synchronized to `C:\Program Files\DnDCombatEngine`;
+  its installed executable matched the distribution SHA-256 and passed a hidden
+  startup smoke test.
 
 The installed application initializes writable user data automatically from the
 bundled seed JSON. The same initialization can be run manually with:

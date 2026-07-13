@@ -37,9 +37,14 @@ from dnd_combat_engine.gui.import_dialogs import (
     review_character_import,
 )
 from dnd_combat_engine.gui.inventory import InventoryWidget
+from dnd_combat_engine.gui.overlays import (
+    create_embedded_dialog,
+    create_embedded_popup,
+    show_embedded_popup,
+)
 from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
-from dnd_combat_engine.gui.spellbook import AbilitiesWidget, SpellbookWidget
+from dnd_combat_engine.gui.spellbook import SpellbookWidget
 from dnd_combat_engine.gui.targeting import (
     active_character_target_id,
     active_target_for_effect,
@@ -208,17 +213,9 @@ def _set_window_icon(window, qt) -> None:
 
 
 def _main_workspace(window, qt, workspace):
-    left_content = qt.QtWidgets.QWidget()
-    left_layout = qt.QtWidgets.QVBoxLayout(left_content)
-    if hasattr(left_layout, "setContentsMargins"):
-        left_layout.setContentsMargins(6, 6, 6, 6)
-    if hasattr(left_layout, "setSpacing"):
-        left_layout.setSpacing(6)
-    window._dnd_left_layout = left_layout  # noqa: SLF001
-
-    left_scroll = _scroll_area(qt, left_content)
-    _set_size_constraint(left_scroll, "setMinimumWidth", 520)
-    _set_size_constraint(left_scroll, "setMaximumWidth", 980)
+    left_panel = _command_panel_area(window, qt)
+    _set_size_constraint(left_panel, "setMinimumWidth", 520)
+    _set_size_constraint(left_panel, "setMaximumWidth", 980)
     _set_size_constraint(workspace, "setMinimumWidth", 360)
     splitter_class = getattr(qt.QtWidgets, "QSplitter", None)
     if splitter_class is not None:
@@ -226,7 +223,7 @@ def _main_workspace(window, qt, workspace):
         if orientation is None:
             orientation = getattr(qt.QtCore.Qt, "Horizontal", None)
         splitter = splitter_class(orientation)
-        splitter.addWidget(left_scroll)
+        splitter.addWidget(left_panel)
         splitter.addWidget(workspace)
         if hasattr(splitter, "setCollapsible"):
             splitter.setCollapsible(0, False)
@@ -240,9 +237,41 @@ def _main_workspace(window, qt, workspace):
 
     container = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QHBoxLayout(container)
-    _layout_add_widget(layout, left_scroll, 2)
+    _layout_add_widget(layout, left_panel, 2)
     _layout_add_widget(layout, workspace, 1)
     return container
+
+
+def _command_panel_area(window, qt):
+    """Create the compact, scrollable command area used beside combat."""
+    tabs_class = getattr(qt.QtWidgets, "QTabWidget", None)
+    if tabs_class is None:
+        content = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(content)
+        _configure_panel_layout(layout)
+        window._dnd_left_layout = layout  # noqa: SLF001
+        return _scroll_area(qt, content)
+
+    tabs = tabs_class()
+    tab_layouts = {}
+    for tab_name in ("Campaign", "Combat", "Manage"):
+        content = qt.QtWidgets.QWidget()
+        layout = qt.QtWidgets.QVBoxLayout(content)
+        _configure_panel_layout(layout)
+        tab_layouts[tab_name] = layout
+        tabs.addTab(_scroll_area(qt, content), tab_name)
+    window._dnd_left_layout = None  # noqa: SLF001
+    window._dnd_panel_tab_layouts = tab_layouts  # noqa: SLF001
+    window._dnd_command_tabs = tabs  # noqa: SLF001
+    return tabs
+
+
+def _configure_panel_layout(layout) -> None:
+    """Apply shared spacing to a left-side command tab layout."""
+    if hasattr(layout, "setContentsMargins"):
+        layout.setContentsMargins(6, 6, 6, 6)
+    if hasattr(layout, "setSpacing"):
+        layout.setSpacing(6)
 
 
 def _set_size_constraint(widget, method_name: str, value: int) -> None:
@@ -264,13 +293,25 @@ def _scroll_area(qt, widget):
 
 
 def _add_left_panel(window, qt, title: str, widget) -> None:
-    layout = getattr(window, "_dnd_left_layout", None)
+    tab_layouts = getattr(window, "_dnd_panel_tab_layouts", {})
+    layout = tab_layouts.get(_command_tab_for_panel(title))
+    if layout is None:
+        layout = getattr(window, "_dnd_left_layout", None)
     if layout is None:
         return
     host = _panel_host(qt, title, widget)
-    _layout_add_widget(layout, host)
+    _layout_add_widget(layout, host, 1 if title in {"Activity", "Combat Log"} else None)
     if hasattr(window, "_dnd_panel_hosts"):
         window._dnd_panel_hosts[title] = host  # noqa: SLF001
+
+
+def _command_tab_for_panel(title: str) -> str:
+    """Return the command tab that owns a named left-side panel."""
+    if title in {"Target", "Attack", "Combat Log"}:
+        return "Combat"
+    if title in {"Campaign Editor", "Encounter"}:
+        return "Manage"
+    return "Campaign"
 
 
 def _panel_host(qt, title: str, widget):
@@ -353,6 +394,7 @@ def _configure_menus(window, qt, app: DnDCombatEngineApp, state: GuiCampaignStat
             action = action_class(spec.text, window)
             if spec.shortcut and hasattr(action, "setShortcut"):
                 action.setShortcut(spec.shortcut)
+                _set_application_shortcut_context(qt, action)
             if hasattr(action, "setStatusTip"):
                 action.setStatusTip(spec.status_tip)
             if hasattr(action, "triggered"):
@@ -381,6 +423,15 @@ def _set_menu_minimum_width(menu, width: int) -> None:
         menu.setMinimumWidth(width)
 
 
+def _set_application_shortcut_context(qt, action) -> None:
+    """Allow menu shortcuts to reach the main window while a popup has focus."""
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    shortcut_namespace = getattr(qt_namespace, "ShortcutContext", qt_namespace)
+    context = getattr(shortcut_namespace, "ApplicationShortcut", None)
+    if context is not None and hasattr(action, "setShortcutContext"):
+        action.setShortcutContext(context)
+
+
 def _run_menu_action(
     window,
     qt,
@@ -393,9 +444,6 @@ def _run_menu_action(
         return
     if action_id == "character.spellbook":
         _open_spellbook_window(window, qt, app, state)
-        return
-    if action_id == "character.abilities":
-        _open_abilities_window(window, qt, app, state)
         return
     if action_id == "character.inventory":
         _open_inventory_window(window, qt, app, state)
@@ -501,7 +549,9 @@ def _ask_bug_report(qt, parent) -> BetaBugReport | None:
     if dialog_class is None:
         return None
 
-    dialog = dialog_class(parent)
+    dialog = create_embedded_dialog(qt, parent)
+    if dialog is None:
+        return None
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle("Report Bug")
     if hasattr(dialog, "resize"):
@@ -815,8 +865,6 @@ def _refresh_campaign_docks(
     _replace_dock_widget(docks, "Character Sheet", _character_widget(app, qt, state))
     session = getattr(window, "_dnd_action_bar_session", None)
     if session is not None:
-        _replace_panel_widget(panels, "Abilities", _abilities_widget(app, qt, state, session))
-        _replace_dock_widget(docks, "Abilities", _abilities_widget(app, qt, state, session))
         on_activate = getattr(window, "_dnd_action_bar_on_activate", None)
         if on_activate is not None:
             _replace_dock_widget(
@@ -1009,7 +1057,9 @@ def _open_spellbook_window(
         )
         return
 
-    popup = qt.QtWidgets.QDialog(window)
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle(f"{character.name} Spellbook")
     if hasattr(popup, "resize"):
@@ -1018,51 +1068,6 @@ def _open_spellbook_window(
     layout.addWidget(_spellbook_widget(app, qt, state, session))
     _show_popup(window, popup, key="spellbook")
     _set_status(window, f"Opened {character.name} spellbook.")
-
-
-def _open_abilities_window(
-    window,
-    qt,
-    app: DnDCombatEngineApp,
-    state: GuiCampaignState,
-) -> None:
-    if _toggle_named_popup(window, "abilities", "Closed abilities."):
-        return
-    session = getattr(window, "_dnd_action_bar_session", None)
-    if session is None:
-        _show_message(window, qt, "Abilities Failed", "Action bar is not ready.", error=True)
-        return
-    character_id = _active_character_id(state)
-    if character_id is None:
-        _show_message(
-            window,
-            qt,
-            "Abilities Failed",
-            "Set a party leader before opening abilities.",
-            error=True,
-        )
-        return
-    try:
-        character = app.characters.load(character_id)
-    except KeyError:
-        _show_message(
-            window,
-            qt,
-            "Abilities Failed",
-            f"Party leader {character_id} could not be loaded.",
-            error=True,
-        )
-        return
-
-    popup = qt.QtWidgets.QDialog(window)
-    if hasattr(popup, "setWindowTitle"):
-        popup.setWindowTitle(f"{character.name} Abilities")
-    if hasattr(popup, "resize"):
-        popup.resize(360, 520)
-    layout = qt.QtWidgets.QVBoxLayout(popup)
-    layout.addWidget(_abilities_widget(app, qt, state, session))
-    _show_popup(window, popup, key="abilities")
-    _set_status(window, f"Opened {character.name} abilities.")
 
 
 def _open_inventory_window(
@@ -1095,7 +1100,9 @@ def _open_inventory_window(
         )
         return
 
-    popup = qt.QtWidgets.QDialog(window)
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle(f"{character.name} Inventory")
     if hasattr(popup, "resize"):
@@ -1204,7 +1211,9 @@ def _ask_inventory_item(qt, parent) -> InventoryItem | None:
     dialog_class = getattr(qt.QtWidgets, "QDialog", None)
     if dialog_class is None:
         return None
-    dialog = dialog_class(parent)
+    dialog = create_embedded_dialog(qt, parent)
+    if dialog is None:
+        return None
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle("Add Inventory Item")
     layout = qt.QtWidgets.QVBoxLayout(dialog)
@@ -1416,7 +1425,9 @@ def _generic_dialog_accepted(qt, dialog) -> bool:
 def _open_key_binds_window(window, qt) -> None:
     if _toggle_named_popup(window, "key_binds", "Closed key binds."):
         return
-    popup = qt.QtWidgets.QDialog(window)
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle("Key Binds")
     if hasattr(popup, "resize"):
@@ -1446,7 +1457,9 @@ def _open_key_binds_window(window, qt) -> None:
 def _open_preferences_window(window, qt) -> None:
     if _toggle_named_popup(window, "preferences", "Closed preferences."):
         return
-    popup = qt.QtWidgets.QDialog(window)
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle("Preferences")
     if hasattr(popup, "resize"):
@@ -1482,8 +1495,7 @@ def _show_popup(window, popup, key: str | None = None) -> None:
         named = getattr(window, "_dnd_named_popups", {})
         named[key] = popup
         window._dnd_named_popups = named  # noqa: SLF001
-    if hasattr(popup, "show"):
-        popup.show()
+    show_embedded_popup(window, popup)
 
 
 def _toggle_named_popup(window, key: str, status_message: str) -> bool:
@@ -1533,7 +1545,6 @@ def _key_bind_rows() -> tuple[tuple[str, str], ...]:
         ("Action Bar Slot 12", "="),
         ("Inventory", "B"),
         ("Spellbook", "K"),
-        ("Abilities", "N"),
         ("Roll Previous Die", "Ctrl+R"),
         ("Clear Combat Workspace", "Ctrl+L"),
         ("Exit", "Ctrl+Q"),
@@ -2376,7 +2387,9 @@ def _choose_party_targets(
     button_box_class = getattr(qt.QtWidgets, "QDialogButtonBox", None)
     if dialog_class is None or checkbox_class is None or button_box_class is None:
         return target_ids[:max_targets] if max_targets is not None else target_ids
-    dialog = dialog_class(parent)
+    dialog = create_embedded_dialog(qt, parent)
+    if dialog is None:
+        return target_ids[:max_targets] if max_targets is not None else target_ids
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle(title)
     layout = qt.QtWidgets.QVBoxLayout(dialog)
@@ -3137,18 +3150,6 @@ def _spellbook_widget(
     return SpellbookWidget.create(app, qt, session, _active_character_id(state))
 
 
-def _abilities_widget(
-    app: DnDCombatEngineApp,
-    qt,
-    state: GuiCampaignState,
-    session: ActionBarSession,
-):
-    character_id = _active_character_id(state)
-    if character_id is None:
-        return _label(qt, "No party leader selected")
-    return AbilitiesWidget.create(app, qt, session, character_id)
-
-
 def _action_bar_widget(
     app: DnDCombatEngineApp,
     qt,
@@ -3208,4 +3209,3 @@ def _show_message(window, qt, title: str, message: str, error: bool = False) -> 
 
 def _set_status(window, message: str) -> None:
     window.statusBar().showMessage(message)
-

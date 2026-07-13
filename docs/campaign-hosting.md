@@ -30,13 +30,19 @@ The internet transport should plug into this model instead of replacing it. A
 future relay server can exchange signed session messages while the desktop app
 continues to use the same controller and rules engine path.
 
-## Planned Slices
+## Delivery Slices
 
 1. Hosted session model, join code lifecycle, and persistence.
 2. GUI commands for **Host Campaign** and **Join Campaign**.
-3. Local loopback multiplayer smoke test.
+3. Local loopback multiplayer smoke test. Completed: independent host and guest
+   app instances discover a session, join by code, activate, disconnect, and
+   close through the same isolated JSON store.
 4. WebSocket relay protocol for campaign state messages.
 5. DM lobby with connected players, ready checks, and character assignment.
 6. Action synchronization through the unified combat action resolver.
+
+The completed loopback test validates the backend contract and persistence
+boundary. It does not open a network listener; the WebSocket relay slice is the
+first Internet transport implementation.
 7. Conflict handling, reconnect, and session recovery.
 8. Public beta relay deployment and connection diagnostics.

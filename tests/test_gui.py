@@ -1325,6 +1325,54 @@ def test_layout_helpers_cover_fallback_paths() -> None:
     main_window._replace_panel_widget({}, "Missing", widget)
 
 
+def test_command_panel_groups_keep_workflows_together() -> None:
+    """Left-side panels are routed to compact task-focused command tabs."""
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class Layout:
+        def __init__(self) -> None:
+            self.widgets = []
+
+        def addWidget(self, widget, stretch=None) -> None:  # noqa: N802
+            self.widgets.append((widget, stretch))
+
+    class Widget:
+        pass
+
+    class Widgets:
+        QWidget = Widget
+        QGroupBox = Widget
+
+        @staticmethod
+        def QVBoxLayout(parent):  # noqa: N802, ANN001
+            return Layout()
+
+    qt = SimpleNamespace(QtWidgets=Widgets)
+    campaign_layout = Layout()
+    combat_layout = Layout()
+    manage_layout = Layout()
+    window = SimpleNamespace(
+        _dnd_panel_tab_layouts={
+            "Campaign": campaign_layout,
+            "Combat": combat_layout,
+            "Manage": manage_layout,
+        },
+        _dnd_panel_hosts={},
+    )
+
+    assert main_window._command_tab_for_panel("Party") == "Campaign"
+    assert main_window._command_tab_for_panel("Target") == "Combat"
+    assert main_window._command_tab_for_panel("Campaign Editor") == "Manage"
+
+    main_window._add_left_panel(window, qt, "Combat Log", Widget())
+
+    assert not campaign_layout.widgets
+    assert combat_layout.widgets[0][1] == 1
+    assert not manage_layout.widgets
+
+
 def test_key_bind_rows_and_color_scheme_application() -> None:
     from dnd_combat_engine.gui import main_window
 
@@ -1348,7 +1396,7 @@ def test_key_bind_rows_and_color_scheme_application() -> None:
     assert rows["Action Bar Slot 12"] == "="
     assert rows["Inventory"] == "B"
     assert rows["Spellbook"] == "K"
-    assert rows["Abilities"] == "N"
+    assert "Abilities" not in rows
 
     window = FakeWindow()
     main_window._apply_color_scheme(window, "Parchment")
@@ -1356,6 +1404,29 @@ def test_key_bind_rows_and_color_scheme_application() -> None:
     assert window._dnd_color_scheme == "Parchment"
     assert "#f1eadc" in window.stylesheet
     assert window.status.message == "Color scheme set to Parchment."
+
+
+def test_menu_shortcuts_use_application_context_for_popup_toggle() -> None:
+    """Window commands remain available while a popup owns keyboard focus."""
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class ShortcutContext:
+        ApplicationShortcut = "application"
+
+    class Action:
+        def setShortcutContext(self, context) -> None:  # noqa: N802
+            self.context = context
+
+    action = Action()
+    qt = SimpleNamespace(
+        QtCore=SimpleNamespace(Qt=SimpleNamespace(ShortcutContext=ShortcutContext))
+    )
+
+    main_window._set_application_shortcut_context(qt, action)
+
+    assert action.context == "application"
 
 
 def test_spell_slot_tracker_handles_empty_and_missing_leaders() -> None:

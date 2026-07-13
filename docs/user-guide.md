@@ -33,7 +33,7 @@ encounter data is available, and where activity is recorded.
 
 ## Party Leader
 
-The party leader is the active character for Spellbook, Abilities, Inventory,
+The party leader is the active character for Spellbook, Inventory,
 saving throws, and action-bar casting. Set the party leader from the Campaign
 menu after adding party members.
 
@@ -60,18 +60,17 @@ other effects to that target.
 If an action needs a specific target and none is selected, the app prompts for
 one when possible.
 
-## Spellbook, Abilities, and Inventory
+## Spellbook and Inventory
 
 Open these windows from the Character menu:
 
-- Spellbook: spells and spell-like attacks for the party leader.
-- Abilities: configured combat abilities and weapon attacks.
+- Spellbook: spells, cantrips, attacks, channel divinity, and configured combat
+  abilities for the party leader.
 - Inventory: carried items, storage containers, currency, and consumables.
 
 Default shortcuts:
 
 - `K`: Spellbook.
-- `N`: Abilities.
 - `B`: Inventory.
 
 Pressing the shortcut again closes the same popup.

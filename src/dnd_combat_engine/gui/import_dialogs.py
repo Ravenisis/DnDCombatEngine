@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from dnd_combat_engine.gui.overlays import create_embedded_dialog
 from dnd_combat_engine.models import (
     AbilityScores,
     Armor,
@@ -95,7 +96,9 @@ def review_character_import(qt, parent, draft: CharacterImportDraft) -> Characte
     if dialog_class is None or table_class is None or item_class is None:
         return draft
 
-    dialog = dialog_class(parent)
+    dialog = create_embedded_dialog(qt, parent)
+    if dialog is None:
+        return draft
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle("Confirm Character Import")
     if hasattr(dialog, "resize"):

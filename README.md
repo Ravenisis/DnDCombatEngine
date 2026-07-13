@@ -18,7 +18,7 @@ action bar.
 4. Open the starter campaign, or create a new campaign from the Campaign menu.
 5. Add party members by importing a character sheet PDF or URL.
 6. Set a party leader from the Campaign menu.
-7. Open the Spellbook, Abilities, or Inventory windows from the Character menu.
+7. Open the Spellbook or Inventory window from the Character menu.
 8. Put actions on the action bar and run combat from the main workspace.
 
 For local build and packaging notes, see [DEVNOTES.md](DEVNOTES.md). For release
@@ -27,7 +27,6 @@ history, see [CHANGELOG.md](CHANGELOG.md).
 ## Main Controls
 
 - `K` toggles the party leader's Spellbook.
-- `N` toggles the party leader's Abilities window.
 - `B` toggles the party leader's Inventory.
 - `1` through `=` activate action-bar slots.
 - Shift-click an action-bar button to roll a d20 instead of resolving the action.

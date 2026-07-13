@@ -11,7 +11,7 @@ clean.
 3. Import each player character from PDF or URL.
 4. Review each imported character in the confirmation popup.
 5. Set the party leader.
-6. Open the Spellbook, Abilities, and Inventory windows to confirm the active
+6. Open the Spellbook and Inventory windows to confirm the active
    character has expected actions, spells, resources, currency, and inventory.
 7. Put common spells and attacks on the action bar.
 
