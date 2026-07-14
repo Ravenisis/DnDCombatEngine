@@ -160,6 +160,150 @@ def test_dice_menu_rolls_standard_die_and_ctrl_r_repeats_previous() -> None:
     assert window.status.message == "d8 roll: 2 rolls=(2,)"
 
 
+def test_campaign_activity_menu_opens_full_log_window(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    opened = []
+    monkeypatch.setattr(
+        main_window,
+        "_open_campaign_activity_window",
+        lambda *args: opened.append(args),
+    )
+
+    main_window._run_menu_action(window, FakeQt, object(), state, "campaign.activity")
+
+    assert opened
+
+
+def test_campaign_activity_popup_is_scrollable_and_has_a_close_command(monkeypatch) -> None:
+    class Popup:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+            self.closed = False
+
+        def setWindowTitle(self, title) -> None:  # noqa: N802
+            self.title = title
+
+        def resize(self, width, height) -> None:
+            self.size = (width, height)
+
+        def show(self) -> None:
+            self.shown = True
+
+        def close(self) -> None:
+            self.closed = True
+
+    class Layout:
+        def __init__(self, parent) -> None:
+            self.widgets = []
+            parent.layout = self
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+    class Signal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+    class Button:
+        def __init__(self, text) -> None:
+            self.text = text
+            self.clicked = Signal()
+
+    qt = SimpleNamespace(
+        QtWidgets=SimpleNamespace(
+            QFrame=Popup,
+            QVBoxLayout=Layout,
+            QPushButton=Button,
+        )
+    )
+    window = FakeWindow()
+    state = main_window.GuiCampaignState(active_campaign_id="starter")
+    monkeypatch.setattr(main_window, "_activity_widget", lambda *args: "activity")
+
+    main_window._open_campaign_activity_window(window, qt, object(), state)
+
+    popup = window._dnd_named_popups["campaign_activity"]
+    assert popup.title == "Campaign Activity"
+    assert popup.size == (720, 560)
+    assert popup.layout.widgets[0] == "activity"
+    close_button = popup.layout.widgets[1]
+    assert close_button.text == "Close"
+    close_button.clicked.callback()
+    assert popup.closed
+    assert window._dnd_named_popups == {}
+
+
+def test_preferences_remember_the_selected_color_scheme_and_offer_close() -> None:
+    class Popup:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+
+        def setWindowTitle(self, title) -> None:  # noqa: N802
+            self.title = title
+
+        def resize(self, width, height) -> None:
+            self.size = (width, height)
+
+        def show(self) -> None:
+            self.shown = True
+
+    class Layout:
+        def __init__(self, parent) -> None:
+            self.widgets = []
+            parent.layout = self
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+    class Signal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+    class Combo:
+        def __init__(self) -> None:
+            self.items = []
+            self.index = -1
+            self.currentIndexChanged = Signal()
+
+        def addItem(self, item) -> None:  # noqa: N802
+            self.items.append(item)
+
+        def findText(self, value) -> int:  # noqa: N802
+            return self.items.index(value)
+
+        def setCurrentIndex(self, index) -> None:  # noqa: N802
+            self.index = index
+
+    class Label:
+        def __init__(self, text) -> None:
+            self.text = text
+
+    class Button:
+        def __init__(self, text) -> None:
+            self.text = text
+            self.clicked = Signal()
+
+    qt = SimpleNamespace(
+        QtWidgets=SimpleNamespace(
+            QFrame=Popup,
+            QVBoxLayout=Layout,
+            QComboBox=Combo,
+            QLabel=Label,
+            QPushButton=Button,
+        )
+    )
+    window = FakeWindow()
+    window._dnd_color_scheme = "Parchment"
+
+    main_window._open_preferences_window(window, qt)
+
+    popup = window._dnd_named_popups["preferences"]
+    combo = next(widget for widget in popup.layout.widgets if isinstance(widget, Combo))
+    assert combo.items[combo.index] == "Parchment"
+    assert popup.layout.widgets[-1].text == "Close"
+
+
 def test_pdf_menu_action_runs_import_and_reports_status(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState(
@@ -730,7 +874,7 @@ def test_character_spellbook_menu_opens_party_leader_popup() -> None:
     main_window._run_menu_action(window, FakePopupQt, app, state, "character.spellbook")
 
     assert FakeDialog.last.title == "Ravenisis Spellbook"
-    assert FakeDialog.last.size == (360, 520)
+    assert FakeDialog.last.size == (680, 650)
     assert FakeDialog.last.shown is True
     assert window._dnd_popups == [FakeDialog.last]
     assert window.status.message == "Opened Ravenisis spellbook."

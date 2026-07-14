@@ -316,27 +316,25 @@ def _inventory_header(
     money_log_current: dict | None = None,
 ):
     widget = qt.QtWidgets.QWidget()
-    layout = qt.QtWidgets.QHBoxLayout(widget)
-    layout.addWidget(qt.QtWidgets.QLabel(f"Inventory: {character_name}"))
-    if hasattr(layout, "addStretch"):
-        layout.addStretch(1)
+    grid_class = getattr(qt.QtWidgets, "QGridLayout", qt.QtWidgets.QVBoxLayout)
+    layout = grid_class(widget)
+    title = qt.QtWidgets.QLabel(f"Inventory: {character_name}")
     if on_add_item is not None:
         add_item_button = qt.QtWidgets.QPushButton("Add Item")
         if hasattr(add_item_button, "setToolTip"):
             add_item_button.setToolTip("Manually add an item stack to this inventory.")
         add_item_button.clicked.connect(lambda checked=False: on_add_item())
-        layout.addWidget(add_item_button)
+    else:
+        add_item_button = None
     money_log = money_log_entries
     if money_log is None:
         money_log = [f"Opening balance: {_currency_price_text(purse.total_cp)}"]
     money_log_button = qt.QtWidgets.QPushButton("Money Log")
     if hasattr(money_log_button, "setToolTip"):
         money_log_button.setToolTip("Show currency changes made while this inventory is open.")
-    layout.addWidget(money_log_button)
     ledger = qt.QtWidgets.QLineEdit()
     if hasattr(ledger, "setPlaceholderText"):
         ledger.setPlaceholderText("1PP 100GP")
-    layout.addWidget(ledger)
     buttons = qt.QtWidgets.QWidget()
     button_layout = qt.QtWidgets.QVBoxLayout(buttons)
     deposit = qt.QtWidgets.QPushButton("Deposit")
@@ -347,9 +345,8 @@ def _inventory_header(
         withdraw.setStyleSheet("background:#9f2f2f; color:white;")
     button_layout.addWidget(deposit)
     button_layout.addWidget(withdraw)
-    layout.addWidget(buttons)
     boxes = _currency_boxes(qt, purse)
-    layout.addWidget(_currency_box_grid(qt, boxes))
+    currency_grid = _currency_box_grid(qt, boxes)
     current = money_log_current if money_log_current is not None else {"purse": purse}
     current["purse"] = purse
 
@@ -403,7 +400,31 @@ def _inventory_header(
         signal = getattr(box, "editingFinished", None)
         if signal is not None and hasattr(signal, "connect"):
             signal.connect(apply_boxes)
+    _inventory_header_add(layout, title, 0, 0)
+    if add_item_button is not None:
+        _inventory_header_add(layout, add_item_button, 0, 1)
+    _inventory_header_add(layout, money_log_button, 0, 2)
+    _inventory_header_add(layout, ledger, 1, 0, 1, 2)
+    _inventory_header_add(layout, buttons, 1, 2)
+    _inventory_header_add(layout, currency_grid, 0, 3, 2, 1)
+    if hasattr(layout, "setColumnStretch"):
+        layout.setColumnStretch(0, 1)
     return widget
+
+
+def _inventory_header_add(
+    layout,
+    widget,
+    row: int,
+    column: int,
+    row_span: int = 1,
+    column_span: int = 1,
+) -> None:
+    """Add a responsive inventory-header cell on real and fallback Qt layouts."""
+    try:
+        layout.addWidget(widget, row, column, row_span, column_span)
+    except TypeError:
+        layout.addWidget(widget)
 
 
 def _show_money_log(qt, parent, character_name: str, entries: list[str], current: dict):

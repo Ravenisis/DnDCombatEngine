@@ -276,6 +276,62 @@ def test_spellbook_helpers_cover_tab_and_character_paths() -> None:
     assert tab._dnd_spellbook_tab_count == 1
 
 
+def test_spellbook_tab_uses_resizable_scroll_area_when_available() -> None:
+    """Spellbook entries retain their button height when a tab has many ranks."""
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import spellbook
+
+    class Widget:
+        pass
+
+    class Layout:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widget = widget
+
+    class ScrollArea:
+        def setWidgetResizable(self, value) -> None:  # noqa: N802
+            self.resizable = value
+
+        def setWidget(self, widget) -> None:  # noqa: N802
+            self.widget = widget
+
+    qt = SimpleNamespace(
+        QtWidgets=SimpleNamespace(
+            QWidget=Widget,
+            QVBoxLayout=Layout,
+            QScrollArea=ScrollArea,
+        )
+    )
+
+    tab = spellbook._spellbook_tab(qt)
+
+    assert isinstance(tab, ScrollArea)
+    assert tab.resizable is True
+    assert isinstance(tab.widget, Widget)
+
+
+def test_inventory_scroll_area_resizes_its_inventory_content() -> None:
+    """Long container lists remain reachable without shrinking their icon buttons."""
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class ScrollArea:
+        def setWidgetResizable(self, value) -> None:  # noqa: N802
+            self.resizable = value
+
+    qt = SimpleNamespace(QtWidgets=SimpleNamespace(QScrollArea=ScrollArea))
+
+    scroll_area = main_window._inventory_scroll_area(qt)
+
+    assert isinstance(scroll_area, ScrollArea)
+    assert scroll_area.resizable is True
+
+
 def test_inventory_widget_delegates_to_inventory_helpers(monkeypatch) -> None:
     character = Character("lyra", "Lyra", HitPoints(10, 10))
     app = SimpleNamespace(characters=SimpleNamespace(load=lambda _: character))

@@ -14,6 +14,13 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
+- The CI matrix installs PySide6 on every supported operating system and runs a
+  real offscreen desktop smoke test as part of the coverage-enforced full suite.
+- Spellbook and Inventory overlays are larger and scrollable; Campaign Activity
+  is now a dedicated scrollable popup from the Campaign menu.
+- Key Binds and Preferences include visible Close commands. Preferences retain
+  the active color selection, and dice/save interaction paths ignore duplicate
+  GUI activation signals.
 - The command side of the desktop UI is organized into Campaign, Combat, and
   Manage tabs to keep workflow controls reachable without a single tall panel.
 - Spellbook, Inventory, Key Binds, Preferences, and Money Log are child

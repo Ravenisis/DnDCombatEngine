@@ -22,6 +22,7 @@ def test_default_action_specs_include_core_commands() -> None:
         "campaign.close",
         "campaign.add_party_member",
         "campaign.set_party_leader",
+        "campaign.activity",
         "campaign.long_rest",
         "campaign.short_rest",
         "campaign.import_pdf",
@@ -68,8 +69,9 @@ def test_action_specs_group_by_menu_preserves_order() -> None:
     assert grouped["Character"][2].action_id == "character.break_concentration"
     assert grouped["Campaign"][0].action_id == "campaign.load_starter"
     assert grouped["Campaign"][4].action_id == "campaign.add_party_member"
-    assert grouped["Campaign"][6].action_id == "campaign.long_rest"
-    assert grouped["Campaign"][8].action_id == "campaign.import_pdf"
+    assert grouped["Campaign"][6].action_id == "campaign.activity"
+    assert grouped["Campaign"][7].action_id == "campaign.long_rest"
+    assert grouped["Campaign"][9].action_id == "campaign.import_pdf"
     assert grouped["Combat"][0].action_id == "combat.quick_attack"
     assert [spec.action_id for spec in grouped["Dice"]] == [
         "dice.roll_d4",

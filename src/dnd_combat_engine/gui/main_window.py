@@ -6,6 +6,7 @@ import json
 import re
 from dataclasses import replace
 from pathlib import Path
+from time import monotonic
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
 from dnd_combat_engine.controllers import CombatActionRequest
@@ -126,12 +127,6 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
     window.setCentralWidget(_main_workspace(window, qt, workspace))
 
     _add_left_panel(window, qt, "Campaign", _campaign_widget(application, qt, campaign_state))
-    _add_left_panel(
-        window,
-        qt,
-        "Activity",
-        _activity_widget(application, qt, campaign_state),
-    )
     _add_left_panel(window, qt, "Party", _party_widget(window, application, qt, campaign_state))
     _add_left_panel(
         window,
@@ -300,7 +295,7 @@ def _add_left_panel(window, qt, title: str, widget) -> None:
     if layout is None:
         return
     host = _panel_host(qt, title, widget)
-    _layout_add_widget(layout, host, 1 if title in {"Activity", "Combat Log"} else None)
+    _layout_add_widget(layout, host, 1 if title == "Combat Log" else None)
     if hasattr(window, "_dnd_panel_hosts"):
         window._dnd_panel_hosts[title] = host  # noqa: SLF001
 
@@ -456,10 +451,10 @@ def _run_menu_action(
         if notation is None:
             _set_status(window, f"{action_id} selected.")
             return
-        _roll_menu_die(window, app, state, notation)
+        _roll_menu_die(window, app, state, notation, source=action_id)
         return
     if action_id == "dice.repeat_last":
-        _roll_menu_die(window, app, state, state.last_dice_notation)
+        _roll_menu_die(window, app, state, state.last_dice_notation, source=action_id)
         return
     if action_id == "campaign.load_starter":
         _open_campaign(window, qt, app, state, "starter_campaign")
@@ -480,6 +475,9 @@ def _run_menu_action(
         return
     if action_id == "campaign.set_party_leader":
         _set_party_leader_from_menu(window, qt, app, state)
+        return
+    if action_id == "campaign.activity":
+        _open_campaign_activity_window(window, qt, app, state)
         return
     if action_id == "campaign.long_rest":
         _rest_campaign(window, qt, app, state, long_rest=True)
@@ -852,13 +850,11 @@ def _refresh_campaign_docks(
     docks = getattr(window, "_dnd_docks", {})
     panels = getattr(window, "_dnd_panel_hosts", {})
     _replace_panel_widget(panels, "Campaign", _campaign_widget(app, qt, state))
-    _replace_panel_widget(panels, "Activity", _activity_widget(app, qt, state))
     _replace_panel_widget(panels, "Party", _party_widget(window, app, qt, state))
     _replace_panel_widget(panels, "Target", _target_widget(window, app, qt, state))
     _replace_panel_widget(panels, "Campaign Editor", _campaign_editor_widget(app, qt, state))
     _replace_panel_widget(panels, "Character Sheet", _character_widget(app, qt, state))
     _replace_dock_widget(docks, "Campaign", _campaign_widget(app, qt, state))
-    _replace_dock_widget(docks, "Activity", _activity_widget(app, qt, state))
     _replace_dock_widget(docks, "Party", _party_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Target", _target_widget(window, app, qt, state))
     _replace_dock_widget(docks, "Campaign Editor", _campaign_editor_widget(app, qt, state))
@@ -1063,7 +1059,7 @@ def _open_spellbook_window(
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle(f"{character.name} Spellbook")
     if hasattr(popup, "resize"):
-        popup.resize(360, 520)
+        popup.resize(680, 650)
     layout = qt.QtWidgets.QVBoxLayout(popup)
     layout.addWidget(_spellbook_widget(app, qt, state, session))
     _show_popup(window, popup, key="spellbook")
@@ -1106,8 +1102,11 @@ def _open_inventory_window(
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle(f"{character.name} Inventory")
     if hasattr(popup, "resize"):
-        popup.resize(620, 520)
+        popup.resize(900, 660)
     layout = qt.QtWidgets.QVBoxLayout(popup)
+    scroll_area = _inventory_scroll_area(qt)
+    if scroll_area is not None:
+        layout.addWidget(scroll_area)
     content = {"widget": None}
     money_log_entries = [f"Opening balance: {_currency_change_text(character.currency.total_cp)}"]
     money_log_current = {"purse": character.currency}
@@ -1154,16 +1153,30 @@ def _open_inventory_window(
             money_log_current=money_log_current,
         )
         previous = content.get("widget")
-        if previous is not None and hasattr(layout, "removeWidget"):
-            layout.removeWidget(previous)
-        layout.addWidget(next_widget)
-        if previous is not None and hasattr(previous, "setParent"):
-            previous.setParent(None)
+        if scroll_area is not None and hasattr(scroll_area, "setWidget"):
+            scroll_area.setWidget(next_widget)
+        else:
+            if previous is not None and hasattr(layout, "removeWidget"):
+                layout.removeWidget(previous)
+            layout.addWidget(next_widget)
+            if previous is not None and hasattr(previous, "setParent"):
+                previous.setParent(None)
         content["widget"] = next_widget
 
     refresh_inventory()
     _show_popup(window, popup, key="inventory")
     _set_status(window, f"Opened {character.name} inventory.")
+
+
+def _inventory_scroll_area(qt):
+    """Create the scroll host used by the inventory's long container list."""
+    scroll_class = getattr(qt.QtWidgets, "QScrollArea", None)
+    if scroll_class is None:
+        return None
+    scroll_area = scroll_class()
+    if hasattr(scroll_area, "setWidgetResizable"):
+        scroll_area.setWidgetResizable(True)
+    return scroll_area
 
 
 def _add_inventory_item_from_dialog(
@@ -1450,6 +1463,7 @@ def _open_key_binds_window(window, qt) -> None:
             "\n".join(f"{command}: {shortcut}" for command, shortcut in rows)
         )
         layout.addWidget(label)
+    _add_popup_close_button(window, qt, layout, "key_binds", "Closed key binds.")
     _show_popup(window, popup, key="key_binds")
     _set_status(window, "Opened key binds.")
 
@@ -1475,6 +1489,7 @@ def _open_preferences_window(window, qt) -> None:
         schemes = ("Dark", "Parchment", "High Contrast")
         for scheme in schemes:
             combo.addItem(scheme)
+        _set_combo_text(combo, getattr(window, "_dnd_color_scheme", "Dark"))
 
         def apply_scheme(index: int) -> None:
             scheme = schemes[index] if 0 <= index < len(schemes) else "Dark"
@@ -1483,8 +1498,53 @@ def _open_preferences_window(window, qt) -> None:
         if hasattr(combo, "currentIndexChanged"):
             combo.currentIndexChanged.connect(apply_scheme)
         layout.addWidget(combo)
+    _add_popup_close_button(window, qt, layout, "preferences", "Closed preferences.")
     _show_popup(window, popup, key="preferences")
     _set_status(window, "Opened preferences.")
+
+
+def _open_campaign_activity_window(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    """Open the full persisted campaign activity log in a scrollable popup."""
+    if _toggle_named_popup(window, "campaign_activity", "Closed campaign activity."):
+        return
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
+    if hasattr(popup, "setWindowTitle"):
+        popup.setWindowTitle("Campaign Activity")
+    if hasattr(popup, "resize"):
+        popup.resize(720, 560)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    layout.addWidget(_activity_widget(app, qt, state))
+    _add_popup_close_button(
+        window,
+        qt,
+        layout,
+        "campaign_activity",
+        "Closed campaign activity.",
+    )
+    _show_popup(window, popup, key="campaign_activity")
+    _set_status(window, "Opened campaign activity.")
+
+
+def _add_popup_close_button(window, qt, layout, key: str, status_message: str) -> None:
+    """Add an explicit close command to an embedded popup."""
+    button_class = getattr(qt.QtWidgets, "QPushButton", None)
+    if button_class is None:
+        return
+    button = button_class("Close")
+    if hasattr(button, "setToolTip"):
+        button.setToolTip("Close this window.")
+    if hasattr(button, "clicked"):
+        button.clicked.connect(
+            lambda checked=False: _close_named_popup(window, key, status_message)
+        )
+    layout.addWidget(button)
 
 
 def _show_popup(window, popup, key: str | None = None) -> None:
@@ -1505,15 +1565,21 @@ def _toggle_named_popup(window, key: str, status_message: str) -> bool:
         return False
     is_visible = popup.isVisible() if hasattr(popup, "isVisible") else True
     if is_visible:
-        if hasattr(popup, "close"):
-            popup.close()
-        named.pop(key, None)
-        window._dnd_named_popups = named  # noqa: SLF001
-        _set_status(window, status_message)
+        _close_named_popup(window, key, status_message)
         return True
     named.pop(key, None)
     window._dnd_named_popups = named  # noqa: SLF001
     return False
+
+
+def _close_named_popup(window, key: str, status_message: str) -> None:
+    """Close and unregister a named embedded popup."""
+    named = getattr(window, "_dnd_named_popups", {})
+    popup = named.pop(key, None)
+    if popup is not None and hasattr(popup, "close"):
+        popup.close()
+    window._dnd_named_popups = named  # noqa: SLF001
+    _set_status(window, status_message)
 
 
 def _apply_color_scheme(window, scheme: str) -> None:
@@ -1564,7 +1630,11 @@ def _roll_menu_die(
     app: DnDCombatEngineApp,
     state: GuiCampaignState,
     notation: str,
+    *,
+    source: str | None = None,
 ) -> str:
+    if _duplicate_roll_guard(window, source or f"dice:{notation}"):
+        return ""
     result = app.dice.roll(notation)
     state.last_dice_notation = notation
     die = notation.removeprefix("1")
@@ -1572,6 +1642,18 @@ def _roll_menu_die(
     _append_workspace(window, message)
     _set_status(window, message)
     return message
+
+
+def _duplicate_roll_guard(window, source: str, *, interval_seconds: float = 0.15) -> bool:
+    """Ignore duplicate Qt activation signals for the same roll command."""
+    now = monotonic()
+    previous = getattr(window, "_dnd_roll_guard", None)
+    window._dnd_roll_guard = (source, now)  # noqa: SLF001
+    return (
+        previous is not None
+        and previous[0] == source
+        and now - previous[1] < interval_seconds
+    )
 
 
 def _consume_inventory_item(
@@ -2877,6 +2959,9 @@ def _roll_saving_throw(
     *,
     advantage: bool = False,
 ) -> str:
+    roll_source = f"save:{ability.lower()}:{advantage}"
+    if _duplicate_roll_guard(window, roll_source):
+        return ""
     character_id = _active_character_id(state)
     if character_id is None:
         message = "No party leader selected for saving throw."

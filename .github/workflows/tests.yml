@@ -32,12 +32,8 @@ jobs:
       - name: Upgrade packaging tools
         run: python -m pip install --upgrade pip setuptools wheel
 
-      - name: Install package
-        run: python -m pip install -e ".[dev]"
-
-      - name: Install Windows GUI smoke dependencies
-        if: runner.os == 'Windows'
-        run: python -m pip install -e ".[gui]"
+      - name: Install package and GUI test dependencies
+        run: python -m pip install -e ".[dev,gui]"
 
       - name: Lint
         run: python -m ruff check .
@@ -53,13 +49,12 @@ jobs:
           from dnd_combat_engine.models import Character, HitPoints;
           print('core imports ok')"
 
-      - name: Windows GUI import smoke test
-        if: runner.os == 'Windows'
+      - name: GUI import smoke test
         run: >-
           python -c "from dnd_combat_engine.gui import main_window;
           from dnd_combat_engine.gui.action_bar import ActionBarSession;
           from dnd_combat_engine.gui.widgets import PartyFramesWidget;
-          print('windows gui imports ok')"
+          print('gui imports ok')"
 
-      - name: Test
-        run: python -m pytest
+      - name: Full test suite with coverage gate
+        run: python -m pytest --cov-fail-under=90

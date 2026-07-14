@@ -8,7 +8,7 @@ Run:
 
 ```powershell
 python -m ruff check .
-python -m pytest --basetemp .\tmp\pytest
+python -m pytest --cov-fail-under=90 --basetemp .\tmp\pytest
 python -m mypy
 ```
 

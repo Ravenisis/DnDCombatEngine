@@ -90,6 +90,12 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Set which party member owns the active spellbook",
         ),
         GuiActionSpec(
+            "campaign.activity",
+            "Campaign",
+            "Campaign Activity",
+            "Open the complete campaign activity log",
+        ),
+        GuiActionSpec(
             "campaign.long_rest",
             "Campaign",
             "Long Rest",

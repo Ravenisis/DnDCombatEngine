@@ -79,7 +79,7 @@ class CampaignActivityWidget:
         if not campaign.activity_log:
             output.append("No campaign activity yet.")
             return output
-        for entry in campaign.activity_log[-12:]:
+        for entry in campaign.activity_log:
             output.append(f"[{entry.category}] {entry.message}")
         return output
 

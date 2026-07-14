@@ -28,8 +28,8 @@ jobs:
       - name: Lint
         run: python -m ruff check .
 
-      - name: Test
-        run: python -m pytest
+      - name: Full test suite with coverage gate
+        run: python -m pytest --cov-fail-under=90
 
       - name: Build wheel and source distribution
         run: python -m build

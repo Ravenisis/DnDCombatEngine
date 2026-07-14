@@ -7,6 +7,11 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added a real headless PySide6 smoke test that creates the main window,
+  validates an embedded Preferences overlay, and closes it through the visible
+  Close button.
+- Added a Campaign Activity command to the Campaign menu, opening the complete
+  persisted activity log in a large scrollable overlay.
 - Added a local hosted-campaign loopback smoke test covering host discovery,
   joining by code, activation, disconnect, and close lifecycle persistence.
 - Added the first WebSocket relay transport for hosted-campaign lifecycle
@@ -23,6 +28,14 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- The CI matrix now installs PySide6 on Ubuntu and Windows, runs GUI import and
+  interaction smoke checks, and explicitly fails the full test suite below the
+  90% coverage gate.
+- Enlarged the Spellbook and Inventory overlays; both now use scrollable
+  content, and the inventory header reflows without horizontal clipping.
+- Added visible Close buttons to Key Binds and Preferences, preserved the
+  selected color scheme when reopening Preferences, and suppress duplicate
+  activation signals for dice and saving-throw rolls.
 - Removed the separate Abilities menu and `N` shortcut. Abilities remain in the
   Spellbook's existing tab alongside spells, cantrips, attacks, and channel
   divinity.

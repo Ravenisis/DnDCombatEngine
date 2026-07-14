@@ -27,7 +27,7 @@ class SpellbookWidget:
         output.setReadOnly(True)
         layout.addWidget(qt.QtWidgets.QLabel(widgets._spellbook_title(app, character_id)))
         tabs = _spellbook_tabs(qt)
-        layout.addWidget(tabs)
+        _layout_add_widget(layout, tabs, stretch=1)
         attacks_tab = _spellbook_tab(qt)
         spells_tab = _spellbook_tab(qt)
         cantrips_tab = _spellbook_tab(qt)
@@ -108,6 +108,8 @@ class SpellbookWidget:
             _spellbook_tab_add_widget(target_tab, button)
         for tab in (spells_tab, abilities_tab, cantrips_tab, attacks_tab, channel_tab):
             _spellbook_tab_finish(qt, tab)
+        if hasattr(output, "setMaximumHeight"):
+            output.setMaximumHeight(96)
         layout.addWidget(output)
         return widget
 
@@ -154,11 +156,31 @@ class _FallbackTabs:
 
 
 def _spellbook_tab(qt: Any) -> Any:
-    widget = qt.QtWidgets.QWidget()
-    layout = qt.QtWidgets.QVBoxLayout(widget)
-    widget._dnd_spellbook_tab_layout = layout  # noqa: SLF001
-    widget._dnd_spellbook_tab_count = 0  # noqa: SLF001
-    return widget
+    content = qt.QtWidgets.QWidget()
+    layout = qt.QtWidgets.QVBoxLayout(content)
+    scroll_class = getattr(qt.QtWidgets, "QScrollArea", None)
+    if scroll_class is None:
+        tab = content
+    else:
+        tab = scroll_class()
+        if hasattr(tab, "setWidgetResizable"):
+            tab.setWidgetResizable(True)
+        if hasattr(tab, "setWidget"):
+            tab.setWidget(content)
+    tab._dnd_spellbook_tab_layout = layout  # noqa: SLF001
+    tab._dnd_spellbook_tab_count = 0  # noqa: SLF001
+    return tab
+
+
+def _layout_add_widget(layout: Any, widget: Any, stretch: int | None = None) -> None:
+    """Add a widget with stretch when supported by the active Qt binding."""
+    if stretch is None:
+        layout.addWidget(widget)
+        return
+    try:
+        layout.addWidget(widget, stretch)
+    except TypeError:
+        layout.addWidget(widget)
 
 
 def _add_spellbook_tab(tabs: Any, tab: Any, title: str) -> None:

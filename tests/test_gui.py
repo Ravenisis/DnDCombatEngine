@@ -769,6 +769,46 @@ def test_saving_throw_roll_uses_imported_modifier_and_advantage() -> None:
     assert messages == [message]
 
 
+def test_roll_guard_suppresses_duplicate_gui_activation(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    times = iter((1.0, 1.05, 1.30, 1.31))
+    monkeypatch.setattr(main_window, "monotonic", lambda: next(times))
+    window = SimpleNamespace()
+
+    assert not main_window._duplicate_roll_guard(window, "dice.roll_d20")
+    assert main_window._duplicate_roll_guard(window, "dice.roll_d20")
+    assert not main_window._duplicate_roll_guard(window, "dice.roll_d20")
+    assert not main_window._duplicate_roll_guard(window, "save:wisdom:False")
+
+
+def test_named_popup_close_unregisters_window() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class Status:
+        def showMessage(self, message) -> None:  # noqa: N802
+            self.message = message
+
+    class Popup:
+        def close(self) -> None:
+            self.closed = True
+
+    popup = Popup()
+    window = SimpleNamespace(
+        _dnd_named_popups={"preferences": popup},
+        statusBar=lambda: Status(),
+    )
+
+    main_window._close_named_popup(window, "preferences", "Closed preferences.")
+
+    assert popup.closed
+    assert window._dnd_named_popups == {}
+
+
 def test_party_context_menu_wires_actions(monkeypatch) -> None:
     from dnd_combat_engine.gui import widgets
 

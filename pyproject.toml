@@ -46,6 +46,9 @@ dnd_combat_engine = ["data/**/*"]
 addopts = "-q --cov=dnd_combat_engine --cov-report=term-missing --cov-fail-under=90"
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+  "gui: requires PySide6 and exercises the desktop interface offscreen",
+]
 
 [tool.coverage.run]
 omit = [
