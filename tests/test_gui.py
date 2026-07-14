@@ -1304,6 +1304,16 @@ def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
     monkeypatch.setattr(main_window.ActionBarWidget, "create", lambda *args, **kwargs: "bar")
     monkeypatch.setattr(main_window.DiceBarWidget, "create", lambda *args, **kwargs: "dice")
     monkeypatch.setattr(
+        main_window.InitiativeRollWidget,
+        "create",
+        lambda *args, **kwargs: "initiative",
+    )
+    monkeypatch.setattr(
+        main_window.SavingThrowWidget,
+        "create",
+        lambda *args, **kwargs: "saves",
+    )
+    monkeypatch.setattr(
         main_window.SpellSlotTrackerWidget,
         "create",
         lambda *args, **kwargs: "slots",
@@ -1320,7 +1330,12 @@ def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
     assert widget is not None
     assert widget.layout.widgets[0] == ("dice", None)
     controls = widget.layout.widgets[1][0]
-    assert controls.layout.widgets == [("slots", None), ("bar", 1)]
+    assert controls.layout.widgets == [
+        ("slots", None),
+        ("bar", 1),
+        ("initiative", None),
+        ("saves", None),
+    ]
 
 
 def test_layout_helpers_cover_fallback_paths() -> None:

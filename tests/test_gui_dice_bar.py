@@ -5,7 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
-from dnd_combat_engine.gui.dice_bar import DICE_OPTIONS, DiceBarWidget, _icon_path
+from dnd_combat_engine.gui.dice_bar import (
+    DICE_OPTIONS,
+    DiceBarWidget,
+    InitiativeRollWidget,
+    _icon_path,
+)
+from dnd_combat_engine.models import Character, HitPoints
 
 
 class FakeSignal:
@@ -67,6 +73,7 @@ class FakeButton(FakeWidget):
         self.icon_size = None
         self.fixed_size = None
         self.tool_style = None
+        self.enabled = True
 
     def setText(self, text: str) -> None:  # noqa: N802
         self.text = text
@@ -85,6 +92,9 @@ class FakeButton(FakeWidget):
 
     def setToolButtonStyle(self, style) -> None:  # noqa: N802
         self.tool_style = style
+
+    def setEnabled(self, enabled: bool) -> None:  # noqa: N802
+        self.enabled = enabled
 
 
 def _fake_qt():
@@ -117,13 +127,42 @@ def test_dice_bar_builds_and_activates_standard_polyhedral_set() -> None:
         "d10",
         "d12",
         "d20",
-        "d%",
+        "d100",
     ]
     assert all(button.icon.exists() for button in widget.layout.widgets)
     assert all("Combat Workspace" in button.tooltip for button in widget.layout.widgets)
+    assert all(button.fixed_size == (68, 72) for button in widget.layout.widgets)
     widget.layout.widgets[5].clicked.emit()
     assert rolled == ["1d20"]
 
 
 def test_dice_icon_catalog_matches_supported_dice() -> None:
     assert all(_icon_path(sides).is_file() for sides in DICE_OPTIONS)
+
+
+def test_initiative_button_uses_character_modifier_and_activates() -> None:
+    character = Character(
+        "ravenisis",
+        "Ravenisis",
+        HitPoints(10, 10),
+        initiative_modifier=4,
+    )
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
+    activated = []
+
+    button = InitiativeRollWidget.create(app, _fake_qt(), "ravenisis", lambda: activated.append(1))
+
+    assert button.text == "Initiative\n+4"
+    assert button.object_name == "InitiativeRollButton"
+    assert button.enabled
+    button.clicked.emit()
+    assert activated == [1]
+
+
+def test_initiative_button_disables_without_party_leader() -> None:
+    app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: None))
+
+    button = InitiativeRollWidget.create(app, _fake_qt(), None)
+
+    assert button.text == "Initiative\n--"
+    assert not button.enabled

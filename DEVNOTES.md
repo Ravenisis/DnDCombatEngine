@@ -14,6 +14,14 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
+- GitHub-hosted test and package workflows use Node.js 24-backed releases of
+  checkout, setup-python, and upload-artifact; Python coverage and packaging
+  behavior remain unchanged.
+- The Action Bar dock now exposes the party leader's initiative roll beside
+  saving throws. Imported initiative modifiers feed both this control and the
+  encounter initiative service, and the resulting total refreshes party order.
+- Polyhedral controls have enough vertical space for their icon-and-label
+  layout, with percentile notation displayed consistently as `d100`.
 - The Action Bar dock includes a visual seven-piece polyhedral dice strip.
   These controls reuse the Dice menu's roll, log, status, duplicate-signal,
   and previous-die behavior instead of maintaining a separate GUI code path.

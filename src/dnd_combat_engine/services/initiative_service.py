@@ -30,12 +30,12 @@ class InitiativeService:
 
     def _roll_entry(self, combatant: Character, rng: random.Random | None) -> InitiativeEntry:
         roll = self.dice_service.roll("1d20", rng=rng)
-        dexterity_modifier = combatant.abilities.modifier("dexterity")
+        initiative_bonus = combatant.initiative_bonus
         return InitiativeEntry(
             combatant=combatant,
             roll=roll,
-            dexterity_modifier=dexterity_modifier,
-            total=roll.total + dexterity_modifier,
+            dexterity_modifier=initiative_bonus,
+            total=roll.total + initiative_bonus,
         )
 
 
@@ -46,4 +46,3 @@ def _initiative_sort_key(entry: InitiativeEntry) -> tuple[int, int, str, str]:
         entry.combatant.name.lower(),
         entry.combatant.character_id,
     )
-

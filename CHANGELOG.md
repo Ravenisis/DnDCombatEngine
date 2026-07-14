@@ -7,6 +7,9 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added an Initiative control immediately left of the saving throws on the
+  Action Bar dock. It rolls the party leader's `1d20` with the imported
+  initiative modifier, logs the breakdown, and refreshes party order.
 - Added a visual seven-piece polyhedral dice strip above the action bar. The
   d4, d6, d8, d10, d12, d20, and percentile buttons roll directly into the
   Combat Workspace through the same guarded path as the Dice menu.
@@ -31,6 +34,13 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Updated GitHub Actions checkout, Python setup, and artifact upload steps to
+  their Node.js 24-backed major versions, removing the retired Node.js 20
+  runtime from test and package workflows.
+- Enlarged the visual dice controls so icon-and-text labels remain fully
+  visible, and renamed the percentile control from `d%` to `d100`.
+- Initiative resolution now honors an explicitly imported character-sheet
+  modifier before falling back to the Dexterity modifier.
 - Extended the real PySide6 smoke coverage to click a visual die and verify
   both its Combat Workspace result and previous-die state.
 - The CI matrix now installs PySide6 on Ubuntu and Windows, runs GUI import and

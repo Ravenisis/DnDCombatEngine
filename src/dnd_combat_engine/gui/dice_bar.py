@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 
 DICE_OPTIONS = (4, 6, 8, 10, 12, 20, 100)
@@ -30,17 +31,43 @@ class DiceBarWidget:
         return widget
 
 
+class InitiativeRollWidget:
+    """Factory for the party leader's initiative roll control."""
+
+    @staticmethod
+    def create(app, qt, character_id: str | None, on_roll: Callable[[], object] | None = None):
+        """Create a compact initiative button using the character's modifier."""
+        button = qt.QtWidgets.QPushButton()
+        if hasattr(button, "setObjectName"):
+            button.setObjectName("InitiativeRollButton")
+        modifier = None
+        if character_id is not None:
+            with suppress(KeyError):
+                modifier = app.characters.load(character_id).initiative_bonus
+        modifier_text = f"{modifier:+d}" if modifier is not None else "--"
+        button.setText(f"Initiative\n{modifier_text}")
+        button.setToolTip(
+            "Roll initiative for the party leader (1d20 plus the initiative modifier)"
+        )
+        if hasattr(button, "setFixedSize"):
+            button.setFixedSize(84, 64)
+        if hasattr(button, "setEnabled"):
+            button.setEnabled(modifier is not None)
+        button.clicked.connect(lambda checked=False: _activate(on_roll))
+        return button
+
+
 def _die_button(qt, sides: int, on_roll: Callable[[str], object] | None):
     button_class = getattr(qt.QtWidgets, "QToolButton", qt.QtWidgets.QPushButton)
     button = button_class()
     notation = f"1d{sides}"
-    label = "d%" if sides == 100 else f"d{sides}"
+    label = f"d{sides}"
     button.setText(label)
     if hasattr(button, "setObjectName"):
         button.setObjectName(f"DiceRollButton_d{sides}")
     button.setToolTip(f"Roll {label} in the Combat Workspace")
     if hasattr(button, "setFixedSize"):
-        button.setFixedSize(60, 58)
+        button.setFixedSize(68, 72)
 
     icon_path = _icon_path(sides)
     icon_class = getattr(qt.QtGui, "QIcon", None)
@@ -62,6 +89,11 @@ def _die_button(qt, sides: int, on_roll: Callable[[str], object] | None):
 def _roll(on_roll: Callable[[str], object] | None, notation: str) -> None:
     if on_roll is not None:
         on_roll(notation)
+
+
+def _activate(callback: Callable[[], object] | None) -> None:
+    if callback is not None:
+        callback()
 
 
 def _icon_path(sides: int) -> Path:

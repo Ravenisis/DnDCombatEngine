@@ -57,6 +57,20 @@ def test_initiative_service_sorts_by_total_then_dexterity_then_name() -> None:
     assert {entry.total for entry in tracker.entries} == {14}
 
 
+def test_initiative_service_uses_imported_modifier_when_available() -> None:
+    cleric = make_character("cleric", "Ravenisis", dexterity=10)
+    cleric.initiative_modifier = 4
+
+    tracker = InitiativeService().roll_initiative(
+        [cleric],
+        rng=SequenceRng([12]),  # type: ignore[arg-type]
+    )
+
+    assert tracker.current is not None
+    assert tracker.current.dexterity_modifier == 4
+    assert tracker.current.total == 16
+
+
 def test_initiative_tracker_advances_turns_and_rounds() -> None:
     first = make_entry(make_character("first", "First"), 20)
     second = make_entry(make_character("second", "Second"), 10)

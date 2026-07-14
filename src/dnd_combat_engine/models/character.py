@@ -62,6 +62,13 @@ class Character:
         if self.level < 1:
             raise ValueError("level must be at least 1")
 
+    @property
+    def initiative_bonus(self) -> int:
+        """Return the imported initiative modifier or the Dexterity modifier."""
+        if self.initiative_modifier is not None:
+            return self.initiative_modifier
+        return self.abilities.modifier("dexterity")
+
     def to_dict(self) -> dict[str, object]:
         """Serialize the character to plain JSON-compatible data."""
         return {

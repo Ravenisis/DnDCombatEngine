@@ -30,7 +30,7 @@ from dnd_combat_engine.gui.combat_panels import (
     CombatLogWidget,
     EncounterTrackerWidget,
 )
-from dnd_combat_engine.gui.dice_bar import DiceBarWidget
+from dnd_combat_engine.gui.dice_bar import DiceBarWidget, InitiativeRollWidget
 from dnd_combat_engine.gui.import_dialogs import (
     ask_campaign_name,
     ask_character_id,
@@ -189,6 +189,12 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
                 campaign_state,
                 notation,
                 source=f"dice.bar:{notation}",
+            ),
+            on_initiative=lambda: _roll_initiative(
+                window,
+                qt,
+                application,
+                campaign_state,
             ),
         ),
     )
@@ -893,6 +899,12 @@ def _refresh_campaign_docks(
                         state,
                         notation,
                         source=f"dice.bar:{notation}",
+                    ),
+                    on_initiative=lambda: _roll_initiative(
+                        window,
+                        qt,
+                        app,
+                        state,
                     ),
                 ),
             )
@@ -3002,6 +3014,40 @@ def _roll_saving_throw(
     return message
 
 
+def _roll_initiative(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> str:
+    """Roll initiative for the party leader and refresh party ordering."""
+    character_id = _active_character_id(state)
+    if character_id is None:
+        message = "No party leader selected for initiative."
+        _set_status(window, message)
+        return message
+    if _duplicate_roll_guard(window, f"initiative:{character_id}"):
+        return ""
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        message = f"Party leader {character_id} could not be loaded."
+        _set_status(window, message)
+        return message
+    result = app.dice.roll("1d20")
+    modifier = character.initiative_bonus
+    total = result.total + modifier
+    state.party_initiative[character_id] = total
+    message = (
+        f"{character.name} initiative: {total} "
+        f"(1d20 {result.total} rolls={result.rolls}, modifier {modifier:+d})."
+    )
+    _append_workspace(window, message)
+    _refresh_campaign_docks(window, qt, app, state)
+    _set_status(window, message)
+    return message
+
+
 def _proficiency_bonus(level: int) -> int:
     return 2 + max(level - 1, 0) // 4
 
@@ -3258,6 +3304,7 @@ def _action_bar_widget(
     on_activate,
     on_save=None,
     on_die=None,
+    on_initiative=None,
 ):
     widget = qt.QtWidgets.QWidget()
     layout = qt.QtWidgets.QVBoxLayout(widget)
@@ -3278,6 +3325,15 @@ def _action_bar_widget(
         controls_layout,
         ActionBarWidget.create(qt, session, on_activate=on_activate, app=app),
         1,
+    )
+    _layout_add_widget(
+        controls_layout,
+        InitiativeRollWidget.create(
+            app,
+            qt,
+            _active_character_id(state),
+            on_roll=on_initiative,
+        ),
     )
     saving_throw_widget = SavingThrowWidget.create(
         app,
