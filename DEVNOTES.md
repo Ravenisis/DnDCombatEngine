@@ -14,6 +14,9 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
+- The Action Bar dock includes a visual seven-piece polyhedral dice strip.
+  These controls reuse the Dice menu's roll, log, status, duplicate-signal,
+  and previous-die behavior instead of maintaining a separate GUI code path.
 - The CI matrix installs PySide6 on every supported operating system and runs a
   real offscreen desktop smoke test as part of the coverage-enforced full suite.
 - Spellbook and Inventory overlays are larger and scrollable; Campaign Activity

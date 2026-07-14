@@ -7,6 +7,9 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added a visual seven-piece polyhedral dice strip above the action bar. The
+  d4, d6, d8, d10, d12, d20, and percentile buttons roll directly into the
+  Combat Workspace through the same guarded path as the Dice menu.
 - Added a real headless PySide6 smoke test that creates the main window,
   validates an embedded Preferences overlay, and closes it through the visible
   Close button.
@@ -28,6 +31,8 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Extended the real PySide6 smoke coverage to click a visual die and verify
+  both its Combat Workspace result and previous-die state.
 - The CI matrix now installs PySide6 on Ubuntu and Windows, runs GUI import and
   interaction smoke checks, and explicitly fails the full test suite below the
   90% coverage gate.

@@ -29,12 +29,12 @@ QFrame#EmbeddedPopup {
     background: #171b23;
     border: 1px solid #3a4863;
 }
-QPushButton {
+QPushButton, QToolButton {
     background: #253149;
     border: 1px solid #3a4863;
     padding: 6px 10px;
 }
-QPushButton:hover {
+QPushButton:hover, QToolButton:hover {
     background: #31405f;
 }
 """
@@ -62,12 +62,12 @@ QFrame#EmbeddedPopup {
     background: #fffaf0;
     border: 1px solid #8b7047;
 }
-QPushButton {
+QPushButton, QToolButton {
     background: #d1b47e;
     border: 1px solid #8b7047;
     padding: 6px 10px;
 }
-QPushButton:hover {
+QPushButton:hover, QToolButton:hover {
     background: #c5a267;
 }
 """
@@ -95,12 +95,12 @@ QFrame#EmbeddedPopup {
     background: #050505;
     border: 1px solid #ffffff;
 }
-QPushButton {
+QPushButton, QToolButton {
     background: #1d3557;
     border: 1px solid #ffffff;
     padding: 6px 10px;
 }
-QPushButton:hover {
+QPushButton:hover, QToolButton:hover {
     background: #2f5d95;
 }
 """

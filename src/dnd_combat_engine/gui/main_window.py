@@ -30,6 +30,7 @@ from dnd_combat_engine.gui.combat_panels import (
     CombatLogWidget,
     EncounterTrackerWidget,
 )
+from dnd_combat_engine.gui.dice_bar import DiceBarWidget
 from dnd_combat_engine.gui.import_dialogs import (
     ask_campaign_name,
     ask_character_id,
@@ -181,6 +182,13 @@ def create_main_window(app: DnDCombatEngineApp | None = None):
                 campaign_state,
                 ability,
                 advantage=advantage,
+            ),
+            on_die=lambda notation: _roll_menu_die(
+                window,
+                application,
+                campaign_state,
+                notation,
+                source=f"dice.bar:{notation}",
             ),
         ),
     )
@@ -878,6 +886,13 @@ def _refresh_campaign_docks(
                         state,
                         ability,
                         advantage=advantage,
+                    ),
+                    on_die=lambda notation: _roll_menu_die(
+                        window,
+                        app,
+                        state,
+                        notation,
+                        source=f"dice.bar:{notation}",
                     ),
                 ),
             )
@@ -3242,11 +3257,16 @@ def _action_bar_widget(
     session: ActionBarSession,
     on_activate,
     on_save=None,
+    on_die=None,
 ):
     widget = qt.QtWidgets.QWidget()
-    layout = qt.QtWidgets.QHBoxLayout(widget)
+    layout = qt.QtWidgets.QVBoxLayout(widget)
+    _layout_add_widget(layout, DiceBarWidget.create(qt, on_roll=on_die))
+
+    controls = qt.QtWidgets.QWidget()
+    controls_layout = qt.QtWidgets.QHBoxLayout(controls)
     _layout_add_widget(
-        layout,
+        controls_layout,
         SpellSlotTrackerWidget.create(
             app,
             qt,
@@ -3255,7 +3275,7 @@ def _action_bar_widget(
         ),
     )
     _layout_add_widget(
-        layout,
+        controls_layout,
         ActionBarWidget.create(qt, session, on_activate=on_activate, app=app),
         1,
     )
@@ -3266,7 +3286,8 @@ def _action_bar_widget(
         on_roll=on_save,
     )
     if saving_throw_widget is not None:
-        _layout_add_widget(layout, saving_throw_widget)
+        _layout_add_widget(controls_layout, saving_throw_widget)
+    _layout_add_widget(layout, controls)
     return widget
 
 

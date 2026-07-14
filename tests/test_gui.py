@@ -1291,6 +1291,7 @@ def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
     class FakeQtWidgets:
         QWidget = FakeWidget
         QHBoxLayout = FakeLayout
+        QVBoxLayout = FakeLayout
 
     qt = SimpleNamespace(QtWidgets=FakeQtWidgets)
     character = Character(
@@ -1301,6 +1302,7 @@ def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
     )
     app = SimpleNamespace(characters=SimpleNamespace(load=lambda character_id: character))
     monkeypatch.setattr(main_window.ActionBarWidget, "create", lambda *args, **kwargs: "bar")
+    monkeypatch.setattr(main_window.DiceBarWidget, "create", lambda *args, **kwargs: "dice")
     monkeypatch.setattr(
         main_window.SpellSlotTrackerWidget,
         "create",
@@ -1316,7 +1318,9 @@ def test_action_bar_widget_includes_spell_slot_tracker(monkeypatch) -> None:
     )
 
     assert widget is not None
-    assert widget.layout.widgets == [("slots", None), ("bar", 1)]
+    assert widget.layout.widgets[0] == ("dice", None)
+    controls = widget.layout.widgets[1][0]
+    assert controls.layout.widgets == [("slots", None), ("bar", 1)]
 
 
 def test_layout_helpers_cover_fallback_paths() -> None:
