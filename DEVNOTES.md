@@ -14,10 +14,17 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
-- Spellbook, Inventory, and Equipment use parented Qt subwindows so they remain
-  visible in main-window capture while supporting title-bar movement, close
-  controls, and QSettings-backed persistent geometry. The shared overlay layer
-  owns Escape handling and native-close registry cleanup.
+- Spellbook, Inventory, and Equipment use parent-owned native Qt tool windows
+  with working Windows title-bar movement, close controls, and QSettings-backed
+  persistent geometry. The shared overlay layer owns Escape handling and
+  native-close registry cleanup.
+- Application startup upgrades recognized legacy inventory records against the
+  bundled SRD and seed-character references. This repairs stale categories and
+  tooltips and restores character-owned weapons without replacing quantities,
+  bag placement, equipped slots, or unknown custom items.
+- The WiX package permits same-version upgrades, and the package workflow now
+  proves the generated MSI by silently installing it to an isolated folder,
+  launching the installed executable, and uninstalling it.
 - Equipment compatibility is now a public inventory service/controller query;
   body-slot context menus use the same validated autosaving equip workflow as
   drag-and-drop.
@@ -218,7 +225,7 @@ Latest verified local build:
 - `dist/DnDCombatEngine-1.0.3-windows.zip` - 73,310,221 bytes
 - `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,676,857 bytes
 - `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,684,557 bytes
-- Verified with `ruff`, `408` coverage-enforced tests at `90.12%`, mypy, a
+- Verified with `ruff`, `411` coverage-enforced tests at `90.07%`, mypy, a
   PyInstaller rebuild, a portable ZIP rebuild, an Inno Setup rebuild, and a
   WiX MSI rebuild.
 

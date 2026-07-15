@@ -7,21 +7,36 @@
     "strength": 8,
     "wisdom": 13
   },
+  "ability_save_dc": null,
   "armor": null,
+  "armor_proficiencies": [],
+  "character_class": "",
   "character_id": "vale",
   "conditions": [],
+  "currency": {
+    "cp": 0,
+    "gp": 0,
+    "pp": 0,
+    "sp": 0
+  },
+  "damage_resistances": [],
   "features": [
     "Sneak Attack"
   ],
+  "heroic_inspiration": false,
   "hit_points": {
     "current": 21,
     "maximum": 21,
     "temporary": 0
   },
+  "initiative_modifier": null,
   "inventory": [
     {
       "category": "tool",
+      "container_id": null,
+      "equipped_slot": null,
       "item_id": "thieves_tools",
+      "modifiers": {},
       "name": "Thieves' Tools",
       "notes": "SRD tool. Ability: Dexterity. Utilize: Pick a lock (DC 15), or disarm a trap (DC 15).",
       "purchase_price_cp": 2500,
@@ -31,10 +46,31 @@
         "tool"
       ],
       "weight": 1.0
+    },
+    {
+      "category": "weapon",
+      "container_id": null,
+      "equipped_slot": null,
+      "item_id": "rapier",
+      "modifiers": {},
+      "name": "Rapier",
+      "notes": "SRD weapon. Damage: 1d8 Piercing. Properties: Finesse. Mastery: Vex.",
+      "purchase_price_cp": 2500,
+      "quantity": 1,
+      "subcategory": "martial_melee_weapon",
+      "tags": [
+        "weapon",
+        "damage:1d8 Piercing",
+        "mastery:Vex"
+      ],
+      "weight": 2.0
     }
   ],
+  "languages": [],
   "level": 5,
   "name": "Vale",
+  "proficiency_bonus": null,
+  "race": "",
   "resources": {
     "hit_dice": {
       "current": 5,
@@ -42,11 +78,21 @@
       "name": "hit_dice"
     }
   },
+  "saving_throw_modifiers": {},
+  "saving_throw_proficiencies": [],
   "schema_version": 1,
+  "senses": [],
   "skills": [
     "stealth",
     "sleight_of_hand"
   ],
+  "spell_attack_bonus": null,
+  "spell_save_dc": null,
+  "spellcasting_ability": "",
+  "spells": [],
+  "tool_proficiencies": [],
+  "walking_speed": null,
+  "weapon_proficiencies": [],
   "weapons": [
     {
       "damage": [
@@ -60,7 +106,8 @@
         "finesse"
       ],
       "range_long": null,
-      "range_normal": null
+      "range_normal": null,
+      "rule_source": null
     }
   ]
 }

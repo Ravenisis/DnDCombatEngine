@@ -7,6 +7,16 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added an automatic legacy-inventory metadata upgrade at application startup.
+  Existing quantities, storage placement, and equipped slots are retained while
+  recognized items receive current SRD names, categories, weights, prices,
+  tags, subcategories, modifiers, and tooltip descriptions.
+- Added recovery of character-owned weapons that are present in the character
+  weapon list but missing from older inventory saves, including Ravenisis's
+  Warhammer.
+- Added an MSI install-and-launch smoke test to the Windows packaging workflow.
+  The test installs the generated MSI, starts the installed executable, verifies
+  that it remains running, and uninstalls the test copy.
 - Added right-click equipment-slot menus that list only compatible unequipped
   items from the active character inventory, with an Unequip command for
   occupied slots.
@@ -61,6 +71,11 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Spellbook, Inventory, and Equipment now use native Qt tool windows with
+  standard Windows title bars. They can be dragged independently and continue
+  to restore their last position and size.
+- Same-version MSI upgrades are now supported so refreshed `1.0.3` packages
+  replace stale installed files instead of leaving a mixed installation.
 - Removed the Dice drop-down menu while retaining the visual polyhedral dice
   controls and the `Ctrl+R` previous-die shortcut.
 - Right-clicking a consumable now consumes it immediately; the intermediate

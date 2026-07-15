@@ -29,6 +29,7 @@ def test_msi_script_defines_product_shortcut_and_harvested_files() -> None:
     assert 'Target="[INSTALLFOLDER]DnDCombatEngine.exe"' in script
     assert 'Icon Id="AppIcon.ico"' in script
     assert 'Icon="AppIcon.ico"' in script
+    assert 'AllowSameVersionUpgrades="yes"' in script
 
 
 def test_pyinstaller_spec_sets_windows_icon() -> None:
@@ -60,5 +61,17 @@ def test_package_workflow_builds_distributions_executable_and_installer() -> Non
     assert ".\\scripts\\build_windows.ps1 -SkipInstall" in workflow
     assert ".\\scripts\\build_installer.ps1 -SkipExecutableBuild" in workflow
     assert ".\\scripts\\build_msi.ps1 -SkipExecutableBuild" in workflow
+    assert ".\\scripts\\test_msi_install.ps1" in workflow
     assert "DnDCombatEngine-installer" in workflow
     assert "DnDCombatEngine-msi" in workflow
+
+
+def test_msi_smoke_script_installs_launches_and_uninstalls() -> None:
+    script = (PROJECT_ROOT / "scripts" / "test_msi_install.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'Invoke-Msi "/i" "install"' in script
+    assert 'Start-Process $Executable' in script
+    assert 'Invoke-Msi "/x" "uninstall"' in script
+    assert "DND_COMBAT_ENGINE_DATA" in script

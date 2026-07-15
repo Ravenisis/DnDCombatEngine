@@ -52,6 +52,10 @@ jobs:
         shell: pwsh
         run: .\scripts\build_msi.ps1 -SkipExecutableBuild
 
+      - name: Smoke-test MSI install and application launch
+        shell: pwsh
+        run: .\scripts\test_msi_install.ps1
+
       - name: Archive Windows executable folder
         id: package_version
         shell: pwsh

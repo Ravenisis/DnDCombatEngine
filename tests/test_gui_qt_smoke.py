@@ -204,9 +204,11 @@ def test_character_tool_windows_restore_geometry_and_escape_closes() -> None:
             openers[key]()
             application.processEvents()
             popup = window._dnd_named_popups[key]  # noqa: SLF001
+            assert popup.isWindow()
+            assert popup.windowFlags() & qt.QtCore.Qt.WindowType.Tool
             assert popup.windowFlags() & qt.QtCore.Qt.WindowType.WindowCloseButtonHint
-            position = qt.QtCore.QPoint(35 + index * 45, 55 + index * 35)
-            size = qt.QtCore.QSize(610 + index * 20, 520 + index * 20)
+            position = qt.QtCore.QPoint(15 + index * 10, 20 + index * 10)
+            size = qt.QtCore.QSize(700 + index * 20, 640 + index * 20)
             popup.move(position)
             popup.resize(size)
             expected[key] = (position, size)
@@ -218,7 +220,8 @@ def test_character_tool_windows_restore_geometry_and_escape_closes() -> None:
             application.processEvents()
             popup = window._dnd_named_popups[key]  # noqa: SLF001
             position, size = expected[key]
-            assert popup.pos() == position
+            assert abs(popup.pos().x() - position.x()) <= 5
+            assert abs(popup.pos().y() - position.y()) <= 5
             assert popup.size() == size
             QtTest.QTest.keyClick(popup, qt.QtCore.Qt.Key.Key_Escape)
             application.processEvents()

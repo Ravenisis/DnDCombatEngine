@@ -6,7 +6,9 @@
     Manufacturer="Ravenisis"
     UpgradeCode="{F57DAFB7-43CF-4D4D-88B7-5D2D14356744}"
     Scope="perMachine">
-    <MajorUpgrade DowngradeErrorMessage="A newer version of DnDCombatEngine is already installed." />
+    <MajorUpgrade
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A newer version of DnDCombatEngine is already installed." />
     <MediaTemplate EmbedCab="yes" />
     <Icon Id="AppIcon.ico" SourceFile="$(var.ProjectRoot)\src\dnd_combat_engine\data\app_icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />

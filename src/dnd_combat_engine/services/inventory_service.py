@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.equipment import EquipmentSlot
@@ -79,6 +80,51 @@ class InventoryService:
     def total_weight(self, character: Character) -> float:
         """Return total carried inventory weight."""
         return sum(item.total_weight for item in character.inventory)
+
+    def enrich_inventory_metadata(
+        self,
+        character: Character,
+        reference_items: tuple[InventoryItem, ...],
+    ) -> bool:
+        """Upgrade known legacy items while preserving ownership and placement state."""
+        references = _inventory_reference_lookup(reference_items)
+        legacy_clothes_pair = {
+            item.item_id for item in character.inventory
+        }.issuperset({"clothes", "common"})
+        enriched: list[InventoryItem] = []
+        for item in character.inventory:
+            if legacy_clothes_pair and item.item_id == "common":
+                continue
+            lookup_item = item
+            if legacy_clothes_pair and item.item_id == "clothes":
+                lookup_item = replace(item, item_id="clothes_common", name="Clothes, Common")
+            reference = _inventory_reference(references, lookup_item)
+            upgraded = _merge_inventory_metadata(lookup_item, reference)
+            _append_or_merge_inventory_item(enriched, upgraded)
+
+        owned_names = {_normalized_inventory_key(item.name) for item in enriched}
+        for weapon in character.weapons:
+            weapon_name = _normalized_inventory_key(weapon.name)
+            if weapon_name in owned_names:
+                continue
+            reference = references.get(weapon_name)
+            if reference is None:
+                continue
+            enriched.append(
+                replace(
+                    reference,
+                    quantity=1,
+                    container_id=None,
+                    equipped_slot=None,
+                )
+            )
+            owned_names.add(weapon_name)
+
+        upgraded_inventory = tuple(enriched)
+        if upgraded_inventory == character.inventory:
+            return False
+        character.inventory = upgraded_inventory
+        return True
 
     def move_item(
         self,
@@ -245,6 +291,79 @@ def _supports_slot(item: InventoryItem, slot: EquipmentSlot) -> bool:
         EquipmentSlot.RING_RIGHT: ("ring",),
     }
     return any(keyword in text for keyword in keywords.get(slot, ()))
+
+
+LEGACY_ITEM_ALIASES = {
+    "arrows": "arrows_20",
+    "bullseye_lantern": "lantern_bullseye",
+    "healers_kit": "healer_s_kit",
+    "masons_tools": "mason_s_tools",
+    "plate": "plate_armor",
+    "rations_1_day": "rations",
+}
+
+
+def _inventory_reference_lookup(
+    reference_items: tuple[InventoryItem, ...],
+) -> dict[str, InventoryItem]:
+    references: dict[str, InventoryItem] = {}
+    for item in reference_items:
+        references[_normalized_inventory_key(item.item_id)] = item
+        references[_normalized_inventory_key(item.name)] = item
+    return references
+
+
+def _inventory_reference(
+    references: dict[str, InventoryItem],
+    item: InventoryItem,
+) -> InventoryItem | None:
+    item_id = _normalized_inventory_key(item.item_id)
+    direct = references.get(item_id) or references.get(_normalized_inventory_key(item.name))
+    if direct is not None:
+        return direct
+    alias = LEGACY_ITEM_ALIASES.get(item_id)
+    return references.get(alias) if alias is not None else None
+
+
+def _merge_inventory_metadata(
+    item: InventoryItem,
+    reference: InventoryItem | None,
+) -> InventoryItem:
+    if reference is None:
+        return item
+    return InventoryItem(
+        item_id=item.item_id,
+        name=reference.name,
+        quantity=item.quantity,
+        weight=reference.weight,
+        category=reference.category,
+        notes=reference.notes or item.notes,
+        tags=tuple(dict.fromkeys((*reference.tags, *item.tags))),
+        purchase_price_cp=reference.purchase_price_cp,
+        subcategory=reference.subcategory,
+        container_id=item.container_id,
+        equipped_slot=item.equipped_slot,
+        modifiers=reference.modifiers or item.modifiers,
+    )
+
+
+def _append_or_merge_inventory_item(
+    items: list[InventoryItem],
+    candidate: InventoryItem,
+) -> None:
+    for index, item in enumerate(items):
+        if (
+            item.item_id == candidate.item_id
+            and item.container_id == candidate.container_id
+            and item.equipped_slot == candidate.equipped_slot
+        ):
+            items[index] = item.with_quantity(item.quantity + candidate.quantity)
+            return
+    items.append(candidate)
+
+
+def _normalized_inventory_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
 
 
 def _item_modifiers(item: InventoryItem) -> dict[str, int]:

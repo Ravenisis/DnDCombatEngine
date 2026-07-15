@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from dnd_combat_engine.app import DnDCombatEngineApp, create_app
@@ -13,3 +14,40 @@ def test_create_app_wires_controllers_to_seed_data() -> None:
     assert app.characters.load("vale").name == "Vale"
     assert app.compendium.load_monster("goblin").name == "Goblin"
     assert app.dice.describe("1d20")["average"] == 10.5
+
+
+def test_create_app_upgrades_legacy_inventory_metadata(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[1] / "data" / "characters" / "ravenisis.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    canonical_inventory = {
+        item["item_id"]: item for item in payload["inventory"] if item["item_id"] != "warhammer"
+    }
+    payload["inventory"] = []
+    for canonical in canonical_inventory.values():
+        legacy = {
+            **canonical,
+            "category": "other",
+            "weight": 0,
+            "purchase_price_cp": 0,
+            "notes": None,
+            "tags": [],
+            "subcategory": "",
+        }
+        payload["inventory"].append(legacy)
+    characters = tmp_path / "characters"
+    characters.mkdir()
+    (characters / "ravenisis.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    app = create_app(tmp_path)
+    ravenisis = app.characters.load("ravenisis")
+    by_id = {item.item_id: item for item in ravenisis.inventory}
+
+    for item_id, canonical in canonical_inventory.items():
+        assert by_id[item_id].category.value == canonical["category"]
+        assert by_id[item_id].weight == canonical["weight"]
+        assert by_id[item_id].purchase_price_cp == canonical["purchase_price_cp"]
+        assert by_id[item_id].notes == canonical["notes"]
+        assert by_id[item_id].tags == tuple(canonical["tags"])
+        assert by_id[item_id].subcategory == canonical.get("subcategory", "")
+    assert by_id["warhammer"].category.value == "weapon"
+    assert by_id["warhammer"].notes is not None

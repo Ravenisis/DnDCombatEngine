@@ -455,6 +455,7 @@ def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
         DamageComponent,
         DamageProfile,
         DamageType,
+        EquipmentSlot,
         InventoryItem,
         ItemCategory,
         Spell,
@@ -503,6 +504,21 @@ def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
     assert "Quantity: 2" in item_tooltip
     assert "Weight: 0.5 lb each (1 lb total)" in item_tooltip
     assert "Right-click to consume one." in item_tooltip
+
+    equipped_tooltip = widgets._inventory_item_tooltip(
+        InventoryItem(
+            "warhammer",
+            "Warhammer",
+            category=ItemCategory.WEAPON,
+            subcategory="martial_melee_weapon",
+            purchase_price_cp=1500,
+            equipped_slot=EquipmentSlot.MAIN_HAND,
+        )
+    )
+    assert "Type: Martial Melee Weapon" in equipped_tooltip
+    assert "Purchase Price: 1PP 5GP" in equipped_tooltip
+    assert "Sell Price: 7GP 5SP" in equipped_tooltip
+    assert "Equipped: Main Hand" in equipped_tooltip
 
 
 def test_srd_inventory_dialog_tooltip_includes_item_details() -> None:

@@ -164,10 +164,28 @@ def _center_over_parent(parent: Any, popup: Any) -> None:
     popup_height = _dimension(popup, "height")
     if min(parent_width, parent_height, popup_width, popup_height) <= 0:
         return
+    origin_x, origin_y = _parent_window_origin(parent, popup)
     popup.move(
-        max(0, (parent_width - popup_width) // 2),
-        max(0, (parent_height - popup_height) // 2),
+        origin_x + max(0, (parent_width - popup_width) // 2),
+        origin_y + max(0, (parent_height - popup_height) // 2),
     )
+
+
+def _parent_window_origin(parent: Any, popup: Any) -> tuple[int, int]:
+    is_window = getattr(popup, "isWindow", None)
+    if not callable(is_window) or not is_window():
+        return (0, 0)
+    frame_geometry = getattr(parent, "frameGeometry", None)
+    if not callable(frame_geometry):
+        return (0, 0)
+    geometry = frame_geometry()
+    top_left = getattr(geometry, "topLeft", None)
+    point = top_left() if callable(top_left) else None
+    x = getattr(point, "x", None)
+    y = getattr(point, "y", None)
+    if not callable(x) or not callable(y):
+        return (0, 0)
+    return (int(x()), int(y()))
 
 
 def _dimension(widget: Any, name: str) -> int:
@@ -193,7 +211,7 @@ def _tool_window_flags(qt: Any) -> Any | None:
         return None
     flags = None
     for name in (
-        "SubWindow",
+        "Tool",
         "WindowTitleHint",
         "WindowSystemMenuHint",
         "WindowCloseButtonHint",

@@ -20,6 +20,13 @@ Do not download the automatically generated **Source code** archives unless you 
 
 The `.msi` and `Setup.exe` contain the same application. Install only one of them. The `.zip` must remain fully extracted because the executable depends on the bundled files beside it.
 
+If an MSI installation completes but the application does not open, uninstall
+any older **DnDCombatEngine** entry from **Settings > Apps > Installed apps**,
+restart Windows if an installer reports a pending restart, and install the
+latest MSI again while approving the administrator prompt. Refreshed packages
+now replace same-version beta builds, and each release MSI is install-and-launch
+smoke tested on a clean Windows runner.
+
 DnDCombatEngine is a Windows desktop campaign controller for Dungeons & Dragons
 combat. It is being built for the table: import characters, choose a party
 leader, select targets, press action-bar buttons, track resources, and keep the

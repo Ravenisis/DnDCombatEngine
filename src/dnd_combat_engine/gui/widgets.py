@@ -1487,11 +1487,16 @@ def _inventory_item_tooltip(item: InventoryItem) -> str:
         f"Category: {item.category.value.replace('_', ' ').title()}",
         f"Quantity: {item.quantity}",
     ]
+    if item.subcategory:
+        lines.append(f"Type: {item.subcategory.replace('_', ' ').title()}")
     if item.weight:
         lines.append(f"Weight: {item.weight:g} lb each ({item.total_weight:g} lb total)")
     price_cp = item.purchase_price_cp or _default_purchase_price_cp(item)
     if price_cp:
+        lines.append(f"Purchase Price: {_currency_price_text(price_cp)}")
         lines.append(f"Sell Price: {_currency_price_text(price_cp // 2)}")
+    if item.equipped_slot is not None:
+        lines.append(f"Equipped: {item.equipped_slot.value.replace('_', ' ').title()}")
     if item.tags:
         lines.append(f"Tags: {', '.join(item.tags)}")
     if item.notes:

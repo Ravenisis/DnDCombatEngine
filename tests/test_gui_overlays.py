@@ -168,7 +168,7 @@ def test_tool_popup_restores_and_saves_persistent_geometry() -> None:
             self.activated = True
 
     window_type = SimpleNamespace(
-        SubWindow=1,
+        Tool=1,
         WindowTitleHint=2,
         WindowSystemMenuHint=4,
         WindowCloseButtonHint=8,

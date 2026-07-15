@@ -7,10 +7,14 @@ from dnd_combat_engine.gui.drag_drop import ITEM_MIME_TYPE, item_id_from_mime, s
 from dnd_combat_engine.models import (
     AbilityScores,
     Character,
+    DamageComponent,
+    DamageProfile,
+    DamageType,
     EquipmentSlot,
     HitPoints,
     InventoryItem,
     ItemCategory,
+    Weapon,
 )
 from dnd_combat_engine.services import InventoryService
 
@@ -97,6 +101,81 @@ def test_inventory_service_lists_slot_compatible_unequipped_items() -> None:
     assert [
         item.name for item in service.compatible_items(character, EquipmentSlot.MAIN_HAND)
     ] == ["Shield +1"]
+
+
+def test_inventory_service_enriches_legacy_items_and_recovers_owned_weapon() -> None:
+    character = Character(
+        "hero",
+        "Hero",
+        HitPoints(20, 20),
+        inventory=(
+            InventoryItem("plate", "Plate", category=ItemCategory.OTHER),
+            InventoryItem("rope", "Rope", container_id="backpack"),
+            InventoryItem("rope", "Rope", quantity=2, container_id="backpack"),
+            InventoryItem("clothes", "Clothes"),
+            InventoryItem("common", "Common"),
+        ),
+        weapons=(
+            Weapon(
+                "Warhammer",
+                DamageProfile((DamageComponent("1d8", DamageType.BLUDGEONING),)),
+            ),
+        ),
+    )
+    references = (
+        InventoryItem(
+            "plate_armor",
+            "Plate Armor",
+            weight=65,
+            category=ItemCategory.ARMOR,
+            notes="Armor Class 18; Strength 15; stealth disadvantage.",
+            tags=("armor", "ac:18"),
+            purchase_price_cp=150_000,
+            subcategory="heavy_armor",
+        ),
+        InventoryItem(
+            "warhammer",
+            "Warhammer",
+            weight=5,
+            category=ItemCategory.WEAPON,
+            notes="1d8 bludgeoning; versatile (1d10).",
+            tags=("weapon", "damage:1d8 Bludgeoning"),
+            purchase_price_cp=1_500,
+            subcategory="martial_melee_weapon",
+        ),
+        InventoryItem(
+            "rope",
+            "Rope",
+            weight=10,
+            category=ItemCategory.ADVENTURING_GEAR,
+            notes="Fifty feet of hempen rope.",
+        ),
+        InventoryItem(
+            "clothes_common",
+            "Clothes, Common",
+            weight=3,
+            category=ItemCategory.ADVENTURING_GEAR,
+            notes="A common travel outfit.",
+        ),
+    )
+    service = InventoryService()
+
+    assert service.enrich_inventory_metadata(character, references) is True
+    assert service.enrich_inventory_metadata(character, references) is False
+
+    by_id = {item.item_id: item for item in character.inventory}
+    assert by_id["plate"].category is ItemCategory.ARMOR
+    assert by_id["plate"].subcategory == "heavy_armor"
+    assert by_id["plate"].weight == 65
+    assert by_id["rope"].quantity == 3
+    assert by_id["rope"].container_id == "backpack"
+    assert "common" not in by_id
+    assert by_id["clothes_common"].name == "Clothes, Common"
+    assert by_id["warhammer"].category is ItemCategory.WEAPON
+    assert service.compatible_items(character, EquipmentSlot.CHEST) == (by_id["plate"],)
+    assert by_id["warhammer"] in service.compatible_items(
+        character, EquipmentSlot.MAIN_HAND
+    )
 
 
 def test_inventory_service_rejects_bad_storage_and_equipment() -> None:

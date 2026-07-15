@@ -7,20 +7,54 @@
     "strength": 16,
     "wisdom": 10
   },
+  "ability_save_dc": null,
   "armor": null,
+  "armor_proficiencies": [],
+  "character_class": "",
   "character_id": "bran",
   "conditions": [],
+  "currency": {
+    "cp": 0,
+    "gp": 0,
+    "pp": 0,
+    "sp": 0
+  },
+  "damage_resistances": [],
   "features": [
     "Great Weapon Master"
   ],
+  "heroic_inspiration": false,
   "hit_points": {
     "current": 28,
     "maximum": 28,
     "temporary": 0
   },
-  "inventory": [],
+  "initiative_modifier": null,
+  "inventory": [
+    {
+      "category": "weapon",
+      "container_id": null,
+      "equipped_slot": null,
+      "item_id": "greatsword",
+      "modifiers": {},
+      "name": "Greatsword",
+      "notes": "SRD weapon. Damage: 2d6 Slashing. Properties: Heavy, Two-Handed. Mastery: Graze.",
+      "purchase_price_cp": 5000,
+      "quantity": 1,
+      "subcategory": "martial_melee_weapon",
+      "tags": [
+        "weapon",
+        "damage:2d6 Slashing",
+        "mastery:Graze"
+      ],
+      "weight": 6.0
+    }
+  ],
+  "languages": [],
   "level": 5,
   "name": "Bran",
+  "proficiency_bonus": null,
+  "race": "",
   "resources": {
     "hit_dice": {
       "current": 5,
@@ -28,11 +62,21 @@
       "name": "hit_dice"
     }
   },
+  "saving_throw_modifiers": {},
+  "saving_throw_proficiencies": [],
   "schema_version": 1,
+  "senses": [],
   "skills": [
     "athletics",
     "intimidation"
   ],
+  "spell_attack_bonus": null,
+  "spell_save_dc": null,
+  "spellcasting_ability": "",
+  "spells": [],
+  "tool_proficiencies": [],
+  "walking_speed": null,
+  "weapon_proficiencies": [],
   "weapons": [
     {
       "damage": [
@@ -47,7 +91,8 @@
         "two-handed"
       ],
       "range_long": null,
-      "range_normal": null
+      "range_normal": null,
+      "rule_source": null
     }
   ]
 }
