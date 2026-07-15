@@ -68,14 +68,29 @@ class EquipmentWidget:
         equipped = {item.equipped_slot: item for item in character.inventory}
         for slot, (row, column) in SLOT_POSITIONS.items():
             item = equipped.get(slot)
-            button = _equipment_slot_button(qt, slot, item, on_equip, on_unequip)
+            compatible_items = app.inventory.compatible_items(character, slot)
+            button = _equipment_slot_button(
+                qt,
+                slot,
+                item,
+                compatible_items,
+                on_equip,
+                on_unequip,
+            )
             grid.addWidget(button, row, column)
         layout.addWidget(body)
         layout.addWidget(_equipment_stats_table(app, qt, character))
         return widget
 
 
-def _equipment_slot_button(qt, slot: EquipmentSlot, item, on_equip, on_unequip):
+def _equipment_slot_button(
+    qt,
+    slot: EquipmentSlot,
+    item,
+    compatible_items,
+    on_equip,
+    on_unequip,
+):
     base_class = qt.QtWidgets.QPushButton
 
     class EquipmentDropSlot(base_class):
@@ -92,9 +107,19 @@ def _equipment_slot_button(qt, slot: EquipmentSlot, item, on_equip, on_unequip):
                 event.acceptProposedAction()
 
         def mousePressEvent(self, event) -> None:  # noqa: N802
-            if item is not None and _is_right_click(qt, event) and on_unequip is not None:
-                on_unequip(slot)
-                event.accept()
+            if _is_right_click(qt, event):
+                _show_slot_menu(
+                    qt,
+                    self,
+                    event,
+                    slot,
+                    item,
+                    compatible_items,
+                    on_equip,
+                    on_unequip,
+                )
+                if hasattr(event, "accept"):
+                    event.accept()
                 return
             super().mousePressEvent(event)
 
@@ -107,11 +132,65 @@ def _equipment_slot_button(qt, slot: EquipmentSlot, item, on_equip, on_unequip):
     if hasattr(button, "setMinimumSize"):
         button.setMinimumSize(150, 58)
     if hasattr(button, "setToolTip"):
-        detail = "Drop a compatible inventory item here."
+        detail = "Drop a compatible inventory item here or right-click to choose one."
         if item is not None:
-            detail = f"{item.name}\nRight-click to unequip."
+            detail = f"{item.name}\nRight-click to replace or unequip it."
         button.setToolTip(detail)
     return button
+
+
+def _show_slot_menu(
+    qt,
+    button,
+    event,
+    slot: EquipmentSlot,
+    equipped_item,
+    compatible_items,
+    on_equip,
+    on_unequip,
+) -> None:
+    menu_class = getattr(qt.QtWidgets, "QMenu", None)
+    if menu_class is None:
+        return
+    menu = menu_class(button)
+    for compatible in compatible_items:
+        action = menu.addAction(f"Equip {compatible.name}")
+        if hasattr(action, "setToolTip"):
+            action.setToolTip(compatible.notes or compatible.name)
+        if hasattr(action, "triggered") and on_equip is not None:
+            action.triggered.connect(
+                lambda checked=False, item_id=compatible.item_id: on_equip(item_id, slot)
+            )
+    if equipped_item is not None and on_unequip is not None:
+        if compatible_items and hasattr(menu, "addSeparator"):
+            menu.addSeparator()
+        action = menu.addAction(f"Unequip {equipped_item.name}")
+        if hasattr(action, "triggered"):
+            action.triggered.connect(lambda checked=False: on_unequip(slot))
+    if not compatible_items and equipped_item is None:
+        action = menu.addAction("No compatible inventory items")
+        if hasattr(action, "setEnabled"):
+            action.setEnabled(False)
+    position = _event_global_position(event)
+    if hasattr(menu, "exec"):
+        menu.exec(position)
+    elif hasattr(menu, "exec_"):
+        menu.exec_(position)
+
+
+def _event_global_position(event):
+    global_position = getattr(event, "globalPosition", None)
+    if callable(global_position):
+        point = global_position()
+        return point.toPoint() if hasattr(point, "toPoint") else point
+    global_pos = getattr(event, "globalPos", None)
+    if callable(global_pos):
+        return global_pos()
+    position = getattr(event, "position", None)
+    if callable(position):
+        point = position()
+        return point.toPoint() if hasattr(point, "toPoint") else point
+    return None
 
 
 def _equipment_stats_table(app, qt, character):

@@ -14,6 +14,13 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
+- Spellbook, Inventory, and Equipment use parented Qt subwindows so they remain
+  visible in main-window capture while supporting title-bar movement, close
+  controls, and QSettings-backed persistent geometry. The shared overlay layer
+  owns Escape handling and native-close registry cleanup.
+- Equipment compatibility is now a public inventory service/controller query;
+  body-slot context menus use the same validated autosaving equip workflow as
+  drag-and-drop.
 - Inventory stacks now persist `container_id`, `equipped_slot`, detailed
   subcategories, and structured modifiers. `InventoryService` owns validated
   move/equip/unequip operations and computes Base/Gear/Current stat summaries.
@@ -207,11 +214,11 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,711,287 bytes
-- `dist/DnDCombatEngine-1.0.3-windows.zip` - 73,305,907 bytes
-- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,676,586 bytes
-- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,688,653 bytes
-- Verified with `ruff`, `402` coverage-enforced tests at `90.02%`, mypy, a
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,715,746 bytes
+- `dist/DnDCombatEngine-1.0.3-windows.zip` - 73,310,221 bytes
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,676,857 bytes
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,684,557 bytes
+- Verified with `ruff`, `408` coverage-enforced tests at `90.12%`, mypy, a
   PyInstaller rebuild, a portable ZIP rebuild, an Inno Setup rebuild, and a
   WiX MSI rebuild.
 

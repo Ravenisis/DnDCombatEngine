@@ -161,3 +161,69 @@ def test_equipment_popup_renders_slots_stats_and_no_dice_menu() -> None:
         assert "Dice" not in menu_labels
     finally:
         window.close()
+
+
+@pytest.mark.gui
+def test_character_tool_windows_restore_geometry_and_escape_closes() -> None:
+    """Spellbook, inventory, and equipment remain movable and remember placement."""
+    pytest.importorskip("PySide6")
+
+    from PySide6 import QtTest
+
+    from dnd_combat_engine.app import create_app
+    from dnd_combat_engine.gui import main_window
+    from dnd_combat_engine.gui.overlays import SETTINGS_APPLICATION, SETTINGS_ORGANIZATION
+    from dnd_combat_engine.gui.qt import load_qt
+
+    qt = load_qt()
+    application = qt.QtWidgets.QApplication.instance() or qt.QtWidgets.QApplication([])
+    settings = qt.QtCore.QSettings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION)
+    keys = ("spellbook", "inventory", "equipment")
+    for key in keys:
+        settings.remove(f"tool_windows/{key}/geometry")
+    data_root = Path(__file__).resolve().parents[1] / "data"
+    engine = create_app(data_root)
+    window = main_window.create_main_window(engine)
+    window.show()
+    try:
+        state = window._dnd_campaign_state  # noqa: SLF001
+        state.party_leader_character_id = "ravenisis"
+        openers = {
+            "spellbook": lambda: main_window._open_spellbook_window(  # noqa: SLF001
+                window, qt, engine, state
+            ),
+            "inventory": lambda: main_window._open_inventory_window(  # noqa: SLF001
+                window, qt, engine, state
+            ),
+            "equipment": lambda: main_window._open_equipment_window(  # noqa: SLF001
+                window, qt, engine, state
+            ),
+        }
+        expected = {}
+        for index, key in enumerate(keys):
+            openers[key]()
+            application.processEvents()
+            popup = window._dnd_named_popups[key]  # noqa: SLF001
+            assert popup.windowFlags() & qt.QtCore.Qt.WindowType.WindowCloseButtonHint
+            position = qt.QtCore.QPoint(35 + index * 45, 55 + index * 35)
+            size = qt.QtCore.QSize(610 + index * 20, 520 + index * 20)
+            popup.move(position)
+            popup.resize(size)
+            expected[key] = (position, size)
+            popup.close()
+            application.processEvents()
+
+        for key in keys:
+            openers[key]()
+            application.processEvents()
+            popup = window._dnd_named_popups[key]  # noqa: SLF001
+            position, size = expected[key]
+            assert popup.pos() == position
+            assert popup.size() == size
+            QtTest.QTest.keyClick(popup, qt.QtCore.Qt.Key.Key_Escape)
+            application.processEvents()
+            assert key not in window._dnd_named_popups  # noqa: SLF001
+    finally:
+        window.close()
+        for key in keys:
+            settings.remove(f"tool_windows/{key}/geometry")

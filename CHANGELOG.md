@@ -7,6 +7,14 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added right-click equipment-slot menus that list only compatible unequipped
+  items from the active character inventory, with an Unequip command for
+  occupied slots.
+- Added movable Spellbook, Inventory, and Equipment tool windows with native
+  title-bar close controls and persistent position and size across reopen and
+  application restarts.
+- Added shared Escape-key handling for application popups, tool windows, and
+  modal helper dialogs.
 - Added a Character > Equipment screen with a body outline, twelve wearable or
   wielded drop slots, right-click unequip, and a Base/Gear/Current statistics
   comparison table.

@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from dnd_combat_engine.gui import equipment
 from dnd_combat_engine.gui.drag_drop import ITEM_MIME_TYPE, item_id_from_mime, set_item_mime_data
 from dnd_combat_engine.models import (
     AbilityScores,
@@ -80,6 +81,24 @@ def test_inventory_service_moves_equips_and_summarizes_gear() -> None:
     assert service.unequip_item(character, EquipmentSlot.HEAD) is None
 
 
+def test_inventory_service_lists_slot_compatible_unequipped_items() -> None:
+    character = _equipped_character()
+    service = InventoryService()
+
+    assert [item.name for item in service.compatible_items(character, EquipmentSlot.CHEST)] == [
+        "Chain Mail"
+    ]
+    assert [
+        item.name for item in service.compatible_items(character, EquipmentSlot.MAIN_HAND)
+    ] == ["Longsword", "Shield +1"]
+
+    service.equip_item(character, "longsword", EquipmentSlot.MAIN_HAND)
+
+    assert [
+        item.name for item in service.compatible_items(character, EquipmentSlot.MAIN_HAND)
+    ] == ["Shield +1"]
+
+
 def test_inventory_service_rejects_bad_storage_and_equipment() -> None:
     character = _equipped_character()
     service = InventoryService()
@@ -130,3 +149,99 @@ def test_drag_drop_payload_round_trips_and_rejects_other_mime_types() -> None:
     assert mime.hasFormat(ITEM_MIME_TYPE)
     assert item_id_from_mime(mime) == "longsword"
     assert item_id_from_mime(None) is None
+
+
+def test_equipment_slot_menu_lists_compatible_items_and_unequip() -> None:
+    class Signal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+    class Action:
+        def __init__(self, text: str) -> None:
+            self.text = text
+            self.triggered = Signal()
+
+        def setToolTip(self, value: str) -> None:  # noqa: N802
+            self.tooltip = value
+
+        def setEnabled(self, value: bool) -> None:  # noqa: N802
+            self.enabled = value
+
+    class Menu:
+        last = None
+
+        def __init__(self, parent) -> None:
+            self.parent = parent
+            self.actions = []
+            Menu.last = self
+
+        def addAction(self, text: str):  # noqa: N802
+            action = Action(text)
+            self.actions.append(action)
+            return action
+
+        def addSeparator(self) -> None:  # noqa: N802
+            self.separated = True
+
+        def exec(self, position) -> None:
+            self.position = position
+
+    qt = SimpleNamespace(QtWidgets=SimpleNamespace(QMenu=Menu))
+    sword = InventoryItem("longsword", "Longsword", category=ItemCategory.WEAPON)
+    shield = InventoryItem("shield", "Shield", category=ItemCategory.ARMOR)
+    calls = []
+    event = SimpleNamespace(globalPosition=lambda: SimpleNamespace(toPoint=lambda: (5, 6)))
+
+    equipment._show_slot_menu(  # noqa: SLF001
+        qt,
+        object(),
+        event,
+        EquipmentSlot.MAIN_HAND,
+        shield,
+        (sword,),
+        lambda item_id, slot: calls.append((item_id, slot)),
+        lambda slot: calls.append(("unequip", slot)),
+    )
+
+    assert [action.text for action in Menu.last.actions] == [
+        "Equip Longsword",
+        "Unequip Shield",
+    ]
+    Menu.last.actions[0].triggered.callback()
+    Menu.last.actions[1].triggered.callback()
+    assert calls == [
+        ("longsword", EquipmentSlot.MAIN_HAND),
+        ("unequip", EquipmentSlot.MAIN_HAND),
+    ]
+
+    equipment._show_slot_menu(  # noqa: SLF001
+        qt,
+        object(),
+        SimpleNamespace(globalPos=lambda: (8, 9)),
+        EquipmentSlot.HEAD,
+        None,
+        (),
+        None,
+        None,
+    )
+
+    assert Menu.last.actions[0].text == "No compatible inventory items"
+    assert Menu.last.actions[0].enabled is False
+    assert Menu.last.position == (8, 9)
+
+
+def test_equipment_mouse_helpers_support_qt_position_variants() -> None:
+    position = SimpleNamespace(toPoint=lambda: (3, 4))
+
+    assert equipment._event_global_position(  # noqa: SLF001
+        SimpleNamespace(position=lambda: position)
+    ) == (3, 4)
+    assert equipment._event_global_position(object()) is None  # noqa: SLF001
+
+    qt = SimpleNamespace(
+        QtCore=SimpleNamespace(
+            Qt=SimpleNamespace(MouseButton=SimpleNamespace(RightButton=2))
+        )
+    )
+    assert equipment._is_right_click(qt, SimpleNamespace(button=lambda: 2))  # noqa: SLF001
+    assert not equipment._is_right_click(qt, SimpleNamespace(button=lambda: 1))  # noqa: SLF001

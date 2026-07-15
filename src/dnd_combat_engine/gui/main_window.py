@@ -43,7 +43,9 @@ from dnd_combat_engine.gui.inventory import InventoryWidget
 from dnd_combat_engine.gui.overlays import (
     create_embedded_dialog,
     create_embedded_popup,
+    create_tool_popup,
     show_embedded_popup,
+    show_tool_popup,
 )
 from dnd_combat_engine.gui.qt import load_qt
 from dnd_combat_engine.gui.session import GuiSession
@@ -1090,7 +1092,7 @@ def _open_spellbook_window(
         )
         return
 
-    popup = create_embedded_popup(qt, window)
+    popup = create_tool_popup(qt, window, "spellbook")
     if popup is None:
         return
     if hasattr(popup, "setWindowTitle"):
@@ -1133,7 +1135,7 @@ def _open_inventory_window(
         )
         return
 
-    popup = create_embedded_popup(qt, window)
+    popup = create_tool_popup(qt, window, "inventory")
     if popup is None:
         return
     if hasattr(popup, "setWindowTitle"):
@@ -1271,7 +1273,7 @@ def _open_equipment_window(
             error=True,
         )
         return
-    popup = create_embedded_popup(qt, window)
+    popup = create_tool_popup(qt, window, "equipment")
     if popup is None:
         return
     popup.setWindowTitle(f"{character.name} Equipment")
@@ -1758,7 +1760,16 @@ def _show_popup(window, popup, key: str | None = None) -> None:
             key,
             f"Closed {key.replace('_', ' ')}.",
         )
-    show_embedded_popup(window, popup)
+        popup._dnd_native_close_callback = lambda: _unregister_named_popup(  # noqa: SLF001
+            window,
+            key,
+            popup,
+            f"Closed {key.replace('_', ' ')}.",
+        )
+    if getattr(popup, "_dnd_tool_window", False):
+        show_tool_popup(window, popup)
+    else:
+        show_embedded_popup(window, popup)
 
 
 def _toggle_named_popup(window, key: str, status_message: str) -> bool:
@@ -1782,6 +1793,21 @@ def _close_named_popup(window, key: str, status_message: str) -> None:
     if popup is not None and hasattr(popup, "close"):
         popup.close()
     window._dnd_named_popups = named  # noqa: SLF001
+    _set_status(window, status_message)
+
+
+def _unregister_named_popup(window, key: str, popup, status_message: str) -> None:
+    """Forget a tool window closed through its title-bar close button."""
+    named = getattr(window, "_dnd_named_popups", {})
+    if named.get(key) is not popup:
+        return
+    named.pop(key, None)
+    window._dnd_named_popups = named  # noqa: SLF001
+    window._dnd_popups = [  # noqa: SLF001
+        candidate
+        for candidate in getattr(window, "_dnd_popups", [])
+        if candidate is not popup
+    ]
     _set_status(window, status_message)
 
 

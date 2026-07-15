@@ -72,6 +72,14 @@ class InventoryController:
             self.persistence_service.save_character(character)
         return item
 
+    def compatible_items(
+        self,
+        character: Character,
+        slot: EquipmentSlot,
+    ) -> tuple[InventoryItem, ...]:
+        """Return inventory items that can be equipped in a body slot."""
+        return self.inventory_service.compatible_items(character, slot)
+
     def unequip_item(
         self,
         character: Character,

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+SETTINGS_ORGANIZATION = "Ravenisis"
+SETTINGS_APPLICATION = "DnDCombatEngine"
+
 
 def create_embedded_popup(qt: Any, parent: Any) -> Any | None:
     """Create a true child overlay for panels shown during a window-only stream."""
@@ -44,15 +47,106 @@ def create_embedded_dialog(qt: Any, parent: Any) -> Any | None:
     dialog_class = getattr(qt.QtWidgets, "QDialog", None)
     if dialog_class is None:
         return None
+
+
+    class EscapeClosableDialog(dialog_class):
+        def keyPressEvent(self, event: Any) -> None:  # noqa: N802
+            if _is_escape_event(qt, event):
+                if hasattr(self, "reject"):
+                    self.reject()
+                elif hasattr(self, "close"):
+                    self.close()
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            handler = getattr(super(), "keyPressEvent", None)
+            if callable(handler):
+                handler(event)
+
     try:
-        return dialog_class(parent)
+        return EscapeClosableDialog(parent)
     except TypeError:
-        return dialog_class()
+        return EscapeClosableDialog()
+
+
+def create_tool_popup(qt: Any, parent: Any, key: str) -> Any | None:
+    """Create a movable child tool window with persistent geometry and close controls."""
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    if dialog_class is None:
+        popup = create_embedded_popup(qt, parent)
+        if popup is not None:
+            popup._dnd_tool_window = True
+            popup._dnd_geometry_restored = False
+        return popup
+
+    class PersistentToolWindow(dialog_class):
+        def keyPressEvent(self, event: Any) -> None:  # noqa: N802
+            if _is_escape_event(qt, event):
+                callback = getattr(self, "_dnd_escape_callback", None)
+                if callable(callback):
+                    callback()
+                elif hasattr(self, "close"):
+                    self.close()
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            handler = getattr(super(), "keyPressEvent", None)
+            if callable(handler):
+                handler(event)
+
+        def closeEvent(self, event: Any) -> None:  # noqa: N802
+            _save_tool_geometry(qt, self, key)
+            callback = getattr(self, "_dnd_native_close_callback", None)
+            if callable(callback):
+                callback()
+            handler = getattr(super(), "closeEvent", None)
+            if callable(handler):
+                handler(event)
+
+    flags = _tool_window_flags(qt)
+    try:
+        popup = (
+            PersistentToolWindow(parent, flags)
+            if flags is not None
+            else PersistentToolWindow(parent)
+        )
+    except TypeError:
+        try:
+            popup = PersistentToolWindow(parent)
+        except TypeError:
+            popup = PersistentToolWindow()
+    if hasattr(popup, "setObjectName"):
+        popup.setObjectName(f"ToolWindow_{key}")
+    popup._dnd_tool_window = True
+    popup._dnd_tool_qt = qt
+    popup._dnd_tool_key = key
+    popup._dnd_geometry_restored = False
+    popup._dnd_geometry_restore_attempted = False
+    return popup
 
 
 def show_embedded_popup(parent: Any, popup: Any) -> None:
     """Show a child popup centered over its parent application surface."""
     _center_over_parent(parent, popup)
+    if hasattr(popup, "show"):
+        popup.show()
+    if hasattr(popup, "raise_"):
+        popup.raise_()
+    if hasattr(popup, "activateWindow"):
+        popup.activateWindow()
+
+
+def show_tool_popup(parent: Any, popup: Any) -> None:
+    """Show a movable tool window at its saved geometry or centered initially."""
+    if not getattr(popup, "_dnd_geometry_restore_attempted", False):
+        popup._dnd_geometry_restored = _restore_tool_geometry(
+            getattr(popup, "_dnd_tool_qt", None),
+            popup,
+            getattr(popup, "_dnd_tool_key", "tool"),
+        )
+        popup._dnd_geometry_restore_attempted = True
+    if not getattr(popup, "_dnd_geometry_restored", False):
+        _center_over_parent(parent, popup)
     if hasattr(popup, "show"):
         popup.show()
     if hasattr(popup, "raise_"):
@@ -90,3 +184,47 @@ def _is_escape_event(qt: Any, event: Any) -> bool:
     if escape is None:
         escape = getattr(qt_namespace, "Key_Escape", None)
     return escape is not None and event.key() == escape
+
+
+def _tool_window_flags(qt: Any) -> Any | None:
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    window_type = getattr(qt_namespace, "WindowType", qt_namespace)
+    if window_type is None:
+        return None
+    flags = None
+    for name in (
+        "SubWindow",
+        "WindowTitleHint",
+        "WindowSystemMenuHint",
+        "WindowCloseButtonHint",
+    ):
+        value = getattr(window_type, name, None)
+        if value is not None:
+            flags = value if flags is None else flags | value
+    return flags
+
+
+def _settings(qt: Any) -> Any | None:
+    settings_class = getattr(getattr(qt, "QtCore", None), "QSettings", None)
+    if settings_class is None:
+        return None
+    return settings_class(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION)
+
+
+def _restore_tool_geometry(qt: Any, popup: Any, key: str) -> bool:
+    settings = _settings(qt)
+    if settings is None or not hasattr(popup, "restoreGeometry"):
+        return False
+    geometry = settings.value(f"tool_windows/{key}/geometry")
+    if geometry is None:
+        return False
+    return bool(popup.restoreGeometry(geometry))
+
+
+def _save_tool_geometry(qt: Any, popup: Any, key: str) -> None:
+    settings = _settings(qt)
+    if settings is None or not hasattr(popup, "saveGeometry"):
+        return
+    settings.setValue(f"tool_windows/{key}/geometry", popup.saveGeometry())
+    if hasattr(settings, "sync"):
+        settings.sync()

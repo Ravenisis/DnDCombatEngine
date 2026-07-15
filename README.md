@@ -103,7 +103,9 @@ See [Import Character Sheet](docs/import-character-sheet.md).
 - Inventory window with containers, item icons, quantities, currency, money log,
   consumable use, and drag-and-drop storage.
 - Equipment window with body-positioned gear slots and base-versus-equipped stat
-  comparisons.
+  comparisons. Right-click a body slot to choose compatible carried gear.
+- Movable Spellbook, Inventory, and Equipment windows remember their last size
+  and position and can be closed with their title-bar X or Escape.
 - PDF and URL character sheet import with editable confirmation.
 - JSON-backed data for campaigns, characters, monsters, spells, actions, and
   encounters.

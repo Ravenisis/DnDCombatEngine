@@ -119,6 +119,24 @@ class InventoryService:
         self._replace(character, equipped)
         return equipped
 
+    def compatible_items(
+        self,
+        character: Character,
+        slot: EquipmentSlot,
+    ) -> tuple[InventoryItem, ...]:
+        """Return unequipped inventory items that can be equipped in a slot."""
+        self._normalize_locations(character)
+        return tuple(
+            sorted(
+                (
+                    item
+                    for item in character.inventory
+                    if item.equipped_slot is None and _supports_slot(item, slot)
+                ),
+                key=lambda item: item.name.casefold(),
+            )
+        )
+
     def unequip_item(self, character: Character, slot: EquipmentSlot) -> InventoryItem | None:
         """Return the item in a body slot to carried inventory."""
         item = next((item for item in character.inventory if item.equipped_slot is slot), None)
