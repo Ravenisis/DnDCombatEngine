@@ -15,10 +15,23 @@ def test_weapon_round_trips_to_plain_data() -> None:
     assert restored == weapon
 
 
+def test_legacy_versatile_weapon_infers_two_handed_damage() -> None:
+    weapon = Weapon.from_dict(
+        {
+            "name": "Warhammer",
+            "damage": [{"dice": "1d8+1", "damage_type": "bludgeoning"}],
+            "properties": ["martial", "versatile"],
+        }
+    )
+
+    assert weapon.versatile_damage is not None
+    assert weapon.versatile_damage.components[0].dice == "1d10+1"
+    assert Weapon.from_dict(weapon.to_dict()) == weapon
+
+
 def test_armor_round_trips_to_plain_data() -> None:
     armor = Armor(name="Chain Mail", armor_class=16, stealth_disadvantage=True)
 
     restored = Armor.from_dict(armor.to_dict())
 
     assert restored == armor
-

@@ -20,7 +20,10 @@ from dnd_combat_engine.models import (
     EffectKind,
     Encounter,
     EncounterParticipant,
+    EquipmentSlot,
     HitPoints,
+    InventoryItem,
+    ItemCategory,
     Monster,
     ParticipantKind,
     ResourcePool,
@@ -511,9 +514,7 @@ def test_break_concentration_persists_clear_and_activity(monkeypatch) -> None:
                 "cleric",
                 "beacon_of_hope",
                 "Beacon of Hope",
-                targets=(
-                    TargetReference("cleric", "Cleric", TargetKind.CHARACTER, "cleric"),
-                ),
+                targets=(TargetReference("cleric", "Cleric", TargetKind.CHARACTER, "cleric"),),
             ),
         )
     )
@@ -787,9 +788,7 @@ def test_ability_action_applies_damage_to_active_monster_target() -> None:
         "goblin",
         current_hit_points=7,
     )
-    encounters = FakeEncounterStore(
-        Encounter("ambush", "Ambush", participants=(participant,))
-    )
+    encounters = FakeEncounterStore(Encounter("ambush", "Ambush", participants=(participant,)))
     app = SimpleNamespace(
         characters=FakeCharacterStore((attacker,)),
         compendium=FakeCompendium(_spell(), monster),
@@ -817,22 +816,28 @@ def test_action_activation_handles_empty_selection_and_missing_data() -> None:
     assert main_window._activate_action_button(app, main_window.GuiCampaignState(), None) == (
         "Action slot is empty."
     )
-    assert main_window._activate_action_button(
-        app,
-        main_window.GuiCampaignState(
-            selected_character_id=None,
-            party_leader_character_id=None,
-        ),
-        button,
-    ) == "Select a party leader or character before using Attack."
-    assert main_window._activate_action_button(
-        SimpleNamespace(characters=SimpleNamespace(load=_raise_key_error)),
-        main_window.GuiCampaignState(
-            selected_character_id="missing",
-            party_leader_character_id=None,
-        ),
-        button,
-    ) == "Selected character missing could not be loaded."
+    assert (
+        main_window._activate_action_button(
+            app,
+            main_window.GuiCampaignState(
+                selected_character_id=None,
+                party_leader_character_id=None,
+            ),
+            button,
+        )
+        == "Select a party leader or character before using Attack."
+    )
+    assert (
+        main_window._activate_action_button(
+            SimpleNamespace(characters=SimpleNamespace(load=_raise_key_error)),
+            main_window.GuiCampaignState(
+                selected_character_id="missing",
+                party_leader_character_id=None,
+            ),
+            button,
+        )
+        == "Selected character missing could not be loaded."
+    )
 
 
 def test_action_activation_uses_party_leader_before_selected_character() -> None:
@@ -959,9 +964,7 @@ def test_shift_action_bar_activation_rolls_attack_with_modifier(monkeypatch) -> 
         party_leader_character_id="fighter",
     )
     session = ActionBarSession(
-        ActionBar(
-            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),)
-        )
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),))
     )
     monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
 
@@ -1016,18 +1019,12 @@ def test_shift_critical_hit_doubles_follow_up_damage_dice(monkeypatch) -> None:
         party_leader_character_id="fighter",
     )
     session = ActionBarSession(
-        ActionBar(
-            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),)
-        )
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),))
     )
     monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
 
-    check = main_window._activate_action_bar_slot(
-        window, object(), app, state, session, 1, True
-    )
-    damage = main_window._activate_action_bar_slot(
-        window, object(), app, state, session, 1, False
-    )
+    check = main_window._activate_action_bar_slot(window, object(), app, state, session, 1, True)
+    damage = main_window._activate_action_bar_slot(window, object(), app, state, session, 1, False)
 
     assert "Critical hit!" in check
     assert app.dice.notations == ["1d20+6", "2d8+1"]
@@ -1063,20 +1060,126 @@ def test_shift_critical_miss_prevents_follow_up_damage(monkeypatch) -> None:
         party_leader_character_id="fighter",
     )
     session = ActionBarSession(
-        ActionBar(
-            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),)
-        )
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),))
     )
     monkeypatch.setattr(main_window, "_refresh_campaign_docks", lambda *args: None)
 
     main_window._activate_action_bar_slot(window, object(), app, state, session, 1, True)
-    message = main_window._activate_action_bar_slot(
-        window, object(), app, state, session, 1, False
-    )
+    message = main_window._activate_action_bar_slot(window, object(), app, state, session, 1, False)
 
     assert app.dice.notations == ["1d20+2"]
     assert message == "Fighter uses Warhammer. Critical miss: no damage applied."
     assert state.pending_action_check is None
+
+
+def test_versatile_weapon_uses_two_hands_only_when_offhand_is_empty() -> None:
+    versatile = DamageProfile((DamageComponent("1d10+1", DamageType.BLUDGEONING),))
+    weapon = Weapon(
+        "Warhammer",
+        DamageProfile((DamageComponent("1d8+1", DamageType.BLUDGEONING),)),
+        versatile_damage=versatile,
+        properties=("versatile",),
+    )
+    button = ActionBarButton(1, ActionBarActionKind.ABILITY, "warhammer", "Warhammer")
+    two_handed = Character("cleric", "Cleric", HitPoints(20, 20), weapons=(weapon,))
+    one_handed = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        weapons=(weapon,),
+        inventory=(
+            InventoryItem(
+                "shield",
+                "Shield",
+                category=ItemCategory.ARMOR,
+                equipped_slot=EquipmentSlot.OFF_HAND,
+            ),
+        ),
+    )
+
+    two_handed_app = _app(two_handed)
+    one_handed_app = _app(one_handed)
+    main_window._activate_ability_button(two_handed_app, two_handed, button)
+    main_window._activate_ability_button(one_handed_app, one_handed, button)
+
+    assert two_handed_app.dice.notations == ["1d10+1"]
+    assert one_handed_app.dice.notations == ["1d8+1"]
+
+
+def test_channel_divinity_action_spends_shared_resource() -> None:
+    character = Character(
+        "cleric",
+        "Cleric",
+        HitPoints(20, 20),
+        level=6,
+        character_class="Cleric 6",
+        features=("Channel Divinity: Turn Undead",),
+        resources={"channel_divinity": ResourcePool("channel_divinity", 2, 2)},
+    )
+    effect = EffectDefinition(
+        "channel_divinity_turn_undead",
+        "Channel Divinity: Turn Undead",
+        EffectKind.CONDITION,
+        TargetProfile.SPECIAL,
+        resource_cost="channel_divinity",
+    )
+    app = SimpleNamespace(
+        characters=FakeCharacters(character),
+        compendium=SimpleNamespace(load_action_effect=lambda action_id: effect),
+    )
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.ABILITY,
+        "channel_divinity:_turn_undead",
+        "Channel Divinity: Turn Undead",
+    )
+
+    message = main_window._activate_ability_button(app, character, button)
+
+    assert "Turn Undead" in message
+    assert "Spent channel_divinity" in message
+    assert character.resources["channel_divinity"].current == 1
+    assert app.characters.saved == [character]
+
+
+def test_preserve_life_heals_selected_target_only_to_half_maximum() -> None:
+    caster = Character(
+        "cleric",
+        "Ravenisis",
+        HitPoints(20, 20),
+        level=6,
+        character_class="Cleric 6",
+        features=("Channel Divinity: Preserve Life",),
+        resources={"channel_divinity": ResourcePool("channel_divinity", 2, 2)},
+    )
+    target = Character("ally", "Ally", HitPoints(2, 20))
+    effect = EffectDefinition(
+        "channel_divinity_preserve_life",
+        "Channel Divinity: Preserve Life",
+        EffectKind.HEALING,
+        TargetProfile.SPECIAL,
+        resource_cost="channel_divinity",
+    )
+    store = FakeCharacterStore((caster, target))
+    app = SimpleNamespace(
+        characters=store,
+        compendium=SimpleNamespace(load_action_effect=lambda action_id: effect),
+    )
+    button = ActionBarButton(
+        1,
+        ActionBarActionKind.ABILITY,
+        "channel_divinity:_preserve_life",
+        "Channel Divinity: Preserve Life",
+    )
+    state = main_window.GuiCampaignState(
+        active_target=TargetReference("ally", "Ally", TargetKind.CHARACTER, "ally")
+    )
+
+    message = main_window._activate_ability_button(app, caster, button, state)
+
+    assert target.hit_points.current == 10
+    assert caster.resources["channel_divinity"].current == 1
+    assert "Restored 8 HP without exceeding half maximum" in message
 
 
 def test_normal_action_bar_activation_logs_result_and_refreshes(monkeypatch) -> None:
@@ -1098,9 +1201,7 @@ def test_normal_action_bar_activation_logs_result_and_refreshes(monkeypatch) -> 
         party_leader_character_id="fighter",
     )
     session = ActionBarSession(
-        ActionBar(
-            buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),)
-        )
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Attack"),))
     )
     refresh_calls = []
     monkeypatch.setattr(

@@ -1,0 +1,14 @@
+{
+  "action_cost": "bonus_action",
+  "check": {"ability": null, "bonus": 0, "dc": null, "kind": "none", "proficiency_applies": false},
+  "dice": null,
+  "duration": {"amount": 10, "kind": "minute_based", "text": "10 minutes"},
+  "effect_id": "channel_divinity_sacred_weapon",
+  "effect_kind": "buff",
+  "interactions": [{"interaction_id": "sacred-weapon-buff", "label": "Sacred Weapon", "metadata": {"ruleset": "SRD 5.2.1 / 2024 framework"}, "outcome_kind": "apply_buff", "scaling": {}, "trigger": "on_cast", "value": "empower one weapon with sacred power"}],
+  "name": "Channel Divinity: Sacred Weapon",
+  "range_text": "Self",
+  "resource_cost": "channel_divinity",
+  "rule_source": null,
+  "target_profile": "self"
+}

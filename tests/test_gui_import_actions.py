@@ -366,6 +366,124 @@ def test_report_bug_menu_writes_beta_report(monkeypatch, tmp_path) -> None:
     assert window.status.message == f"Submitted bug report to {report_file}."
 
 
+def test_report_bug_menu_configures_automatic_github_upload(monkeypatch) -> None:
+    window = FakeWindow()
+    state = main_window.GuiCampaignState()
+    configured = []
+
+    class Reports:
+        github_upload_configured = False
+
+        def configure_github_token(self, token):
+            configured.append(token)
+            self.github_upload_configured = True
+
+        def submit_bug_report(self, report):
+            return "https://github.com/Ravenisis/DnDCombatEngine/blob/main/reports.md"
+
+    app = SimpleNamespace(beta_reports=Reports())
+    monkeypatch.setattr(
+        main_window,
+        "_ask_bug_report",
+        lambda qt, parent: BetaBugReport("Bug", "Description"),
+    )
+    monkeypatch.setattr(main_window, "_ask_github_token", lambda qt, parent: "secure-token")
+
+    main_window._run_menu_action(window, FakeQt, app, state, "help.report_bug")
+
+    assert configured == ["secure-token"]
+    assert "github.com" in window.status.message
+
+
+def test_github_token_prompt_masks_and_returns_accepted_value() -> None:
+    class LineEdit:
+        class EchoMode:
+            Password = 2
+
+    class InputDialog:
+        @staticmethod
+        def getText(parent, title, label, echo_mode):  # noqa: N802
+            assert title == "Enable GitHub Bug Reports"
+            assert "Contents: read and write" in label
+            assert echo_mode == LineEdit.EchoMode.Password
+            return " token ", True
+
+    qt = SimpleNamespace(QtWidgets=SimpleNamespace(QInputDialog=InputDialog, QLineEdit=LineEdit))
+
+    assert main_window._ask_github_token(qt, object()) == "token"  # noqa: SLF001
+    assert main_window._ask_github_token(  # noqa: SLF001
+        SimpleNamespace(QtWidgets=SimpleNamespace()), object()
+    ) is None
+
+
+def test_github_token_preferences_save_and_clear() -> None:
+    class Signal:
+        def connect(self, callback):
+            self.callback = callback
+
+    class Label:
+        def __init__(self, text=""):
+            self.value = text
+
+        def setText(self, text):  # noqa: N802
+            self.value = text
+
+    class LineEdit:
+        class EchoMode:
+            Password = 2
+
+        def __init__(self):
+            self.value = "token"
+
+        def setPlaceholderText(self, text):  # noqa: N802
+            self.placeholder = text
+
+        def setEchoMode(self, mode):  # noqa: N802
+            self.echo_mode = mode
+
+        def text(self):
+            return self.value
+
+        def clear(self):
+            self.value = ""
+
+    class Button:
+        def __init__(self, text):
+            self.text = text
+            self.clicked = Signal()
+
+    class Layout:
+        def __init__(self):
+            self.widgets = []
+
+        def addWidget(self, widget):  # noqa: N802
+            self.widgets.append(widget)
+
+    class Reports:
+        github_upload_configured = False
+
+        def configure_github_token(self, token):
+            assert token == "token"
+            self.github_upload_configured = True
+
+        def clear_github_token(self):
+            self.github_upload_configured = False
+
+    qt = SimpleNamespace(
+        QtWidgets=SimpleNamespace(QLabel=Label, QLineEdit=LineEdit, QPushButton=Button)
+    )
+    window = FakeWindow()
+    layout = Layout()
+    app = SimpleNamespace(beta_reports=Reports())
+
+    main_window._add_github_token_preferences(window, qt, layout, app)  # noqa: SLF001
+    buttons = [widget for widget in layout.widgets if isinstance(widget, Button)]
+    buttons[0].clicked.callback()
+    assert app.beta_reports.github_upload_configured is True
+    buttons[1].clicked.callback()
+    assert app.beta_reports.github_upload_configured is False
+
+
 def test_report_bug_menu_handles_cancel(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState()
@@ -758,6 +876,7 @@ def test_short_rest_heals_and_keeps_spell_slots_spent(monkeypatch) -> None:
         resources={
             "spell_slot_1": ResourcePool("spell_slot_1", 0, 4),
             "second_wind": ResourcePool("second_wind", 0, 1),
+            "channel_divinity": ResourcePool("channel_divinity", 0, 2),
         },
     )
     saved_characters = []
@@ -782,6 +901,7 @@ def test_short_rest_heals_and_keeps_spell_slots_spent(monkeypatch) -> None:
     assert character.hit_points.temporary == 2
     assert character.resources["spell_slot_1"].current == 0
     assert character.resources["second_wind"].current == 1
+    assert character.resources["channel_divinity"].current == 2
     assert saved_characters == [character]
     assert window.status.message == (
         "Short rest completed for 1 party member. "

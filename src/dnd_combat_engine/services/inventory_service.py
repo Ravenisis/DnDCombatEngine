@@ -279,6 +279,8 @@ def _supports_slot(item: InventoryItem, slot: EquipmentSlot) -> bool:
         return item.category.value == "armor" and "shield" not in text
     if slot in {EquipmentSlot.MAIN_HAND, EquipmentSlot.OFF_HAND}:
         return item.category.value == "weapon" or "shield" in text or "focus" in text
+    if slot in {EquipmentSlot.RING_LEFT, EquipmentSlot.RING_RIGHT}:
+        return _is_equippable_ring(item)
     keywords = {
         EquipmentSlot.HEAD: ("helm", "helmet", "hat", "circlet", "head"),
         EquipmentSlot.NECK: ("amulet", "necklace", "neck"),
@@ -287,10 +289,20 @@ def _supports_slot(item: InventoryItem, slot: EquipmentSlot) -> bool:
         EquipmentSlot.WAIST: ("belt", "waist"),
         EquipmentSlot.LEGS: ("legging", "pants", "legs"),
         EquipmentSlot.FEET: ("boot", "shoe", "slipper", "feet"),
-        EquipmentSlot.RING_LEFT: ("ring",),
-        EquipmentSlot.RING_RIGHT: ("ring",),
     }
     return any(keyword in text for keyword in keywords.get(slot, ()))
+
+
+def _is_equippable_ring(item: InventoryItem) -> bool:
+    """Return whether an item is a wearable ring rather than a substring match."""
+    if item.category.value in {"armor", "weapon", "ammunition"}:
+        return False
+    tags = {_normalized_inventory_key(tag) for tag in item.tags}
+    subcategory = _normalized_inventory_key(item.subcategory)
+    if "ring" in tags or subcategory in {"ring", "magic_ring"}:
+        return True
+    words = set(re.findall(r"[a-z0-9]+", item.name.casefold()))
+    return "ring" in words
 
 
 LEGACY_ITEM_ALIASES = {

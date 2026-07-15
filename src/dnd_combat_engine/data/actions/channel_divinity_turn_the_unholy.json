@@ -1,0 +1,14 @@
+{
+  "action_cost": "action",
+  "check": {"ability": "wisdom", "bonus": 0, "dc": null, "kind": "saving_throw", "proficiency_applies": false},
+  "dice": null,
+  "duration": {"amount": 1, "kind": "minute_based", "text": "1 minute or until damaged"},
+  "effect_id": "channel_divinity_turn_the_unholy",
+  "effect_kind": "condition",
+  "interactions": [{"interaction_id": "turn-unholy-save", "label": "Turn the Unholy", "metadata": {"ruleset": "SRD 5.2.1 / 2024 framework"}, "outcome_kind": "force_save", "scaling": {}, "trigger": "on_target", "value": "fiends and undead in range make a Wisdom saving throw or become turned"}],
+  "name": "Channel Divinity: Turn the Unholy",
+  "range_text": "30 feet",
+  "resource_cost": "channel_divinity",
+  "rule_source": null,
+  "target_profile": "special"
+}

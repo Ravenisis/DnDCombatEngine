@@ -1,0 +1,14 @@
+{
+  "action_cost": "action",
+  "check": {"ability": null, "bonus": 0, "dc": null, "kind": "none", "proficiency_applies": false},
+  "dice": null,
+  "duration": {"amount": null, "kind": "instantaneous", "text": "Instantaneous"},
+  "effect_id": "channel_divinity_divine_spark",
+  "effect_kind": "utility",
+  "interactions": [{"interaction_id": "divine-spark-choice", "label": "Divine Spark", "metadata": {"ruleset": "SRD 5.2.1 / 2024 framework"}, "outcome_kind": "create_choice", "scaling": {}, "trigger": "on_choice", "value": "choose healing or divine damage"}],
+  "name": "Channel Divinity: Divine Spark",
+  "range_text": "30 feet",
+  "resource_cost": "channel_divinity",
+  "rule_source": null,
+  "target_profile": "special"
+}

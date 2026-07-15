@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from dnd_combat_engine.version import APP_VERSION
+
 
 @dataclass(frozen=True, slots=True)
 class BetaBugReport:
@@ -18,7 +20,7 @@ class BetaBugReport:
     severity: str = "Medium"
     area: str = "General"
     tester_name: str = ""
-    app_version: str = "1.0.3"
+    app_version: str = APP_VERSION
     created_at: datetime | None = None
 
     def __post_init__(self) -> None:

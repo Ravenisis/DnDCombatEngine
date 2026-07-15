@@ -7,6 +7,22 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added encrypted per-user GitHub bug-report credentials on Windows. The first
+  report prompts for a fine-grained token, Preferences can replace or clear it,
+  and subsequent reports upload automatically with local fallback on failure.
+- Added a centralized 1.x version-modified timestamp to the About dialog,
+  formatted in Eastern time as `mm/dd/yyyy HH:MM am/pm`.
+- Added model-level versatile weapon support. Warhammer now uses `1d8+1`
+  while the off hand is occupied and `1d10+1` while it is empty; legacy
+  weapon saves infer their alternate profile without requiring re-import.
+- Added the Equipment window to Key Binds with `C` as its default shortcut.
+- Added two tracked Channel Divinity uses for level-6 clerics above the spell
+  slots, short- and long-rest recovery, action-bar resource spending, and
+  data-backed Preserve Life, Turn Undead, Divine Spark, Sacred Weapon, and
+  Turn the Unholy definitions.
+- Added a data-backed level 0-3 cleric spell availability catalog, including
+  Detect Magic and the configured expanded spell names, while retaining richer
+  persisted definitions for spells whose effect automation is implemented.
 - Added an automatic legacy-inventory metadata upgrade at application startup.
   Existing quantities, storage placement, and equipped slots are retained while
   recognized items receive current SRD names, categories, weights, prices,
@@ -71,6 +87,9 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Ring equipment slots now accept explicitly classified or whole-word ring
+  items while rejecting Ring Mail, String, Ball Bearings, and other substring
+  false positives.
 - Spellbook, Inventory, and Equipment now use native Qt tool windows with
   standard Windows title bars. They can be dragged independently and continue
   to restore their last position and size.

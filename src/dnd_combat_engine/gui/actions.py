@@ -52,6 +52,7 @@ def default_action_specs() -> tuple[GuiActionSpec, ...]:
             "Character",
             "Equipment",
             "Open the party leader equipment screen",
+            "C",
         ),
         GuiActionSpec(
             "character.break_concentration",

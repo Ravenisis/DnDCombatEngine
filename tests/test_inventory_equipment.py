@@ -103,6 +103,36 @@ def test_inventory_service_lists_slot_compatible_unequipped_items() -> None:
     ] == ["Shield +1"]
 
 
+def test_ring_slots_accept_rings_without_substring_false_positives() -> None:
+    character = Character(
+        "hero",
+        "Hero",
+        HitPoints(20, 20),
+        inventory=(
+            InventoryItem("protection", "Ring of Protection", tags=("ring",)),
+            InventoryItem("signet", "Signet Ring"),
+            InventoryItem("string", "String"),
+            InventoryItem("springing", "Boots of Striding and Springing"),
+            InventoryItem("ball_bearings", "Ball Bearings"),
+            InventoryItem(
+                "ring_mail",
+                "Ring Mail",
+                category=ItemCategory.ARMOR,
+                subcategory="heavy_armor",
+            ),
+        ),
+    )
+    service = InventoryService()
+
+    compatible = service.compatible_items(character, EquipmentSlot.RING_LEFT)
+
+    assert [item.name for item in compatible] == ["Ring of Protection", "Signet Ring"]
+    service.equip_item(character, "protection", EquipmentSlot.RING_LEFT)
+    assert service.compatible_items(character, EquipmentSlot.RING_RIGHT) == (
+        next(item for item in character.inventory if item.item_id == "signet"),
+    )
+
+
 def test_inventory_service_enriches_legacy_items_and_recovers_owned_weapon() -> None:
     character = Character(
         "hero",

@@ -23,6 +23,7 @@ from dnd_combat_engine.services.multiplayer_service import MultiplayerService
 from dnd_combat_engine.services.persistence_service import PersistenceService
 from dnd_combat_engine.services.spell_service import SpellService
 from dnd_combat_engine.services.srd_catalog_service import SrdCatalogService
+from dnd_combat_engine.services.token_store import UserTokenStore
 from dnd_combat_engine.services.websocket_relay import HostedCampaignWebSocketRelay
 
 __all__ = [
@@ -45,5 +46,6 @@ __all__ = [
     "PersistenceService",
     "SpellService",
     "SrdCatalogService",
+    "UserTokenStore",
     "HostedCampaignWebSocketRelay",
 ]

@@ -1,4 +1,4 @@
-﻿"""Main GUI window."""
+"""Main GUI window."""
 
 from __future__ import annotations
 
@@ -87,12 +87,14 @@ from dnd_combat_engine.models import (
     TargetKind,
     TargetProfile,
     TargetReference,
+    ensure_channel_divinity_resource,
     ensure_spell_slot_resources,
     ensure_spell_slot_resources_for_level,
 )
 from dnd_combat_engine.models.damage import DamageProfile
 from dnd_combat_engine.rules import EffectPlan, EffectResolver
 from dnd_combat_engine.utils.paths import bundled_data_root
+from dnd_combat_engine.version import about_text
 
 _active_character_id = active_character_id
 _slug = slug
@@ -524,7 +526,7 @@ def _run_menu_action(
         _open_key_binds_window(window, qt)
         return
     if action_id == "settings.preferences":
-        _open_preferences_window(window, qt)
+        _open_preferences_window(window, qt, app)
         return
     if action_id == "help.report_bug":
         _report_bug_from_menu(window, qt, app)
@@ -534,7 +536,7 @@ def _run_menu_action(
             window,
             qt,
             "About DnDCombatEngine",
-            "DnDCombatEngine 1.0.3\nLayered Dungeons & Dragons combat workspace.",
+            about_text(),
         )
         return
     _set_status(window, f"{action_id} selected.")
@@ -553,8 +555,17 @@ def _report_bug_from_menu(window, qt, app: DnDCombatEngineApp) -> None:
     if report is None:
         _set_status(window, "Bug report canceled.")
         return
+    reports = app.beta_reports
+    configure = getattr(reports, "configure_github_token", None)
+    if callable(configure) and not getattr(reports, "github_upload_configured", False):
+        token = _ask_github_token(qt, window)
+        if token:
+            try:
+                configure(token)
+            except (OSError, ValueError) as exc:
+                _show_message(window, qt, "GitHub Token Not Saved", str(exc), error=True)
     try:
-        location = app.beta_reports.submit_bug_report(report)
+        location = reports.submit_bug_report(report)
     except (OSError, ValueError) as exc:
         _show_message(window, qt, "Report Bug Failed", str(exc), error=True)
         _set_status(window, str(exc))
@@ -566,6 +577,23 @@ def _report_bug_from_menu(window, qt, app: DnDCombatEngineApp) -> None:
         f"Submitted beta tester report to:\n{location}",
     )
     _set_status(window, f"Submitted bug report to {location}.")
+
+
+def _ask_github_token(qt, parent) -> str | None:
+    """Ask once for a fine-grained token when automatic upload is unconfigured."""
+    dialog_class = getattr(qt.QtWidgets, "QInputDialog", None)
+    line_edit_class = getattr(qt.QtWidgets, "QLineEdit", None)
+    echo_mode = getattr(getattr(line_edit_class, "EchoMode", None), "Password", None)
+    if dialog_class is None or echo_mode is None:
+        return None
+    token, accepted = dialog_class.getText(
+        parent,
+        "Enable GitHub Bug Reports",
+        "Fine-grained token (Contents: read and write):",
+        echo_mode,
+    )
+    value = str(token).strip()
+    return value if accepted and value else None
 
 
 def _ask_bug_report(qt, parent) -> BetaBugReport | None:
@@ -1043,6 +1071,7 @@ def _rest_campaign(
 
 
 def _rest_character(character: Character, *, long_rest: bool) -> None:
+    ensure_channel_divinity_resource(character)
     ensure_spell_slot_resources(character)
     if long_rest:
         character.hit_points.heal(character.hit_points.maximum)
@@ -1234,9 +1263,13 @@ def _move_inventory_item(
     except (KeyError, ValueError) as exc:
         _show_message(window, qt, "Move Item Failed", str(exc), error=True)
         return
-    destination = "Carried" if container_id is None else next(
-        (item.name for item in character.inventory if item.item_id == container_id),
-        container_id,
+    destination = (
+        "Carried"
+        if container_id is None
+        else next(
+            (item.name for item in character.inventory if item.item_id == container_id),
+            container_id,
+        )
     )
     message = f"Moved {moved.name} to {destination}."
     _record_campaign_activity(app, state, message, "inventory")
@@ -1403,8 +1436,7 @@ def _add_inventory_item_from_dialog(
     message = f"Added {item.quantity} x {item.name} to {character.name}."
     if purchase_total:
         message = (
-            f"Bought {item.quantity} x {item.name} for "
-            f"{_currency_change_text(purchase_total)}."
+            f"Bought {item.quantity} x {item.name} for {_currency_change_text(purchase_total)}."
         )
         _record_money_log_transaction(
             money_log_state,
@@ -1527,9 +1559,7 @@ def _populate_srd_item_tooltips(qt, selector, item_by_name: dict[str, InventoryI
     for index, item_name in enumerate(("Custom Item", *item_by_name.keys())):
         item = item_by_name.get(item_name)
         tooltip = (
-            "Create a custom inventory item."
-            if item is None
-            else _srd_inventory_item_tooltip(item)
+            "Create a custom inventory item." if item is None else _srd_inventory_item_tooltip(item)
         )
         selector.setItemData(index, tooltip, tooltip_role)
 
@@ -1668,7 +1698,7 @@ def _open_key_binds_window(window, qt) -> None:
     _set_status(window, "Opened key binds.")
 
 
-def _open_preferences_window(window, qt) -> None:
+def _open_preferences_window(window, qt, app: DnDCombatEngineApp | None = None) -> None:
     if _toggle_named_popup(window, "preferences", "Closed preferences."):
         return
     popup = create_embedded_popup(qt, window)
@@ -1677,7 +1707,7 @@ def _open_preferences_window(window, qt) -> None:
     if hasattr(popup, "setWindowTitle"):
         popup.setWindowTitle("Preferences")
     if hasattr(popup, "resize"):
-        popup.resize(360, 180)
+        popup.resize(460, 300 if app is not None else 180)
     layout = qt.QtWidgets.QVBoxLayout(popup)
     combo_class = getattr(qt.QtWidgets, "QComboBox", None)
     label = qt.QtWidgets.QLabel("Color Scheme")
@@ -1698,9 +1728,60 @@ def _open_preferences_window(window, qt) -> None:
         if hasattr(combo, "currentIndexChanged"):
             combo.currentIndexChanged.connect(apply_scheme)
         layout.addWidget(combo)
+    if app is not None:
+        _add_github_token_preferences(window, qt, layout, app)
     _add_popup_close_button(window, qt, layout, "preferences", "Closed preferences.")
     _show_popup(window, popup, key="preferences")
     _set_status(window, "Opened preferences.")
+
+
+def _add_github_token_preferences(window, qt, layout, app: DnDCombatEngineApp) -> None:
+    """Add secure GitHub bug-report token controls to Preferences."""
+    reports = app.beta_reports
+    line_edit_class = getattr(qt.QtWidgets, "QLineEdit", None)
+    button_class = getattr(qt.QtWidgets, "QPushButton", None)
+    if line_edit_class is None or button_class is None:
+        return
+    layout.addWidget(qt.QtWidgets.QLabel("GitHub Bug Report Upload"))
+    status = qt.QtWidgets.QLabel()
+    token = line_edit_class()
+    if hasattr(token, "setPlaceholderText"):
+        token.setPlaceholderText("Paste a fine-grained repository token")
+    echo_mode = getattr(getattr(line_edit_class, "EchoMode", None), "Password", None)
+    if echo_mode is not None and hasattr(token, "setEchoMode"):
+        token.setEchoMode(echo_mode)
+
+    def refresh_status() -> None:
+        configured = reports.github_upload_configured
+        status.setText("Configured for automatic upload." if configured else "Not configured.")
+
+    def save_token(checked: bool = False) -> None:
+        del checked
+        try:
+            reports.configure_github_token(token.text())
+        except (OSError, ValueError) as exc:
+            _show_message(window, qt, "GitHub Token Not Saved", str(exc), error=True)
+            return
+        token.clear()
+        refresh_status()
+        _set_status(window, "Saved encrypted GitHub bug report token.")
+
+    def clear_token(checked: bool = False) -> None:
+        del checked
+        reports.clear_github_token()
+        token.clear()
+        refresh_status()
+        _set_status(window, "Cleared GitHub bug report token.")
+
+    save_button = button_class("Save GitHub Token")
+    clear_button = button_class("Clear GitHub Token")
+    save_button.clicked.connect(save_token)
+    clear_button.clicked.connect(clear_token)
+    refresh_status()
+    layout.addWidget(status)
+    layout.addWidget(token)
+    layout.addWidget(save_button)
+    layout.addWidget(clear_button)
 
 
 def _open_campaign_activity_window(
@@ -1804,9 +1885,7 @@ def _unregister_named_popup(window, key: str, popup, status_message: str) -> Non
     named.pop(key, None)
     window._dnd_named_popups = named  # noqa: SLF001
     window._dnd_popups = [  # noqa: SLF001
-        candidate
-        for candidate in getattr(window, "_dnd_popups", [])
-        if candidate is not popup
+        candidate for candidate in getattr(window, "_dnd_popups", []) if candidate is not popup
     ]
     _set_status(window, status_message)
 
@@ -1840,6 +1919,7 @@ def _key_bind_rows() -> tuple[tuple[str, str], ...]:
         ("Action Bar Slot 12", "="),
         ("Inventory", "B"),
         ("Spellbook", "K"),
+        ("Equipment", "C"),
         ("Roll Previous Die", "Ctrl+R"),
         ("Clear Combat Workspace", "Ctrl+L"),
         ("Exit", "Ctrl+Q"),
@@ -1878,11 +1958,7 @@ def _duplicate_roll_guard(window, source: str, *, interval_seconds: float = 0.15
     now = monotonic()
     previous = getattr(window, "_dnd_roll_guard", None)
     window._dnd_roll_guard = (source, now)  # noqa: SLF001
-    return (
-        previous is not None
-        and previous[0] == source
-        and now - previous[1] < interval_seconds
-    )
+    return previous is not None and previous[0] == source and now - previous[1] < interval_seconds
 
 
 def _consume_inventory_item(
@@ -2135,9 +2211,7 @@ def _roll_action_bar_check(
     result = app.dice.roll(notation)
     natural = result.rolls[0] if result.rolls else None
     state.pending_action_check = (
-        (slot, button.action_id, natural == 20, natural == 1)
-        if natural in {1, 20}
-        else None
+        (slot, button.action_id, natural == 20, natural == 1) if natural in {1, 20} else None
     )
     outcome = " Critical hit!" if natural == 20 else " Critical miss!" if natural == 1 else ""
     return (
@@ -2234,8 +2308,7 @@ def _activate_action_button(
     except KeyError:
         return f"Selected character {character_id} could not be loaded."
     if critical_miss and (
-        button.kind == ActionBarActionKind.SPELL
-        or _ability_uses_weapon_damage(character, button)
+        button.kind == ActionBarActionKind.SPELL or _ability_uses_weapon_damage(character, button)
     ):
         return f"{character.name} uses {button.name}. Critical miss: no damage applied."
     if button.kind == ActionBarActionKind.SPELL:
@@ -2278,8 +2351,7 @@ def _activate_spell_button(
             return f"{character.name} cannot cast {spell.name}: no level {slot_level} slots."
         if spell_slot_resource.current < 1:
             return (
-                f"{character.name} cannot cast {spell.name}: "
-                f"no level {slot_level} slots remaining."
+                f"{character.name} cannot cast {spell.name}: no level {slot_level} slots remaining."
             )
     selected_targets = _choose_spell_effect_targets(
         app,
@@ -2567,10 +2639,6 @@ def _resolve_gui_combat_action(
         )
         _persist_campaign_concentration(app, state)
     return resolution
-
-
-
-
 
 
 def _choose_spell_effect_targets(
@@ -2959,9 +3027,7 @@ def _apply_concentration_to_state(
     state.concentration_character_id = concentration.caster_id
     state.concentration_spell_id = concentration.effect_id
     target_ids = tuple(target.target_id for target in concentration.targets)
-    state.beacon_of_hope_targets = (
-        target_ids if concentration.effect_id == "beacon_of_hope" else ()
-    )
+    state.beacon_of_hope_targets = target_ids if concentration.effect_id == "beacon_of_hope" else ()
     state.bless_targets = target_ids if concentration.effect_id == "bless" else ()
 
 
@@ -3028,17 +3094,13 @@ def _concentration_broken_message(
 ) -> str:
     if previous is None:
         return f"Concentration broken: {fallback_spell_name}."
-    target_names = tuple(
-        _character_name(app, target.target_id) for target in previous.targets
-    )
+    target_names = tuple(_character_name(app, target.target_id) for target in previous.targets)
     if not target_names:
         return f"Concentration broken: {previous.effect_name}."
     return (
         f"Concentration broken: {previous.effect_name}. "
         f"Removed {previous.effect_name} from {', '.join(target_names)}."
     )
-
-
 
 
 def _spell_display_name(spell_id: str) -> str:
@@ -3070,6 +3132,8 @@ def _activate_ability_button(
     state: GuiCampaignState | None = None,
     critical: bool = False,
 ) -> str:
+    if button.name.casefold().startswith("channel divinity:"):
+        return _activate_channel_divinity_button(app, character, button, state)
     if not _ability_uses_weapon_damage(character, button):
         return f"{button.name} is character sheet information, not a configured combat action."
     if button.name.lower() == "unarmed strike" or button.action_id == "unarmed_strike":
@@ -3095,15 +3159,14 @@ def _activate_ability_button(
                 detail=f"Damage {damage} bludgeoning. {applied}",
             ).message()
         return (
-            f"{character.name} uses Unarmed Strike rank {button.rank}. "
-            f"Damage {damage} bludgeoning."
+            f"{character.name} uses Unarmed Strike rank {button.rank}. Damage {damage} bludgeoning."
         )
     weapon = _weapon_for_button(character, button)
     if weapon is None:
         return f"{character.name} uses {button.name}. No attack damage dice configured."
     damage_message, damage_total = _roll_damage_profile(
         app,
-        weapon.damage,
+        _weapon_damage_profile(character, weapon),
         critical=critical,
     )
     target = _active_target_for_effect(app, state)
@@ -3130,6 +3193,65 @@ def _activate_ability_button(
         f"{character.name} uses {button.name} with {weapon.name} "
         f"rank {button.rank}. {damage_message}"
     )
+
+
+def _weapon_damage_profile(character: Character, weapon) -> DamageProfile:
+    """Choose a versatile weapon's two-handed profile when the off hand is empty."""
+    if weapon.versatile_damage is None:
+        return weapon.damage
+    offhand_occupied = any(
+        item.equipped_slot is EquipmentSlot.OFF_HAND for item in character.inventory
+    )
+    return weapon.damage if offhand_occupied else weapon.versatile_damage
+
+
+def _activate_channel_divinity_button(
+    app: DnDCombatEngineApp,
+    character: Character,
+    button: ActionBarButton,
+    state: GuiCampaignState | None,
+) -> str:
+    """Spend and resolve an imported Channel Divinity option."""
+    if ensure_channel_divinity_resource(character):
+        app.characters.save(character)
+    resource = character.resources.get("channel_divinity")
+    if resource is None:
+        return f"{character.name} has no Channel Divinity uses."
+    if resource.current < 1:
+        return f"{character.name} has no Channel Divinity uses remaining."
+    action_id = _action_identifier(button.name)
+    try:
+        effect = app.compendium.load_action_effect(action_id)
+    except KeyError:
+        return f"{button.name} is not configured in the action compendium."
+    detail = f"{resource.current - 1}/{resource.maximum} Channel Divinity uses remain."
+    targets: tuple[TargetReference, ...] = ()
+    total: int | None = None
+    if action_id == "channel_divinity_preserve_life":
+        pool = max(5 * character.level, 5)
+        target_id = _active_character_target_id(app, state)
+        if target_id is not None:
+            target = app.characters.load(target_id)
+            healing_cap = max(target.hit_points.maximum // 2 - target.hit_points.current, 0)
+            total = target.hit_points.heal(min(pool, healing_cap))
+            app.characters.save(target)
+            targets = (_character_target_reference_with_name(app, target_id),)
+            detail = f"Restored {total} HP without exceeding half maximum; {detail}"
+        else:
+            detail = f"Distribute up to {pool} HP among legal creatures in range; {detail}"
+    try:
+        resolution = _resolve_gui_combat_action(
+            app,
+            character,
+            effect,
+            targets=targets,
+            total=total,
+            detail=detail,
+            state=state,
+        )
+    except ValueError as exc:
+        return f"{character.name} cannot use {button.name}: {exc}."
+    return " ".join(resolution.messages)
 
 
 def _action_effect_definition(action_id: str, name: str) -> EffectDefinition:
@@ -3183,16 +3305,21 @@ def _ability_uses_weapon_damage(character: Character, button: ActionBarButton) -
         "unarmed_strike",
     }
     weapon_actions.update(_action_identifier(weapon.name) for weapon in character.weapons)
-    return action_id in weapon_actions or name in {
-        "attack",
-        "basic attack",
-        "sneak attack",
-        "great weapon master",
-        "sharpshooter",
-        "divine smite",
-        "rage",
-        "unarmed strike",
-    } or name in {weapon.name.lower() for weapon in character.weapons}
+    return (
+        action_id in weapon_actions
+        or name
+        in {
+            "attack",
+            "basic attack",
+            "sneak attack",
+            "great weapon master",
+            "sharpshooter",
+            "divine smite",
+            "rage",
+            "unarmed strike",
+        }
+        or name in {weapon.name.lower() for weapon in character.weapons}
+    )
 
 
 def _action_identifier(value: str) -> str:
@@ -3214,18 +3341,9 @@ def _roll_damage_profile(
         result = app.dice.roll(notation)
         total += result.total
         parts.append(
-            f"{result.notation} {component.damage_type.value}: "
-            f"{result.total} rolls={result.rolls}"
+            f"{result.notation} {component.damage_type.value}: {result.total} rolls={result.rolls}"
         )
     return f"Damage {total} ({'; '.join(parts)}).", total
-
-
-
-
-
-
-
-
 
 
 def _roll_saving_throw(
@@ -3306,9 +3424,7 @@ def _saving_throw_modifier(character: Character, ability: str) -> int:
     imported = character.saving_throw_modifiers.get(ability.lower())
     if imported is not None:
         return imported
-    proficient = ability.lower() in {
-        name.lower() for name in character.saving_throw_proficiencies
-    }
+    proficient = ability.lower() in {name.lower() for name in character.saving_throw_proficiencies}
     proficiency = _proficiency_bonus(character.level) if proficient else 0
     return character.abilities.modifier(ability) + proficiency
 

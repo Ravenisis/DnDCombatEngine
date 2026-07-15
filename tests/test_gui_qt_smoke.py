@@ -25,13 +25,17 @@ def test_main_window_embeds_and_closes_preferences_popup() -> None:
     engine = create_app(data_root)
     window = main_window.create_main_window(engine)
     try:
-        main_window._open_preferences_window(window, qt)
+        main_window._open_preferences_window(window, qt, engine)
         application.processEvents()
 
         popup = window._dnd_named_popups["preferences"]  # noqa: SLF001
         assert popup.parent() is window
         assert not popup.isWindow()
         assert popup.findChild(qt.QtWidgets.QComboBox) is not None
+        assert any(
+            label.text() == "GitHub Bug Report Upload"
+            for label in popup.findChildren(qt.QtWidgets.QLabel)
+        )
         close_button = next(
             button
             for button in popup.findChildren(qt.QtWidgets.QPushButton)

@@ -11,20 +11,52 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from dnd_combat_engine.models.beta_reports import BetaBugReport
+from dnd_combat_engine.services.token_store import UserTokenStore
 
 
 class BetaReportService:
     """Append beta tester reports to a markdown report file."""
 
+    def __init__(self, token_store: UserTokenStore | None = None) -> None:
+        """Initialize optional secure token storage."""
+        self.token_store = token_store
+
+    @property
+    def github_upload_configured(self) -> bool:
+        """Return whether automatic GitHub submission has a usable token."""
+        return bool(self._configured_token())
+
+    def configure_github_token(self, token: str) -> None:
+        """Securely save a GitHub token for future automatic submissions."""
+        if self.token_store is None:
+            raise OSError("Secure GitHub token storage is not configured.")
+        self.token_store.save(token)
+
+    def clear_github_token(self) -> None:
+        """Remove the securely saved GitHub token."""
+        if self.token_store is not None:
+            self.token_store.clear()
+
     def submit_report(self, report_file: Path | str, report: BetaBugReport) -> str:
         """Submit a report online when configured, otherwise append it locally."""
-        token = os.environ.get("DND_COMBAT_ENGINE_GITHUB_TOKEN", "").strip()
+        token = self._configured_token()
         if token:
             try:
                 return self.submit_report_to_github(report, token)
             except (OSError, ValueError):
                 return str(self.append_report(report_file, report))
         return str(self.append_report(report_file, report))
+
+    def _configured_token(self) -> str:
+        environment_token = os.environ.get("DND_COMBAT_ENGINE_GITHUB_TOKEN", "").strip()
+        if environment_token:
+            return environment_token
+        if self.token_store is None:
+            return ""
+        try:
+            return (self.token_store.load() or "").strip()
+        except OSError:
+            return ""
 
     def append_report(self, report_file: Path | str, report: BetaBugReport) -> Path:
         """Append a report to a markdown file and return the written path."""

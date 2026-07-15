@@ -8,7 +8,7 @@ from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.encounters import Encounter
 from dnd_combat_engine.models.monsters import Monster
 from dnd_combat_engine.models.multiplayer import HostedCampaignSession, HostedCampaignState
-from dnd_combat_engine.models.spells import Spell
+from dnd_combat_engine.models.spells import Spell, SpellSchool
 from dnd_combat_engine.models.srd_catalog import SrdCatalog
 from dnd_combat_engine.persistence.json_store import JsonFileStore
 from dnd_combat_engine.persistence.migrations import (
@@ -81,11 +81,49 @@ class PersistenceService:
 
     def load_spell(self, spell_id: str) -> Spell:
         """Load a spell from a JSON document."""
-        return Spell.from_dict(migrate_spell(self.store.load("spells", spell_id)))
+        try:
+            return Spell.from_dict(migrate_spell(self.store.load("spells", spell_id)))
+        except FileNotFoundError:
+            return self._load_class_catalog_spell(spell_id)
 
     def list_spell_ids(self) -> list[str]:
         """List saved spell ids."""
         return self.store.list_ids("spells")
+
+    def class_spell_ids(self, class_id: str, maximum_level: int) -> tuple[str, ...]:
+        """Return configured spell ids available to a class through a spell level."""
+        entries = self._class_spell_entries(class_id)
+        return tuple(
+            str(entry["spell_id"])
+            for entry in entries
+            if int(entry.get("level", 0)) <= maximum_level
+        )
+
+    def _load_class_catalog_spell(self, spell_id: str) -> Spell:
+        for class_id in self.store.list_ids("class_spell_lists"):
+            for entry in self._class_spell_entries(class_id):
+                if str(entry.get("spell_id")) != spell_id:
+                    continue
+                return Spell(
+                    spell_id=spell_id,
+                    name=str(entry["name"]),
+                    level=int(entry["level"]),
+                    school=SpellSchool(str(entry["school"])),
+                    casting_time=str(entry.get("casting_time", "See spell source")),
+                    range_text=str(entry.get("range_text", "See spell source")),
+                    duration=str(entry.get("duration", "See spell source")),
+                    concentration=bool(entry.get("concentration", False)),
+                    ritual=bool(entry.get("ritual", False)),
+                    description=(
+                        "Available class spell. Detailed effect automation is not yet configured."
+                    ),
+                )
+        raise FileNotFoundError(spell_id)
+
+    def _class_spell_entries(self, class_id: str) -> tuple[dict[str, object], ...]:
+        payload = self.store.load("class_spell_lists", class_id.casefold())
+        entries = payload.get("spells", [])
+        return tuple(entry for entry in entries if isinstance(entry, dict))
 
     def load_action_effect(self, action_id: str) -> EffectDefinition:
         """Load a standalone action effect definition from a JSON document."""

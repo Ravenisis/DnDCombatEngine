@@ -47,8 +47,9 @@ from dnd_combat_engine.services import (
     MonsterService,
     PersistenceService,
     SpellService,
+    UserTokenStore,
 )
-from dnd_combat_engine.utils.paths import bundled_data_root, default_data_root
+from dnd_combat_engine.utils.paths import bundled_data_root, default_data_root, user_data_root
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,7 +107,7 @@ def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
         ),
         inventory=InventoryController(inventory_service, persistence_service),
         beta_reports=BetaReportController(
-            BetaReportService(),
+            BetaReportService(UserTokenStore(_github_token_path())),
             _default_beta_report_path(resolved_data_root),
         ),
         hosted_campaigns=LocalHostedCampaignBackend(persistence_service),
@@ -119,6 +120,11 @@ def _default_beta_report_path(data_root: Path) -> Path:
     if (project_root / "pyproject.toml").exists():
         return project_root / "BETA_TESTER_REPORTS.md"
     return data_root / "BETA_TESTER_REPORTS.md"
+
+
+def _github_token_path() -> Path:
+    """Return a per-user path outside the repository for encrypted credentials."""
+    return user_data_root().parent / "settings" / "github_bug_report_token.bin"
 
 
 def _upgrade_saved_inventory_metadata(

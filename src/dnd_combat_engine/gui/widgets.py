@@ -30,6 +30,10 @@ from dnd_combat_engine.gui.panels import (
     encounter_rows,
 )
 from dnd_combat_engine.models.action_bar import ActionBar, ActionBarActionKind, ActionBarButton
+from dnd_combat_engine.models.class_resources import (
+    CHANNEL_DIVINITY_RESOURCE,
+    ensure_channel_divinity_resource,
+)
 from dnd_combat_engine.models.currency import CurrencyPurse
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.spell_slots import (
@@ -89,25 +93,6 @@ ACTIONABLE_ABILITY_FEATURES = (
     "Sneak Attack",
 )
 CONTAINER_ITEM_IDS = {"bag_of_holding", "backpack", "pouch"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class ActionBarWidget:
@@ -192,20 +177,34 @@ class SpellSlotTrackerWidget:
         """Create a compact spell slot tracker for a character."""
         widget = qt.QtWidgets.QWidget()
         layout = qt.QtWidgets.QVBoxLayout(widget)
-        layout.addWidget(qt.QtWidgets.QLabel("Spell Slots"))
         if character_id is None:
+            layout.addWidget(qt.QtWidgets.QLabel("Spell Slots"))
             layout.addWidget(qt.QtWidgets.QLabel("No leader"))
             return widget
         try:
             character = app.characters.load(character_id)
         except KeyError:
+            layout.addWidget(qt.QtWidgets.QLabel("Spell Slots"))
             layout.addWidget(qt.QtWidgets.QLabel("Missing leader"))
             return widget
-        changed = ensure_spell_slot_resources(character)
+        changed = ensure_channel_divinity_resource(character)
+        changed = ensure_spell_slot_resources(character) or changed
         if action_bar is not None:
             changed = _ensure_spell_slots_for_action_bar(character, action_bar) or changed
         if changed and hasattr(app.characters, "save"):
             app.characters.save(character)
+        channel_resource = character.resources.get(CHANNEL_DIVINITY_RESOURCE)
+        if channel_resource is not None:
+            layout.addWidget(qt.QtWidgets.QLabel("Channel Divinity"))
+            layout.addWidget(
+                _resource_checkbox_row(
+                    qt,
+                    channel_resource.current,
+                    channel_resource.maximum,
+                    "Channel Divinity use",
+                )
+            )
+        layout.addWidget(qt.QtWidgets.QLabel("Spell Slots"))
         slot_rows = _spell_slot_rows(character.resources)
         if not slot_rows:
             layout.addWidget(qt.QtWidgets.QLabel("None"))
@@ -231,6 +230,27 @@ class SpellSlotTrackerWidget:
                 row_layout.addWidget(slot)
             layout.addWidget(row)
         return widget
+
+
+def _resource_checkbox_row(qt, current: int, maximum: int, label: str):
+    row = qt.QtWidgets.QWidget()
+    row_layout = qt.QtWidgets.QHBoxLayout(row)
+    for index in range(maximum):
+        checkbox_class = getattr(qt.QtWidgets, "QCheckBox", None)
+        marker = (
+            checkbox_class()
+            if checkbox_class is not None
+            else qt.QtWidgets.QLabel("x" if index < current else "-")
+        )
+        if hasattr(marker, "setChecked"):
+            marker.setChecked(index < current)
+        if hasattr(marker, "setEnabled"):
+            marker.setEnabled(False)
+        if hasattr(marker, "setToolTip"):
+            status = "available" if index < current else "spent"
+            marker.setToolTip(f"{label} {index + 1}: {status}")
+        row_layout.addWidget(marker)
+    return row
 
 
 class SavingThrowWidget:
@@ -284,43 +304,21 @@ class SavingThrowWidget:
                     f"{bonus_text}. Shift-click to roll with advantage."
                 )
             button.clicked.connect(
-                lambda checked=False, save=ability: _trigger_saving_throw(
-                    on_roll,
-                    save,
-                    _shift_pressed(qt),
+                lambda checked=False, save=ability: (
+                    _trigger_saving_throw(
+                        on_roll,
+                        save,
+                        _shift_pressed(qt),
+                    )
+                    if on_roll is not None
+                    else None
                 )
-                if on_roll is not None
-                else None
             )
             try:
                 layout.addWidget(button, row, column)
             except TypeError:
                 layout.addWidget(button)
         return widget
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def _inventory_header(
@@ -386,9 +384,7 @@ def _inventory_header(
         if updated is not None:
             current["purse"] = updated
             action = "Deposit" if multiplier > 0 else "Withdraw"
-            money_log.append(
-                _money_log_entry(action, abs(amount), updated, raw_entry=entry_text)
-            )
+            money_log.append(_money_log_entry(action, abs(amount), updated, raw_entry=entry_text))
             _set_currency_boxes(boxes, updated)
             if hasattr(ledger, "clear"):
                 ledger.clear()
@@ -1217,6 +1213,23 @@ def _spell_ids_for_character(
     except KeyError:
         return spell_ids
     imported_spell_names = {name.casefold() for name in character.spells}
+    if character.character_class.casefold().startswith("cleric"):
+        ensure_spell_slot_resources(character)
+        maximum_level = max(
+            (
+                int(name.removeprefix("spell_slot_"))
+                for name in character.resources
+                if re.fullmatch(r"spell_slot_\d+", name)
+            ),
+            default=max(1, (character.level + 1) // 2),
+        )
+        class_spell_ids = app.compendium.class_spell_ids("cleric", maximum_level)
+        imported_ids = tuple(
+            spell_id
+            for spell_id in spell_ids
+            if app.compendium.load_spell(spell_id).name.casefold() in imported_spell_names
+        )
+        return tuple(dict.fromkeys((*class_spell_ids, *imported_ids)))
     feature_text = " ".join(character.features).lower()
     matching_ids = []
     for spell_id in spell_ids:
@@ -1409,6 +1422,11 @@ def _actionable_ability_names(features: tuple[str, ...]) -> tuple[str, ...]:
             continue
         if ability.lower() in feature_blob:
             names.append(ability)
+    names.extend(
+        feature.strip()
+        for feature in features
+        if feature.casefold().startswith("channel divinity:")
+    )
     return tuple(dict.fromkeys(names))
 
 
@@ -1424,6 +1442,9 @@ def _ability_tooltip(feature: str) -> str:
         "Rage": "Use rage-enhanced melee damage when available.",
         "Channel Divinity: Turn Undead": "Present your holy symbol and turn undead creatures.",
         "Channel Divinity: Preserve Life": "Restore hit points to creatures within range.",
+        "Channel Divinity: Divine Spark": "Channel divine power as healing or divine damage.",
+        "Channel Divinity: Sacred Weapon": "Empower a wielded weapon with sacred power.",
+        "Channel Divinity: Turn the Unholy": "Turn nearby fiends and undead.",
     }
     return "\n".join((feature, descriptions.get(feature, "Character ability.")))
 
@@ -1532,9 +1553,7 @@ def _saving_throw_modifier(character, ability: str) -> int:
     imported = character.saving_throw_modifiers.get(ability.lower())
     if imported is not None:
         return imported
-    proficient = ability.lower() in {
-        name.lower() for name in character.saving_throw_proficiencies
-    }
+    proficient = ability.lower() in {name.lower() for name in character.saving_throw_proficiencies}
     proficiency = _proficiency_bonus(character.level) if proficient else 0
     return character.abilities.modifier(ability) + proficiency
 

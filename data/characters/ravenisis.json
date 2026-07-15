@@ -412,6 +412,12 @@
           "dice": "1d8+1"
         }
       ],
+      "versatile_damage": [
+        {
+          "damage_type": "bludgeoning",
+          "dice": "1d10+1"
+        }
+      ],
       "name": "Warhammer",
       "properties": [
         "martial",

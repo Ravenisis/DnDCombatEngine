@@ -626,9 +626,7 @@ def _extract_level(text: str) -> int:
 
 def _extract_character_class(text: str) -> str:
     return (
-        _extract_labeled_line(text, "class & level")
-        or _extract_labeled_line(text, "class")
-        or ""
+        _extract_labeled_line(text, "class & level") or _extract_labeled_line(text, "class") or ""
     )
 
 
@@ -648,7 +646,18 @@ def _extract_resources(text: str, level: int) -> dict[str, ResourcePool]:
         resources[name] = ResourcePool(name, maximum, maximum)
     if level > 0:
         resources["hit_dice"] = ResourcePool("hit_dice", level, level)
+    channel_uses = _imported_channel_divinity_uses(text, level)
+    if channel_uses:
+        resources["channel_divinity"] = ResourcePool("channel_divinity", channel_uses, channel_uses)
     return resources
+
+
+def _imported_channel_divinity_uses(text: str, level: int) -> int:
+    if not re.search(r"\bchannel\s+divinity\b", text, flags=re.I):
+        return 0
+    if _is_cleric_sheet(text):
+        return 2 if level >= 6 else 1
+    return 1
 
 
 def _spell_slots_for_imported_character(text: str, level: int) -> dict[int, int]:
@@ -1155,13 +1164,34 @@ def _extract_weapons(text: str) -> tuple[Weapon, ...]:
             continue
         dice = match.group("dice").lower()
         damage_type = DamageType(match.group("damage_type").lower())
+        versatile_dice = _versatile_weapon_dice(name, dice)
         weapons.append(
             Weapon(
                 name=name,
                 damage=DamageProfile((DamageComponent(dice, damage_type),)),
+                versatile_damage=(
+                    DamageProfile((DamageComponent(versatile_dice, damage_type),))
+                    if versatile_dice is not None
+                    else None
+                ),
             )
         )
     return tuple(weapons)
+
+
+def _versatile_weapon_dice(name: str, one_handed_dice: str) -> str | None:
+    versatile_die = {
+        "battleaxe": "1d10",
+        "longsword": "1d10",
+        "quarterstaff": "1d8",
+        "spear": "1d8",
+        "trident": "1d10",
+        "warhammer": "1d10",
+    }.get(name.casefold().strip())
+    if versatile_die is None:
+        return None
+    modifier_match = re.search(r"([+-]\d+)$", one_handed_dice)
+    return f"{versatile_die}{modifier_match.group(1) if modifier_match else ''}"
 
 
 def _looks_like_weapon_name(name: str) -> bool:
@@ -1237,6 +1267,7 @@ _KNOWN_IMPORT_SPELLS = (
     "Beacon of Hope",
     "Bless",
     "Cure Wounds",
+    "Detect Magic",
     "Guiding Bolt",
     "Hex",
     "Lesser Restoration",
@@ -1245,6 +1276,14 @@ _KNOWN_IMPORT_SPELLS = (
     "Sacred Flame",
     "Spiritual Weapon",
     "Thaumaturgy",
+)
+
+_SUPPORTED_CHANNEL_DIVINITY_FEATURES = (
+    "Channel Divinity: Divine Spark",
+    "Channel Divinity: Preserve Life",
+    "Channel Divinity: Sacred Weapon",
+    "Channel Divinity: Turn the Unholy",
+    "Channel Divinity: Turn Undead",
 )
 
 
@@ -1428,7 +1467,12 @@ def _expand_channel_divinity_features(
     ) or bool(re.search(r"\bchannel\s+divinity\b", text, flags=re.I))
     if not has_channel_divinity:
         return tuple(dict.fromkeys(expanded))
-    if not any(feature.casefold() == "channel divinity: turn undead" for feature in expanded):
+    for supported in _SUPPORTED_CHANNEL_DIVINITY_FEATURES:
+        if re.search(rf"\b{re.escape(supported)}\b", text, flags=re.I):
+            expanded.append(supported)
+    if _is_cleric_sheet(text) and not any(
+        feature.casefold() == "channel divinity: turn undead" for feature in expanded
+    ):
         expanded.append("Channel Divinity: Turn Undead")
     if _is_life_domain_sheet(text) and not any(
         feature.casefold() == "channel divinity: preserve life" for feature in expanded
@@ -1527,10 +1571,7 @@ def _extract_spells(text: str) -> tuple[str, ...]:
 def _srd_spell_catalog() -> tuple[tuple[str, int], ...]:
     """Return SRD spell names and levels used to recognize PDF spell rows."""
     path = (
-        Path(__file__).resolve().parents[1]
-        / "data"
-        / "srd_catalog"
-        / "srd_spells_level_0_5.json"
+        Path(__file__).resolve().parents[1] / "data" / "srd_catalog" / "srd_spells_level_0_5.json"
     )
     try:
         raw_catalog = json.loads(path.read_text(encoding="utf-8"))

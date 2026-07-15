@@ -1,10 +1,13 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 
 from dnd_combat_engine.controllers import BetaReportController
 from dnd_combat_engine.models import BetaBugReport
 from dnd_combat_engine.services import BetaReportService, beta_report_service
+from dnd_combat_engine.services import token_store as token_store_module
+from dnd_combat_engine.services.token_store import UserTokenStore
 
 
 def test_beta_report_service_appends_markdown_report(tmp_path) -> None:
@@ -103,6 +106,129 @@ def test_beta_report_service_falls_back_to_local_file_when_online_submission_fai
 
     assert result == str(report_file)
     assert "Fallback summary" in report_file.read_text(encoding="utf-8")
+
+
+def test_beta_report_service_uses_and_manages_saved_token(monkeypatch, tmp_path) -> None:
+    class TokenStore:
+        token = None
+
+        def load(self):
+            return self.token
+
+        def save(self, token):
+            self.token = token
+
+        def clear(self):
+            self.token = None
+
+    store = TokenStore()
+    service = BetaReportService(store)
+    monkeypatch.delenv("DND_COMBAT_ENGINE_GITHUB_TOKEN", raising=False)
+    monkeypatch.setattr(service, "submit_report_to_github", lambda report, token: token)
+
+    assert service.github_upload_configured is False
+    service.configure_github_token("saved-token")
+    assert service.github_upload_configured is True
+    assert service.submit_report(tmp_path / "unused.md", BetaBugReport("Bug", "Details")) == (
+        "saved-token"
+    )
+    service.clear_github_token()
+    assert service.github_upload_configured is False
+
+
+def test_user_token_store_encrypts_round_trip_and_clears(monkeypatch, tmp_path) -> None:
+    store = UserTokenStore(tmp_path / "settings" / "token.bin")
+    monkeypatch.setattr(token_store_module.os, "name", "nt")
+    monkeypatch.setattr(token_store_module, "_protect_data", lambda value: value[::-1])
+    monkeypatch.setattr(token_store_module, "_unprotect_data", lambda value: value[::-1])
+
+    assert store.load() is None
+    store.save("  secret-token  ")
+    assert b"secret-token" not in store.path.read_bytes()
+    assert store.load() == "secret-token"
+    store.clear()
+    assert store.load() is None
+
+
+def test_user_token_store_rejects_invalid_or_insecure_storage(monkeypatch, tmp_path) -> None:
+    store = UserTokenStore(tmp_path / "token.bin")
+    with pytest.raises(ValueError, match="empty"):
+        store.save(" ")
+    monkeypatch.setattr(token_store_module.os, "name", "posix")
+    with pytest.raises(OSError, match="only on Windows"):
+        store.save("token")
+    store.path.write_bytes(b"unknown")
+    with pytest.raises(OSError, match="unsupported format"):
+        store.load()
+    store.path.write_bytes(token_store_module._DPAPI_HEADER + b"encrypted")  # noqa: SLF001
+    with pytest.raises(OSError, match="only be decrypted on Windows"):
+        store.load()
+
+
+def test_dpapi_bindings_protect_and_unprotect(monkeypatch) -> None:
+    class Crypt32:
+        def __init__(self) -> None:
+            self.buffers = []
+
+        def transform(self, source_pointer, output_pointer) -> int:
+            source = token_store_module.ctypes.cast(
+                source_pointer,
+                token_store_module.ctypes.POINTER(token_store_module._DataBlob),  # noqa: SLF001
+            ).contents
+            value = token_store_module.ctypes.string_at(source.data, source.size)[::-1]
+            buffer = token_store_module.ctypes.create_string_buffer(value)
+            self.buffers.append(buffer)
+            output = token_store_module.ctypes.cast(
+                output_pointer,
+                token_store_module.ctypes.POINTER(token_store_module._DataBlob),  # noqa: SLF001
+            ).contents
+            output.size = len(value)
+            output.data = token_store_module.ctypes.cast(
+                buffer,
+                token_store_module.ctypes.POINTER(token_store_module.ctypes.c_char),
+            )
+            return 1
+
+        def CryptProtectData(self, source, *args):  # noqa: N802
+            return self.transform(source, args[-1])
+
+        def CryptUnprotectData(self, source, *args):  # noqa: N802
+            return self.transform(source, args[-1])
+
+    crypt32 = Crypt32()
+    kernel32 = SimpleNamespace(LocalFree=lambda pointer: None)
+    monkeypatch.setattr(
+        token_store_module.ctypes,
+        "windll",
+        SimpleNamespace(crypt32=crypt32, kernel32=kernel32),
+        raising=False,
+    )
+
+    encrypted = token_store_module._protect_data(b"secret")  # noqa: SLF001
+
+    assert encrypted == b"terces"
+    assert token_store_module._unprotect_data(encrypted) == b"secret"  # noqa: SLF001
+
+
+def test_beta_report_controller_manages_github_token(tmp_path) -> None:
+    class Store:
+        token = None
+
+        def load(self):
+            return self.token
+
+        def save(self, token):
+            self.token = token
+
+        def clear(self):
+            self.token = None
+
+    controller = BetaReportController(BetaReportService(Store()), tmp_path / "reports.md")
+
+    controller.configure_github_token("token")
+    assert controller.github_upload_configured is True
+    controller.clear_github_token()
+    assert controller.github_upload_configured is False
 
 
 def test_beta_bug_report_requires_summary_and_description() -> None:

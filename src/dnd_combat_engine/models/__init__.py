@@ -6,6 +6,11 @@ from dnd_combat_engine.models.action_economy import ActionCost, TurnEconomy
 from dnd_combat_engine.models.beta_reports import BetaBugReport
 from dnd_combat_engine.models.campaigns import Campaign, CampaignActivityEntry, CampaignStatus
 from dnd_combat_engine.models.character import Character
+from dnd_combat_engine.models.class_resources import (
+    CHANNEL_DIVINITY_RESOURCE,
+    ensure_channel_divinity_resource,
+    inferred_channel_divinity_uses,
+)
 from dnd_combat_engine.models.combat_log import CombatLog, CombatLogEntry, CombatLogEntryType
 from dnd_combat_engine.models.concentration import (
     ConcentrationOutcome,
@@ -72,6 +77,7 @@ __all__ = [
     "Campaign",
     "CampaignActivityEntry",
     "CampaignStatus",
+    "CHANNEL_DIVINITY_RESOURCE",
     "Character",
     "CharacterImportDraft",
     "CheckDefinition",
@@ -128,5 +134,7 @@ __all__ = [
     "concentration_save_dc",
     "ensure_spell_slot_resources",
     "ensure_spell_slot_resources_for_level",
+    "ensure_channel_divinity_resource",
+    "inferred_channel_divinity_uses",
     "inferred_spell_slots",
 ]

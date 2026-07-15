@@ -16,6 +16,17 @@ def test_create_app_wires_controllers_to_seed_data() -> None:
     assert app.dice.describe("1d20")["average"] == 10.5
 
 
+def test_seed_data_exposes_configured_level_six_cleric_spellbook() -> None:
+    app = create_app(Path(__file__).resolve().parents[1] / "data")
+
+    spell_ids = app.compendium.class_spell_ids("cleric", 3)
+    names = {app.compendium.load_spell(spell_id).name for spell_id in spell_ids}
+
+    assert {"Guidance", "Detect Magic", "Spiritual Weapon", "Water Walk"} <= names
+    assert {"Wardaway", "Deryan's Helpful Homunculi", "Laeral's Silver Lance"} <= names
+    assert all(app.compendium.load_spell(spell_id).level <= 3 for spell_id in spell_ids)
+
+
 def test_create_app_upgrades_legacy_inventory_metadata(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[1] / "data" / "characters" / "ravenisis.json"
     payload = json.loads(source.read_text(encoding="utf-8"))

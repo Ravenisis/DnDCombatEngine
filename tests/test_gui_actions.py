@@ -44,6 +44,7 @@ def test_default_action_specs_include_core_commands() -> None:
     }
     assert next(spec for spec in specs if spec.action_id == "character.inventory").shortcut == "B"
     assert next(spec for spec in specs if spec.action_id == "character.spellbook").shortcut == "K"
+    assert next(spec for spec in specs if spec.action_id == "character.equipment").shortcut == "C"
     assert next(spec for spec in specs if spec.action_id == "dice.roll_d20").shortcut is None
     assert next(spec for spec in specs if spec.action_id == "dice.repeat_last").shortcut == "Ctrl+R"
     assert next(spec for spec in specs if spec.action_id == "campaign.import_pdf").submenu == (

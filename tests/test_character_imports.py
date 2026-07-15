@@ -176,6 +176,45 @@ def test_character_import_service_adds_spell_slots_for_cleric_sheet() -> None:
     assert character.resources["hit_dice"].maximum == 6
 
 
+def test_character_import_adds_channel_uses_detect_magic_and_versatile_damage() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Ravenisis
+        Class & Level: Cleric 6
+        Channel Divinity: Turn Undead
+        Warhammer +4 1d8+1 bludgeoning
+        === 1st LEVEL ===
+        Detect Magic
+        Guiding Bolt
+        """,
+        source="test",
+    )
+
+    warhammer = draft.weapons[0]
+    assert draft.resources["channel_divinity"].maximum == 2
+    assert "Channel Divinity: Turn Undead" in draft.features
+    assert "Detect Magic" in draft.spells
+    assert warhammer.versatile_damage is not None
+    assert warhammer.versatile_damage.components[0].dice == "1d10+1"
+
+
+def test_character_import_preserves_other_named_channel_divinity_options() -> None:
+    draft = CharacterImportService().parse_text(
+        """
+        Character Name: Devotion
+        Class & Level: Paladin 3
+        Channel Divinity: Sacred Weapon
+        Channel Divinity: Turn the Unholy
+        """,
+        source="test",
+    )
+
+    assert "Channel Divinity: Sacred Weapon" in draft.features
+    assert "Channel Divinity: Turn the Unholy" in draft.features
+    assert "Channel Divinity: Turn Undead" not in draft.features
+    assert draft.resources["channel_divinity"].maximum == 1
+
+
 def test_character_import_service_infers_core_cleric_armor_proficiencies() -> None:
     draft = CharacterImportService().parse_text(
         """
@@ -442,10 +481,7 @@ def test_character_import_service_follows_dndbeyond_character_page_pdf_link(
         calls.append(url)
         if url == "https://www.dndbeyond.com/characters/92446074":
             return SimpleNamespace(
-                content=(
-                    b'<html><a href="/sheet-pdfs/wazic_92446074.pdf">'
-                    b"Export PDF</a></html>"
-                ),
+                content=(b'<html><a href="/sheet-pdfs/wazic_92446074.pdf">Export PDF</a></html>'),
                 content_type="text/html; charset=utf-8",
                 final_url=url,
             )
@@ -461,11 +497,13 @@ def test_character_import_service_follows_dndbeyond_character_page_pdf_link(
     monkeypatch.setattr(
         service,
         "_extract_pdf_bytes",
-        lambda content: """
+        lambda content: (
+            """
         Character Name: Ravenisis
         Class & Level: Cleric 6
         Current HP: 63
-        """,
+        """
+        ),
     )
 
     draft = service.import_url("https://www.dndbeyond.com/characters/92446074")
@@ -488,7 +526,7 @@ def test_character_import_service_follows_escaped_dndbeyond_pdf_link(monkeypatch
                 content=(
                     b"<script>"
                     b'"pdfUrl":"https:\\\\/\\\\/www.dndbeyond.com\\\\/sheet-pdfs'
-                    b"\\\\/wazic_92446074.pdf\""
+                    b'\\\\/wazic_92446074.pdf"'
                     b"</script>"
                 ),
                 content_type="text/html; charset=utf-8",
@@ -509,9 +547,7 @@ def test_character_import_service_follows_escaped_dndbeyond_pdf_link(monkeypatch
         lambda content: "Character Name: Ravenisis\nClass & Level: Cleric 6",
     )
 
-    draft = service.import_url(
-        "https://www.dndbeyond.com/profile/wazic/characters/92446074"
-    )
+    draft = service.import_url("https://www.dndbeyond.com/profile/wazic/characters/92446074")
 
     assert draft.name == "Ravenisis"
     assert draft.source == "https://www.dndbeyond.com/sheet-pdfs/wazic_92446074.pdf"

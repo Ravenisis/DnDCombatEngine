@@ -26,6 +26,10 @@ class CompendiumController:
         """Load a spell by id."""
         return self.persistence_service.load_spell(spell_id)
 
+    def class_spell_ids(self, class_id: str, maximum_level: int) -> tuple[str, ...]:
+        """Return configured spells available to a class through a spell level."""
+        return self.persistence_service.class_spell_ids(class_id, maximum_level)
+
     def load_action_effect(self, action_id: str) -> EffectDefinition:
         """Load a standalone action effect definition by id."""
         return self.persistence_service.load_action_effect(action_id)

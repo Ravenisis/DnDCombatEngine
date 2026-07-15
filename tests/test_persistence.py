@@ -87,6 +87,39 @@ def test_persistence_service_saves_and_loads_spell(tmp_path) -> None:
     assert service.store.load("spells", "shield")["schema_version"] == 1
 
 
+def test_persistence_materializes_class_catalog_spells(tmp_path) -> None:
+    store = JsonFileStore(tmp_path)
+    store.save(
+        "class_spell_lists",
+        "cleric",
+        {
+            "class_id": "cleric",
+            "spells": [
+                {
+                    "spell_id": "detect_magic",
+                    "name": "Detect Magic",
+                    "level": 1,
+                    "school": "divination",
+                    "ritual": True,
+                },
+                {
+                    "spell_id": "spirit_guardians",
+                    "name": "Spirit Guardians",
+                    "level": 3,
+                    "school": "conjuration",
+                },
+            ],
+        },
+    )
+    service = PersistenceService(store)
+
+    assert service.class_spell_ids("Cleric", 1) == ("detect_magic",)
+    spell = service.load_spell("detect_magic")
+    assert spell.name == "Detect Magic"
+    assert spell.ritual is True
+    assert "automation" in spell.description
+
+
 def test_persistence_service_saves_and_loads_monster(tmp_path) -> None:
     service = PersistenceService(JsonFileStore(tmp_path))
     monster = Monster(

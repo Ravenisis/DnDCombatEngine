@@ -1,0 +1,24 @@
+{
+  "action_cost": "action",
+  "check": {"ability": null, "bonus": 0, "dc": null, "kind": "none", "proficiency_applies": false},
+  "dice": null,
+  "duration": {"amount": null, "kind": "instantaneous", "text": "Instantaneous"},
+  "effect_id": "channel_divinity_preserve_life",
+  "effect_kind": "healing",
+  "interactions": [
+    {
+      "interaction_id": "preserve-life-healing-pool",
+      "label": "Preserve Life",
+      "metadata": {"maximum_target_hp": "half maximum", "ruleset": "2014 5e / SRD framework"},
+      "outcome_kind": "apply_healing",
+      "scaling": {"hit_points_per_cleric_level": 5},
+      "trigger": "on_choice",
+      "value": "distribute a healing pool among legal creatures within 30 feet"
+    }
+  ],
+  "name": "Channel Divinity: Preserve Life",
+  "range_text": "30 feet",
+  "resource_cost": "channel_divinity",
+  "rule_source": null,
+  "target_profile": "special"
+}

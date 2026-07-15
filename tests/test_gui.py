@@ -1,4 +1,3 @@
-﻿
 from dnd_combat_engine.gui import GuiDependencyError, dark_theme_stylesheet
 from dnd_combat_engine.gui.qt import load_qt
 
@@ -429,11 +428,7 @@ def test_action_bar_shift_shortcuts_roll_checks_and_buttons_are_wider() -> None:
         QtWidgets=SimpleNamespace(QWidget=Widget, QHBoxLayout=Layout, QPushButton=Button),
     )
     session = ActionBarSession(
-        ActionBar(
-            buttons=(
-                ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),
-            )
-        )
+        ActionBar(buttons=(ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),))
     )
     activated = []
 
@@ -570,31 +565,20 @@ def test_srd_inventory_catalog_expansion_surfaces_magic_and_trade_items() -> Non
     assert "saving throws" in tooltip
 
     assert "ring" in widgets._inventory_icon_candidates(items["Ring of Protection"])
-    assert "manual" in widgets._inventory_icon_candidates(
-        items["Manual of Gainful Exercise"]
-    )
+    assert "manual" in widgets._inventory_icon_candidates(items["Manual of Gainful Exercise"])
     assert "cursed" in widgets._inventory_icon_candidates(items["Berserker Axe"])
     assert "magic_weapon" in widgets._inventory_icon_candidates(items["Vorpal Sword"])
     assert "gemstone" in widgets._inventory_icon_candidates(items["Diamond Gemstone"])
-    assert "art_object" in widgets._inventory_icon_candidates(
-        items["Jeweled Platinum Ring"]
-    )
+    assert "art_object" in widgets._inventory_icon_candidates(items["Jeweled Platinum Ring"])
     assert "figurine" in widgets._inventory_icon_candidates(
         items["Figurine of Wondrous Power (Silver Raven)"]
     )
     assert "force_item" in widgets._inventory_icon_candidates(items["Cube of Force"])
-    assert "talisman" in widgets._inventory_icon_candidates(
-        items["Talisman of Pure Good"]
-    )
-    assert "gauntlets" in widgets._inventory_icon_candidates(
-        items["Gauntlets of Ogre Power"]
-    )
+    assert "talisman" in widgets._inventory_icon_candidates(items["Talisman of Pure Good"])
+    assert "gauntlets" in widgets._inventory_icon_candidates(items["Gauntlets of Ogre Power"])
     assert "horn_magic" in widgets._inventory_icon_candidates(items["Horn of Blasting"])
     assert widgets._inventory_icon_path(items["Ring of Protection"]).name == "ring.svg"
-    assert (
-        widgets._inventory_icon_path(items["Manual of Gainful Exercise"]).name
-        == "manual.svg"
-    )
+    assert widgets._inventory_icon_path(items["Manual of Gainful Exercise"]).name == "manual.svg"
     assert widgets._inventory_icon_path(items["Berserker Axe"]).name == "cursed.svg"
     assert (
         widgets._inventory_icon_path(items["Figurine of Wondrous Power (Silver Raven)"]).name
@@ -872,12 +856,8 @@ def test_party_initiative_helpers_parse_and_prompt() -> None:
 
     assert _initiative_text(None) == "Initiative: - | Position: -"
     assert _initiative_text(17) == "Initiative: 17 | Position: 1"
-    assert _initiative_text("vale", {"bran": 11, "vale": 18}) == (
-        "Initiative: 18 | Position: 1"
-    )
-    assert _initiative_text("bran", {"bran": 11, "vale": 18}) == (
-        "Initiative: 11 | Position: 2"
-    )
+    assert _initiative_text("vale", {"bran": 11, "vale": 18}) == ("Initiative: 18 | Position: 1")
+    assert _initiative_text("bran", {"bran": 11, "vale": 18}) == ("Initiative: 11 | Position: 2")
     assert _parse_initiative_value(" 22 ") == 22
     assert _parse_initiative_value("twenty") is None
     assert _ask_initiative_roll(FakeQt, object(), None) == 17
@@ -894,28 +874,34 @@ def test_party_frame_feature_text_filters_import_metadata() -> None:
     from dnd_combat_engine.models import Condition, ConditionName
 
     assert _party_frame_feature_text(()) == ""
-    assert _party_frame_feature_text(
-        (
-            "Cleric 6",
-            "Hill Dwarf",
-            "Folk Hero",
-            "wazic",
-            "Life Domain",
-            "Disciple of Life",
-            "Blessed Healer",
-            "Cantrips: Light, Sacred Flame, Thaumaturgy",
-            "Domain Spells: Bless, Cure Wounds, Revivify",
+    assert (
+        _party_frame_feature_text(
+            (
+                "Cleric 6",
+                "Hill Dwarf",
+                "Folk Hero",
+                "wazic",
+                "Life Domain",
+                "Disciple of Life",
+                "Blessed Healer",
+                "Cantrips: Light, Sacred Flame, Thaumaturgy",
+                "Domain Spells: Bless, Cure Wounds, Revivify",
+            )
         )
-    ) == ""
-    assert _party_frame_feature_text(
-        (
-            "Cleric 6, Hill Dwarf, Folk Hero",
-            "Bless",
-            "Sneak Attack",
-            "Hex",
-            "Rage",
+        == ""
+    )
+    assert (
+        _party_frame_feature_text(
+            (
+                "Cleric 6, Hill Dwarf, Folk Hero",
+                "Bless",
+                "Sneak Attack",
+                "Hex",
+                "Rage",
+            )
         )
-    ) == "Bless, Hex, Rage"
+        == "Bless, Hex, Rage"
+    )
     assert _party_frame_condition_text((Condition(ConditionName.POISONED),)) == (
         "Conditions: Poisoned"
     )
@@ -953,8 +939,7 @@ def test_saving_throw_roll_uses_imported_modifier_and_advantage() -> None:
     message = _roll_saving_throw(window, app, state, "wisdom", advantage=True)
 
     assert message == (
-        "Ravenisis Wisdom save with advantage: 22 "
-        "(2d20kh1 17 rolls=(12, 17), modifier +5)."
+        "Ravenisis Wisdom save with advantage: 22 (2d20kh1 17 rolls=(12, 17), modifier +5)."
     )
     assert messages == [message]
 
@@ -1645,6 +1630,7 @@ def test_key_bind_rows_and_color_scheme_application() -> None:
     assert rows["Action Bar Slot 12"] == "="
     assert rows["Inventory"] == "B"
     assert rows["Spellbook"] == "K"
+    assert rows["Equipment"] == "C"
     assert "Abilities" not in rows
 
     window = FakeWindow()
@@ -1721,4 +1707,3 @@ def test_spell_slot_tracker_handles_empty_and_missing_leaders() -> None:
         "Spell Slots",
         "Missing leader",
     ]
-
