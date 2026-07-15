@@ -57,6 +57,46 @@ def test_seed_data_loads_with_domain_models() -> None:
     assert "talisman" in srd_items_by_name["Talisman of Pure Good"]["tags"]
     assert "shield" in srd_items_by_name["Animated Shield"]["tags"]
     assert "damage:radiant" in srd_items_by_name["Holy Avenger"]["tags"]
+    assert srd_items_by_name["Arrows (20)"]["category"] == "ammunition"
+    assert srd_items_by_name["Chain Mail"]["subcategory"] == "heavy_armor"
+    assert srd_items_by_name["Longsword"]["subcategory"] == "martial_melee_weapon"
+    assert srd_items_by_name["Potion of Healing"]["subcategory"] == "potion"
+
+
+def test_ravenisis_pouch_items_have_useful_srd_metadata() -> None:
+    store = JsonFileStore(DATA_ROOT)
+    character = Character.from_dict(store.load("characters", "ravenisis"))
+    items = {item.item_id: item for item in character.inventory}
+    pouch_index = next(
+        index for index, item in enumerate(character.inventory) if item.item_id == "pouch"
+    )
+    pouch_items = character.inventory[pouch_index + 1 :]
+
+    assert pouch_items
+    assert all(item.notes for item in pouch_items)
+    assert all(item.purchase_price_cp > 0 for item in pouch_items)
+    assert items["arrows"].category.value == "ammunition"
+    assert items["healers_kit"].category.value == "adventuring_gear"
+    assert "limited_use" in items["healers_kit"].tags
+    assert items["torch"].category.value == "consumable"
+    assert "light_source" in items["torch"].tags
+    assert "4d4 + 4" in (items["potion_of_healing_greater"].notes or "")
+
+
+def test_every_seed_inventory_item_has_rich_rules_metadata() -> None:
+    store = JsonFileStore(DATA_ROOT)
+    inventory = tuple(
+        item
+        for character_id in store.list_ids("characters")
+        for item in Character.from_dict(store.load("characters", character_id)).inventory
+    )
+
+    assert inventory
+    assert all(item.notes for item in inventory)
+    assert all(item.tags for item in inventory)
+    assert all(item.category.value != "other" for item in inventory)
+    assert all(item.subcategory for item in inventory)
+    assert all(item.purchase_price_cp >= 0 for item in inventory)
 
 
 def test_seed_spells_define_data_backed_effects_for_core_actions() -> None:

@@ -8,9 +8,16 @@ future internet relay can implement the same interface without changing the GUI.
 from __future__ import annotations
 
 from typing import Protocol
+from uuid import uuid4
 
 from dnd_combat_engine.models import Campaign
-from dnd_combat_engine.models.multiplayer import HostedCampaignSession, PlayerRole
+from dnd_combat_engine.models.multiplayer import (
+    HostedCampaignSession,
+    HostedCampaignState,
+    PlayerRole,
+    SessionEventKind,
+    SessionStateEvent,
+)
 from dnd_combat_engine.services.multiplayer_service import MultiplayerService
 from dnd_combat_engine.services.persistence_service import PersistenceService
 
@@ -53,6 +60,20 @@ class HostedCampaignBackend(Protocol):
 
     def close_session(self, session_id: str) -> HostedCampaignSession:
         """Close a hosted campaign session."""
+
+    def load_state(self, session_id: str) -> HostedCampaignState:
+        """Load the latest synchronized combat state."""
+
+    def publish_state_event(
+        self,
+        session_id: str,
+        source_player_id: str,
+        kind: SessionEventKind,
+        payload: dict[str, object],
+        *,
+        character_id: str | None = None,
+    ) -> tuple[SessionStateEvent, HostedCampaignState]:
+        """Validate, persist, and return one synchronized state event."""
 
 
 class LocalHostedCampaignBackend:
@@ -137,3 +158,51 @@ class LocalHostedCampaignBackend:
         session = self._multiplayer.close(self.load_session(session_id))
         self._persistence.save_hosted_session(session)
         return session
+
+    def load_state(self, session_id: str) -> HostedCampaignState:
+        """Load the latest synchronized combat state for a session."""
+        self.load_session(session_id)
+        return self._persistence.load_hosted_state(session_id)
+
+    def publish_state_event(
+        self,
+        session_id: str,
+        source_player_id: str,
+        kind: SessionEventKind,
+        payload: dict[str, object],
+        *,
+        character_id: str | None = None,
+    ) -> tuple[SessionStateEvent, HostedCampaignState]:
+        """Apply a player's state event to the authoritative session snapshot."""
+        session = self.load_session(session_id)
+        player = next(
+            (
+                player
+                for player in session.connected_players
+                if player.player_id == source_player_id
+            ),
+            None,
+        )
+        if player is None:
+            raise ValueError("source player is not connected to the hosted session")
+        if player.role is PlayerRole.OBSERVER:
+            raise ValueError("observers cannot publish campaign state")
+        if (
+            player.role is not PlayerRole.HOST
+            and character_id is not None
+            and player.character_id != character_id
+        ):
+            raise ValueError("players can update only their assigned character")
+        state = self._persistence.load_hosted_state(session_id)
+        event = SessionStateEvent(
+            event_id=uuid4().hex,
+            session_id=session_id,
+            kind=kind,
+            source_player_id=source_player_id,
+            character_id=character_id,
+            revision=state.revision + 1,
+            payload=payload,
+        )
+        state = state.apply(event)
+        self._persistence.save_hosted_state(state)
+        return event, state

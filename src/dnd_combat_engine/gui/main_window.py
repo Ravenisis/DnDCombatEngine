@@ -31,6 +31,7 @@ from dnd_combat_engine.gui.combat_panels import (
     EncounterTrackerWidget,
 )
 from dnd_combat_engine.gui.dice_bar import DiceBarWidget, InitiativeRollWidget
+from dnd_combat_engine.gui.equipment import EquipmentWidget
 from dnd_combat_engine.gui.import_dialogs import (
     ask_campaign_name,
     ask_character_id,
@@ -78,6 +79,7 @@ from dnd_combat_engine.models import (
     EffectDefinition,
     EffectKind,
     EffectResolution,
+    EquipmentSlot,
     InventoryItem,
     ItemCategory,
     TargetKind,
@@ -396,8 +398,9 @@ def _configure_menus(window, qt, app: DnDCombatEngineApp, state: GuiCampaignStat
     if action_class is None:
         action_class = qt.QtWidgets.QAction
     for menu_name, specs in action_specs_by_menu(default_action_specs()).items():
-        menu = menu_bar.addMenu(menu_name)
-        _set_menu_minimum_width(menu, 260)
+        menu = None if menu_name == "Dice" else menu_bar.addMenu(menu_name)
+        if menu is not None:
+            _set_menu_minimum_width(menu, 260)
         submenus = {}
         for spec in specs:
             action = action_class(spec.text, window)
@@ -416,6 +419,10 @@ def _configure_menus(window, qt, app: DnDCombatEngineApp, state: GuiCampaignStat
                         action_id,
                     )
                 )
+            if menu is None:
+                if hasattr(window, "addAction"):
+                    window.addAction(action)
+                continue
             target_menu = menu
             if spec.submenu:
                 target_menu = submenus.get(spec.submenu)
@@ -456,6 +463,9 @@ def _run_menu_action(
         return
     if action_id == "character.inventory":
         _open_inventory_window(window, qt, app, state)
+        return
+    if action_id == "character.equipment":
+        _open_equipment_window(window, qt, app, state)
         return
     if action_id == "character.break_concentration":
         _break_concentration_from_menu(window, qt, app, state)
@@ -1176,6 +1186,16 @@ def _open_inventory_window(
                 refresh_inventory,
                 money_log_state,
             ),
+            on_move=lambda item_id, container_id: _move_inventory_item(
+                window,
+                qt,
+                app,
+                state,
+                character_id,
+                item_id,
+                container_id,
+                refresh_inventory,
+            ),
             money_log_entries=money_log_entries,
             money_log_current=money_log_current,
         )
@@ -1190,9 +1210,159 @@ def _open_inventory_window(
                 previous.setParent(None)
         content["widget"] = next_widget
 
+    popup._dnd_refresh = refresh_inventory  # noqa: SLF001
     refresh_inventory()
     _show_popup(window, popup, key="inventory")
     _set_status(window, f"Opened {character.name} inventory.")
+
+
+def _move_inventory_item(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    item_id: str,
+    container_id: str | None,
+    refresh_inventory,
+) -> None:
+    try:
+        character = app.characters.load(character_id)
+        moved = app.inventory.move_item(character, item_id, container_id, autosave=True)
+    except (KeyError, ValueError) as exc:
+        _show_message(window, qt, "Move Item Failed", str(exc), error=True)
+        return
+    destination = "Carried" if container_id is None else next(
+        (item.name for item in character.inventory if item.item_id == container_id),
+        container_id,
+    )
+    message = f"Moved {moved.name} to {destination}."
+    _record_campaign_activity(app, state, message, "inventory")
+    refresh_inventory()
+    _set_status(window, message)
+
+
+def _open_equipment_window(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+) -> None:
+    if _toggle_named_popup(window, "equipment", "Closed equipment."):
+        return
+    character_id = _active_character_id(state)
+    if character_id is None:
+        _show_message(
+            window,
+            qt,
+            "Equipment Failed",
+            "Set a party leader before opening equipment.",
+            error=True,
+        )
+        return
+    try:
+        character = app.characters.load(character_id)
+    except KeyError:
+        _show_message(
+            window,
+            qt,
+            "Equipment Failed",
+            "Party leader could not be loaded.",
+            error=True,
+        )
+        return
+    popup = create_embedded_popup(qt, window)
+    if popup is None:
+        return
+    popup.setWindowTitle(f"{character.name} Equipment")
+    popup.resize(760, 760)
+    layout = qt.QtWidgets.QVBoxLayout(popup)
+    content = {"widget": None}
+
+    def refresh_equipment() -> None:
+        next_widget = EquipmentWidget.create(
+            app,
+            qt,
+            character_id,
+            on_equip=lambda item_id, slot: _equip_inventory_item(
+                window,
+                qt,
+                app,
+                state,
+                character_id,
+                item_id,
+                slot,
+                refresh_equipment,
+            ),
+            on_unequip=lambda slot: _unequip_inventory_item(
+                window,
+                app,
+                state,
+                character_id,
+                slot,
+                refresh_equipment,
+            ),
+        )
+        previous = content["widget"]
+        if previous is not None:
+            layout.removeWidget(previous)
+            previous.setParent(None)
+        layout.addWidget(next_widget)
+        content["widget"] = next_widget
+
+    popup._dnd_refresh = refresh_equipment  # noqa: SLF001
+    refresh_equipment()
+    _show_popup(window, popup, key="equipment")
+    _set_status(window, f"Opened {character.name} equipment.")
+
+
+def _equip_inventory_item(
+    window,
+    qt,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    item_id: str,
+    slot: EquipmentSlot,
+    refresh_equipment,
+) -> None:
+    try:
+        character = app.characters.load(character_id)
+        item = app.inventory.equip_item(character, item_id, slot, autosave=True)
+    except (KeyError, ValueError) as exc:
+        _show_message(window, qt, "Equip Item Failed", str(exc), error=True)
+        return
+    message = f"Equipped {item.name} in {slot.value.replace('_', ' ')}."
+    _record_campaign_activity(app, state, message, "equipment")
+    refresh_equipment()
+    _refresh_popup(window, "inventory")
+    _set_status(window, message)
+
+
+def _unequip_inventory_item(
+    window,
+    app: DnDCombatEngineApp,
+    state: GuiCampaignState,
+    character_id: str,
+    slot: EquipmentSlot,
+    refresh_equipment,
+) -> None:
+    character = app.characters.load(character_id)
+    item = app.inventory.unequip_item(character, slot, autosave=True)
+    if item is None:
+        return
+    message = f"Unequipped {item.name}."
+    _record_campaign_activity(app, state, message, "equipment")
+    refresh_equipment()
+    _refresh_popup(window, "inventory")
+    _set_status(window, message)
+
+
+def _refresh_popup(window, key: str) -> None:
+    popup = getattr(window, "_dnd_named_popups", {}).get(key)
+    refresh = getattr(popup, "_dnd_refresh", None)
+    if callable(refresh):
+        refresh()
 
 
 def _inventory_scroll_area(qt):
@@ -1257,6 +1427,7 @@ def _ask_inventory_item(qt, parent) -> InventoryItem | None:
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle("Add Inventory Item")
     layout = qt.QtWidgets.QVBoxLayout(dialog)
+    _add_dialog_close_control(qt, dialog, layout)
     catalog_items = _srd_inventory_items()
     item_by_name = {item.name: item for item in catalog_items}
     srd_item = _combo_box(qt, ("Custom Item", *(item.name for item in catalog_items)))
@@ -1582,6 +1753,11 @@ def _show_popup(window, popup, key: str | None = None) -> None:
         named = getattr(window, "_dnd_named_popups", {})
         named[key] = popup
         window._dnd_named_popups = named  # noqa: SLF001
+        popup._dnd_escape_callback = lambda: _close_named_popup(  # noqa: SLF001
+            window,
+            key,
+            f"Closed {key.replace('_', ' ')}.",
+        )
     show_embedded_popup(window, popup)
 
 
@@ -2558,14 +2734,62 @@ def _choose_thaumaturgy_effect(qt, parent) -> str | None:
 def _choose_string(qt, parent, title: str, prompt: str, options: tuple[str, ...]) -> str | None:
     if qt is None or parent is None:
         return options[0] if options else None
-    dialog = getattr(qt.QtWidgets, "QInputDialog", None)
-    if dialog is None:
+    dialog_class = getattr(qt.QtWidgets, "QDialog", None)
+    combo_class = getattr(qt.QtWidgets, "QComboBox", None)
+    if dialog_class is not None and combo_class is not None:
+        dialog = create_embedded_dialog(qt, parent)
+        if dialog is not None:
+            if hasattr(dialog, "setWindowTitle"):
+                dialog.setWindowTitle(title)
+            layout = qt.QtWidgets.QVBoxLayout(dialog)
+            _add_dialog_close_control(qt, dialog, layout)
+            layout.addWidget(qt.QtWidgets.QLabel(prompt))
+            selector = combo_class()
+            if hasattr(selector, "addItems"):
+                selector.addItems(list(options))
+            else:
+                for option in options:
+                    selector.addItem(option)
+            layout.addWidget(selector)
+            buttons = _standard_dialog_buttons(qt, dialog)
+            if buttons is not None:
+                layout.addWidget(buttons)
+            if not _generic_dialog_accepted(qt, dialog):
+                return None
+            return _combo_text(selector)
+    input_dialog = getattr(qt.QtWidgets, "QInputDialog", None)
+    if input_dialog is None:
         return options[0] if options else None
-    selected = dialog.getItem(parent, title, prompt, list(options), 0, False)
+    selected = input_dialog.getItem(parent, title, prompt, list(options), 0, False)
     if isinstance(selected, tuple):
         value, accepted = selected
         return str(value) if accepted else None
     return str(selected) if selected is not None else None
+
+
+def _add_dialog_close_control(qt, dialog, layout) -> None:
+    """Add a compact top-right X to child dialogs that lack a native title bar."""
+    tool_button_class = getattr(qt.QtWidgets, "QToolButton", None)
+    widget_class = getattr(qt.QtWidgets, "QWidget", None)
+    layout_class = getattr(qt.QtWidgets, "QHBoxLayout", None)
+    if tool_button_class is None or widget_class is None or layout_class is None:
+        return
+    header = widget_class()
+    header_layout = layout_class(header)
+    if hasattr(header_layout, "addStretch"):
+        header_layout.addStretch(1)
+    close_button = tool_button_class()
+    if hasattr(close_button, "setText"):
+        close_button.setText("X")
+    if hasattr(close_button, "setToolTip"):
+        close_button.setToolTip("Close this window.")
+    if hasattr(close_button, "setFixedSize"):
+        close_button.setFixedSize(24, 24)
+    close_action = getattr(dialog, "reject", None) or getattr(dialog, "close", None)
+    if callable(close_action) and hasattr(close_button, "clicked"):
+        close_button.clicked.connect(lambda checked=False: close_action())
+    header_layout.addWidget(close_button)
+    layout.addWidget(header)
 
 
 def _apply_cure_wounds(

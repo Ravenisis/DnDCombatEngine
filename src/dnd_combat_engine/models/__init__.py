@@ -37,16 +37,19 @@ from dnd_combat_engine.models.encounters import (
     EncounterStatus,
     ParticipantKind,
 )
-from dnd_combat_engine.models.equipment import Armor, Weapon
+from dnd_combat_engine.models.equipment import Armor, EquipmentSlot, Weapon
 from dnd_combat_engine.models.hit_points import HitPoints
 from dnd_combat_engine.models.imports import CharacterImportDraft
 from dnd_combat_engine.models.inventory import InventoryItem, ItemCategory
 from dnd_combat_engine.models.monsters import CreatureSize, CreatureType, Monster
 from dnd_combat_engine.models.multiplayer import (
     HostedCampaignSession,
+    HostedCampaignState,
     HostedCampaignStatus,
     HostedPlayer,
     PlayerRole,
+    SessionEventKind,
+    SessionStateEvent,
 )
 from dnd_combat_engine.models.resources import ResourcePool
 from dnd_combat_engine.models.rules import RuleSource
@@ -96,8 +99,10 @@ __all__ = [
     "Encounter",
     "EncounterParticipant",
     "EncounterStatus",
+    "EquipmentSlot",
     "HitPoints",
     "HostedCampaignSession",
+    "HostedCampaignState",
     "HostedCampaignStatus",
     "HostedPlayer",
     "InventoryItem",
@@ -107,6 +112,8 @@ __all__ = [
     "Monster",
     "ParticipantKind",
     "PlayerRole",
+    "SessionEventKind",
+    "SessionStateEvent",
     "ResourcePool",
     "RuleSource",
     "Spell",

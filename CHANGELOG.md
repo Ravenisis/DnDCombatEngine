@@ -7,6 +7,25 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Added a Character > Equipment screen with a body outline, twelve wearable or
+  wielded drop slots, right-click unequip, and a Base/Gear/Current statistics
+  comparison table.
+- Added persisted inventory placement and drag-and-drop support for moving item
+  stacks between carried storage, bags, and compatible equipment slots.
+- Added revisioned hosted-session synchronization for character and party HP,
+  initiative rolls, hit rolls, and action results. WebSocket subscribers in the
+  same session receive live event broadcasts and can reload the latest snapshot.
+- Added a repeatable SRD equipment enrichment pass with a first-class ammunition
+  category and detailed weapon, armor, ammunition, and consumable subcategories.
+- Added explicit latest-release download and Windows installation instructions
+  at the beginning of the player README.
+- Added a README comparison of the MSI, guided Setup executable, and portable
+  ZIP release assets so players can choose one without installing duplicates.
+- Added explicit `Shift+1` through `Shift+=` Action Bar shortcuts for rolling
+  an action's hit check, matching the existing Shift+left-click behavior.
+- Added Escape-to-close behavior for embedded windows, visible X controls for
+  Add Item and choice dialogs such as Thaumaturgy, and a Close button in the
+  Money Log.
 - Added an Initiative control immediately left of the saving throws on the
   Action Bar dock. It rolls the party leader's `1d20` with the imported
   initiative modifier, logs the breakdown, and refreshes party order.
@@ -34,6 +53,17 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Removed the Dice drop-down menu while retaining the visual polyhedral dice
+  controls and the `Ctrl+R` previous-die shortcut.
+- Right-clicking a consumable now consumes it immediately; the intermediate
+  inventory context menu was removed. Shift+right-click continues to sell.
+- Removing a storage container now returns its contents to Carried inventory so
+  item stacks cannot become hidden behind an orphaned container reference.
+- Enriched every saved character inventory stack, not only Pouch contents, with
+  available SRD descriptions, prices, tags, weights, and corrected categories.
+- Widened Action Bar slots, shortened and left-aligned the currency transaction
+  input, and expanded the current Pouch contents with SRD descriptions, prices,
+  tags, weights, and corrected item categories.
 - Updated GitHub Actions checkout, Python setup, and artifact upload steps to
   their Node.js 24-backed major versions, removing the retired Node.js 20
   runtime from test and package workflows.

@@ -354,7 +354,7 @@ def test_inventory_widget_delegates_to_inventory_helpers(monkeypatch) -> None:
     from dnd_combat_engine.gui import widgets
 
     monkeypatch.setattr(widgets, "_inventory_header", lambda *args: "header")
-    monkeypatch.setattr(widgets, "_inventory_sections", lambda _: ())
+    monkeypatch.setattr(widgets, "_inventory_storage_sections", lambda _: ())
 
     widget = inventory.InventoryWidget.create(app, qt, "lyra")
 
@@ -461,24 +461,7 @@ def test_widget_context_helpers_cover_menu_and_action_button_paths() -> None:
     )
     calls = []
 
-    class Event:
-        def globalPos(self):
-            return "global"
-
-        def pos(self):
-            return "local"
-
-    button = SimpleNamespace(mapToGlobal=lambda value: f"mapped:{value}")
     item = InventoryItem("potion", "Potion", category=ItemCategory.CONSUMABLE)
-    widgets._show_inventory_item_menu(
-        qt,
-        button,
-        item,
-        lambda item_id: calls.append(("consume", item_id)) or 1,
-        lambda item_id: calls.append(("sell", item_id)) or 1,
-        Event(),
-    )
-    assert calls == []
     assert widgets._is_right_click(qt, SimpleNamespace(button=lambda: 2)) is True
     assert widgets._is_right_click(qt, SimpleNamespace(button=lambda: 1)) is False
 
@@ -506,6 +489,8 @@ def test_widget_context_helpers_cover_menu_and_action_button_paths() -> None:
     button_instance = button_class("2")
     button_instance.mousePressEvent(SimpleNamespace(button=lambda: 1, modifiers=lambda: 0))
     assert button_instance.base_called is True
+    button_instance.mousePressEvent(SimpleNamespace(button=lambda: 2, modifiers=lambda: 0))
+    assert calls == [("consume", "potion")]
 
     assert widgets._set_inventory_button_remaining(button_instance, 0) is None
     assert button_instance.enabled is False

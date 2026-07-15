@@ -2,7 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from dnd_combat_engine.models import Campaign, HostedCampaignStatus, PlayerRole
+from dnd_combat_engine.models import (
+    Campaign,
+    HostedCampaignStatus,
+    PlayerRole,
+    SessionEventKind,
+)
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.services import LocalHostedCampaignBackend, PersistenceService
 
@@ -51,3 +56,34 @@ def test_local_hosted_campaign_backend_rejects_unknown_join_code(tmp_path: Path)
 
     with pytest.raises(ValueError, match="join code"):
         backend.join_session("MISSING", "fluxor", "Fluxor")
+
+
+def test_local_hosted_backend_persists_authoritative_combat_state(tmp_path: Path) -> None:
+    backend = _backend(tmp_path)
+    session = backend.host_campaign(Campaign("starter", "Starter"), "DM")
+    joined = backend.join_session(
+        session.join_code,
+        "fluxor",
+        "Fluxor",
+        character_id="fluxor",
+    )
+
+    event, state = backend.publish_state_event(
+        joined.session_id,
+        "fluxor",
+        SessionEventKind.CHARACTER_HEALTH,
+        {"current": 12, "maximum": 20, "temporary": 0},
+        character_id="fluxor",
+    )
+
+    assert event.revision == 1
+    assert state.character_health["fluxor"]["current"] == 12
+    assert backend.load_state(joined.session_id) == state
+    with pytest.raises(ValueError, match="assigned character"):
+        backend.publish_state_event(
+            joined.session_id,
+            "fluxor",
+            SessionEventKind.INITIATIVE_ROLL,
+            {"total": 15},
+            character_id="someone_else",
+        )

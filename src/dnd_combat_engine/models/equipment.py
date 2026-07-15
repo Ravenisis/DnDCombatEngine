@@ -3,10 +3,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Self
 
 from dnd_combat_engine.models.damage import DamageProfile
 from dnd_combat_engine.models.rules import RuleSource
+
+
+class EquipmentSlot(StrEnum):
+    """Wearable and wielded locations on a character."""
+
+    HEAD = "head"
+    NECK = "neck"
+    BACK = "back"
+    CHEST = "chest"
+    HANDS = "hands"
+    MAIN_HAND = "main_hand"
+    OFF_HAND = "off_hand"
+    WAIST = "waist"
+    LEGS = "legs"
+    FEET = "feet"
+    RING_LEFT = "ring_left"
+    RING_RIGHT = "ring_right"
 
 
 @dataclass(frozen=True, slots=True)

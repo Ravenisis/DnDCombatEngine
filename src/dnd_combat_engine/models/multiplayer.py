@@ -25,6 +25,16 @@ class PlayerRole(StrEnum):
     OBSERVER = "observer"
 
 
+class SessionEventKind(StrEnum):
+    """Authoritative state changes shared by connected campaign clients."""
+
+    CHARACTER_HEALTH = "character_health"
+    PARTY_HEALTH = "party_health"
+    INITIATIVE_ROLL = "initiative_roll"
+    HIT_ROLL = "hit_roll"
+    ACTION_RESULT = "action_result"
+
+
 @dataclass(frozen=True, slots=True)
 class HostedPlayer:
     """A player entry in a hosted campaign session."""
@@ -180,3 +190,193 @@ class HostedCampaignSession:
                 str(data["relay_url"]) if data.get("relay_url") is not None else None
             ),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class SessionStateEvent:
+    """One revisioned change to shared hosted-campaign state."""
+
+    event_id: str
+    session_id: str
+    kind: SessionEventKind
+    source_player_id: str
+    revision: int
+    payload: dict[str, object]
+    character_id: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate event identity and the payload required by its kind."""
+        if not self.event_id or not self.session_id or not self.source_player_id:
+            raise ValueError("event, session, and source player ids are required")
+        if self.revision < 1:
+            raise ValueError("event revision must be at least 1")
+        if self.kind is not SessionEventKind.PARTY_HEALTH and not self.character_id:
+            raise ValueError(f"character_id is required for {self.kind.value}")
+        _validate_event_payload(self.kind, self.payload)
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize the event to JSON-compatible data."""
+        return {
+            "event_id": self.event_id,
+            "session_id": self.session_id,
+            "kind": self.kind.value,
+            "source_player_id": self.source_player_id,
+            "character_id": self.character_id,
+            "revision": self.revision,
+            "payload": self.payload,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Self:
+        """Build an event from JSON-compatible data."""
+        payload = data.get("payload")
+        if not isinstance(payload, dict):
+            raise ValueError("event payload must be an object")
+        character_id = data.get("character_id")
+        return cls(
+            event_id=str(data["event_id"]),
+            session_id=str(data["session_id"]),
+            kind=SessionEventKind(str(data["kind"])),
+            source_player_id=str(data["source_player_id"]),
+            character_id=str(character_id) if character_id is not None else None,
+            revision=int(data["revision"]),
+            payload={str(key): value for key, value in payload.items()},
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class HostedCampaignState:
+    """Latest synchronized combat state for a hosted campaign session."""
+
+    session_id: str
+    revision: int = 0
+    character_health: dict[str, dict[str, int]] = field(default_factory=dict)
+    initiative_rolls: dict[str, int] = field(default_factory=dict)
+    latest_hit_rolls: dict[str, dict[str, object]] = field(default_factory=dict)
+    recent_events: tuple[SessionStateEvent, ...] = field(default_factory=tuple)
+
+    def apply(self, event: SessionStateEvent) -> Self:
+        """Return state with the next authoritative event applied."""
+        if event.session_id != self.session_id:
+            raise ValueError("event belongs to a different hosted session")
+        if event.revision != self.revision + 1:
+            raise ValueError("event revision is not the next session revision")
+        health = {key: dict(value) for key, value in self.character_health.items()}
+        initiative = dict(self.initiative_rolls)
+        hit_rolls = {key: dict(value) for key, value in self.latest_hit_rolls.items()}
+        if event.kind is SessionEventKind.CHARACTER_HEALTH and event.character_id:
+            health[event.character_id] = _health_payload(event.payload)
+        elif event.kind is SessionEventKind.PARTY_HEALTH:
+            members = event.payload["members"]
+            if isinstance(members, dict):
+                health.update(
+                    {
+                        str(character_id): _health_payload(value)
+                        for character_id, value in members.items()
+                        if isinstance(value, dict)
+                    }
+                )
+        elif event.kind is SessionEventKind.INITIATIVE_ROLL and event.character_id:
+            initiative[event.character_id] = int(event.payload["total"])
+        elif (
+            event.kind in {SessionEventKind.HIT_ROLL, SessionEventKind.ACTION_RESULT}
+            and event.character_id
+        ):
+            hit_rolls[event.character_id] = dict(event.payload)
+        return type(self)(
+            session_id=self.session_id,
+            revision=event.revision,
+            character_health=health,
+            initiative_rolls=initiative,
+            latest_hit_rolls=hit_rolls,
+            recent_events=(*self.recent_events[-99:], event),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize synchronized state to JSON-compatible data."""
+        return {
+            SCHEMA_VERSION_FIELD: CURRENT_SCHEMA_VERSION,
+            "session_id": self.session_id,
+            "revision": self.revision,
+            "character_health": self.character_health,
+            "initiative_rolls": self.initiative_rolls,
+            "latest_hit_rolls": self.latest_hit_rolls,
+            "recent_events": [event.to_dict() for event in self.recent_events],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Self:
+        """Build synchronized state from JSON-compatible data."""
+        return cls(
+            session_id=str(data["session_id"]),
+            revision=int(data.get("revision", 0)),
+            character_health=_nested_int_mapping(data.get("character_health", {})),
+            initiative_rolls={
+                str(key): int(value)
+                for key, value in _mapping(data.get("initiative_rolls", {})).items()
+            },
+            latest_hit_rolls={
+                str(key): dict(value)
+                for key, value in _mapping(data.get("latest_hit_rolls", {})).items()
+                if isinstance(value, dict)
+            },
+            recent_events=tuple(
+                SessionStateEvent.from_dict(value)
+                for value in data.get("recent_events", [])
+                if isinstance(value, dict)
+            ),
+        )
+
+
+def _validate_event_payload(kind: SessionEventKind, payload: dict[str, object]) -> None:
+    if kind is SessionEventKind.CHARACTER_HEALTH:
+        _health_payload(payload)
+    elif kind is SessionEventKind.PARTY_HEALTH:
+        members = payload.get("members")
+        if not isinstance(members, dict) or not members:
+            raise ValueError("party health requires a non-empty members object")
+        for value in members.values():
+            if not isinstance(value, dict):
+                raise ValueError("party health member values must be objects")
+            _health_payload(value)
+    elif kind is SessionEventKind.INITIATIVE_ROLL:
+        _required_int(payload, "total")
+    elif kind is SessionEventKind.HIT_ROLL:
+        _required_int(payload, "total")
+        natural = _required_int(payload, "natural")
+        if not 1 <= natural <= 20:
+            raise ValueError("hit roll natural value must be between 1 and 20")
+    elif kind is SessionEventKind.ACTION_RESULT and (
+        not isinstance(payload.get("message"), str) or not payload["message"]
+    ):
+        raise ValueError("action result requires a message")
+
+
+def _health_payload(payload: object) -> dict[str, int]:
+    if not isinstance(payload, dict):
+        raise ValueError("health payload must be an object")
+    current = _required_int(payload, "current")
+    maximum = _required_int(payload, "maximum")
+    temporary = int(payload.get("temporary", 0))
+    if maximum < 1 or current < 0 or current > maximum or temporary < 0:
+        raise ValueError("health values are outside their valid range")
+    return {"current": current, "maximum": maximum, "temporary": temporary}
+
+
+def _required_int(payload: dict[str, object], name: str) -> int:
+    value = payload.get(name)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{name} must be an integer")
+    return value
+
+
+def _mapping(value: object) -> dict[object, object]:
+    return value if isinstance(value, dict) else {}
+
+
+def _nested_int_mapping(value: object) -> dict[str, dict[str, int]]:
+    return {
+        str(key): {str(inner_key): int(inner_value) for inner_key, inner_value in inner.items()}
+        for key, inner in _mapping(value).items()
+        if isinstance(inner, dict)
+    }

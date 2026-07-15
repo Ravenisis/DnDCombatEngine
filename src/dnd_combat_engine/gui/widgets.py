@@ -12,6 +12,7 @@ from dnd_combat_engine.gui import combat_panels as _combat_panels
 from dnd_combat_engine.gui import inventory as _inventory
 from dnd_combat_engine.gui import spellbook as _spellbook
 from dnd_combat_engine.gui.action_bar import ActionBarSession
+from dnd_combat_engine.gui.drag_drop import item_id_from_mime, set_item_mime_data
 from dnd_combat_engine.gui.editors import (
     add_character_to_encounter,
     add_monster_to_encounter,
@@ -125,11 +126,12 @@ class ActionBarWidget:
         if hasattr(layout, "setAlignment"):
             layout.setAlignment(qt.QtCore.Qt.AlignmentFlag.AlignCenter)
         buttons = []
+        shift_shortcuts = []
         button_class = _action_bar_button_class(qt, session, on_activate)
         for slot in range(1, 13):
             button = button_class("", slot)
             if hasattr(button, "setFixedSize"):
-                button.setFixedSize(92, 64)
+                button.setFixedSize(100, 64)
             if hasattr(button, "setStyleSheet"):
                 button.setStyleSheet("text-align: left top; padding: 4px;")
             hotkey = ACTION_BAR_HOTKEYS[slot - 1]
@@ -145,6 +147,21 @@ class ActionBarWidget:
             )
             buttons.append(button)
             layout.addWidget(button)
+            shortcut = _action_bar_shift_shortcut(
+                qt,
+                widget,
+                hotkey,
+                lambda item_slot=slot: _activate_action_button(
+                    session,
+                    on_activate,
+                    item_slot,
+                    True,
+                ),
+            )
+            if shortcut is not None:
+                shift_shortcuts.append(shortcut)
+
+        widget._dnd_shift_shortcuts = shift_shortcuts  # noqa: SLF001
 
         def refresh(bar: ActionBar) -> None:
             for slot, button in enumerate(buttons, start=1):
@@ -335,6 +352,11 @@ def _inventory_header(
     ledger = qt.QtWidgets.QLineEdit()
     if hasattr(ledger, "setPlaceholderText"):
         ledger.setPlaceholderText("1PP 100GP")
+    if hasattr(ledger, "setFixedWidth"):
+        ledger.setFixedWidth(144)
+    alignment = _qt_alignment(qt, "AlignLeft")
+    if alignment is not None and hasattr(ledger, "setAlignment"):
+        ledger.setAlignment(alignment)
     buttons = qt.QtWidgets.QWidget()
     button_layout = qt.QtWidgets.QVBoxLayout(buttons)
     deposit = qt.QtWidgets.QPushButton("Deposit")
@@ -449,6 +471,14 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
     else:
         output = qt.QtWidgets.QLabel(text)
     layout.addWidget(output)
+    close_button_class = getattr(qt.QtWidgets, "QPushButton", None)
+    if close_button_class is not None:
+        close_button = close_button_class("Close")
+        if hasattr(close_button, "setToolTip"):
+            close_button.setToolTip("Close the money log.")
+        if hasattr(close_button, "clicked"):
+            close_button.clicked.connect(lambda checked=False: dialog.close())
+        layout.addWidget(close_button)
     dialogs = getattr(parent, "_dnd_money_log_dialogs", [])
     dialogs.append(dialog)
     parent._dnd_money_log_dialogs = dialogs  # noqa: SLF001
@@ -529,12 +559,16 @@ def _inventory_section(
     items: tuple[InventoryItem, ...],
     on_consume,
     on_sell,
+    on_move=None,
+    container_id: str | None = None,
 ):
-    group_class = getattr(qt.QtWidgets, "QGroupBox", qt.QtWidgets.QWidget)
+    group_class = _inventory_drop_group_class(qt, on_move, container_id)
     try:
         group = group_class(section_name)
     except TypeError:
         group = group_class()
+    if hasattr(group, "setAcceptDrops"):
+        group.setAcceptDrops(on_move is not None)
     if hasattr(group, "setStyleSheet"):
         group.setStyleSheet("QGroupBox { margin-top: 8px; padding-top: 8px; }")
     grid_class = getattr(qt.QtWidgets, "QGridLayout", qt.QtWidgets.QVBoxLayout)
@@ -550,6 +584,25 @@ def _inventory_section(
     if not items:
         layout.addWidget(qt.QtWidgets.QLabel("Empty"))
     return group
+
+
+def _inventory_drop_group_class(qt, on_move, container_id: str | None):
+    base_class = getattr(qt.QtWidgets, "QGroupBox", qt.QtWidgets.QWidget)
+
+    class InventoryDropGroup(base_class):
+        def dragEnterEvent(self, event) -> None:  # noqa: N802
+            if on_move is not None and item_id_from_mime(event.mimeData()) is not None:
+                event.acceptProposedAction()
+                return
+            event.ignore()
+
+        def dropEvent(self, event) -> None:  # noqa: N802
+            item_id = item_id_from_mime(event.mimeData())
+            if item_id is not None and on_move is not None:
+                on_move(item_id, container_id)
+                event.acceptProposedAction()
+
+    return InventoryDropGroup
 
 
 def _inventory_item_button(qt, item: InventoryItem, on_consume, on_sell):
@@ -577,6 +630,14 @@ def _inventory_button_class(qt, item: InventoryItem, on_consume, on_sell):
     base_class = qt.QtWidgets.QPushButton
 
     class ConsumableInventoryButton(base_class):
+        def mouseMoveEvent(self, event) -> None:  # noqa: N802
+            if _left_button_held(qt, event):
+                _start_inventory_drag(qt, self, item)
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            super().mouseMoveEvent(event)
+
         def mousePressEvent(self, event) -> None:  # noqa: N802
             if _is_right_click(qt, event) and any((on_consume, on_sell)):
                 if _is_shift_right_click(qt, event) and on_sell is not None:
@@ -584,38 +645,40 @@ def _inventory_button_class(qt, item: InventoryItem, on_consume, on_sell):
                     if hasattr(event, "accept"):
                         event.accept()
                     return
-                _show_inventory_item_menu(qt, self, item, on_consume, on_sell, event)
-                if hasattr(event, "accept"):
-                    event.accept()
-                return
+                if item.category is ItemCategory.CONSUMABLE and on_consume is not None:
+                    _consume_inventory_button_item(self, item, on_consume)
+                    if hasattr(event, "accept"):
+                        event.accept()
+                    return
             super().mousePressEvent(event)
 
     return ConsumableInventoryButton
 
 
-def _show_inventory_item_menu(qt, button, item: InventoryItem, on_consume, on_sell, event) -> None:
-    menu_class = getattr(qt.QtWidgets, "QMenu", None)
-    if menu_class is None:
-        _consume_inventory_button_item(button, item, on_consume)
+def _start_inventory_drag(qt, button, item: InventoryItem) -> None:
+    drag_class = getattr(qt.QtGui, "QDrag", None)
+    mime_class = getattr(qt.QtCore, "QMimeData", None)
+    if drag_class is None or mime_class is None:
         return
-    menu = menu_class(button)
-    if on_consume is not None:
-        consume_action = menu.addAction("Consume")
-        if item.category != ItemCategory.CONSUMABLE and hasattr(consume_action, "setEnabled"):
-            consume_action.setEnabled(False)
-        if hasattr(consume_action, "triggered"):
-            consume_action.triggered.connect(
-                lambda checked=False: _consume_inventory_button_item(button, item, on_consume)
-            )
-    position = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else None
-    if position is None:
-        position = event.globalPos() if hasattr(event, "globalPos") else None
-    if position is None and hasattr(button, "mapToGlobal"):
-        position = button.mapToGlobal(event.pos())
-    if hasattr(menu, "exec"):
-        menu.exec(position)
-    elif hasattr(menu, "exec_"):
-        menu.exec_(position)
+    drag = drag_class(button)
+    mime_data = mime_class()
+    set_item_mime_data(qt, mime_data, item.item_id)
+    drag.setMimeData(mime_data)
+    if hasattr(button, "icon") and hasattr(drag, "setPixmap"):
+        icon = button.icon()
+        if hasattr(icon, "pixmap"):
+            drag.setPixmap(icon.pixmap(48, 48))
+    action_namespace = getattr(getattr(qt.QtCore, "Qt", None), "DropAction", None)
+    move_action = getattr(action_namespace, "MoveAction", None)
+    drag.exec(move_action) if move_action is not None else drag.exec()
+
+
+def _left_button_held(qt, event) -> bool:
+    namespace = getattr(getattr(qt.QtCore, "Qt", None), "MouseButton", None)
+    left = getattr(namespace, "LeftButton", None) if namespace is not None else None
+    if left is None or not hasattr(event, "buttons"):
+        return False
+    return bool(event.buttons() & left)
 
 
 def _consume_inventory_button_item(button, item: InventoryItem, on_consume) -> None:
@@ -653,13 +716,37 @@ def _inventory_quantity_text(item: InventoryItem) -> str:
 def _inventory_sections(
     inventory: tuple[InventoryItem, ...],
 ) -> tuple[tuple[str, tuple[InventoryItem, ...]], ...]:
-    sections: list[tuple[str, list[InventoryItem]]] = [("Carried", [])]
-    for item in inventory:
-        if _is_container_item(item):
-            sections.append((item.name, []))
-            continue
-        sections[-1][1].append(item)
-    return tuple((name, tuple(items)) for name, items in sections)
+    return tuple((name, items) for _, name, items in _inventory_storage_sections(inventory))
+
+
+def _inventory_storage_sections(
+    inventory: tuple[InventoryItem, ...],
+) -> tuple[tuple[str | None, str, tuple[InventoryItem, ...]], ...]:
+    """Group visible inventory stacks by persisted or legacy container location."""
+    containers = [item for item in inventory if _is_container_item(item)]
+    groups: dict[str | None, list[InventoryItem]] = {None: []}
+    for container in containers:
+        groups[container.item_id] = []
+    has_locations = any(
+        item.container_id is not None or item.equipped_slot is not None for item in inventory
+    )
+    if has_locations:
+        for item in inventory:
+            if _is_container_item(item) or item.equipped_slot is not None:
+                continue
+            destination = item.container_id if item.container_id in groups else None
+            groups[destination].append(item)
+    else:
+        current: str | None = None
+        for item in inventory:
+            if _is_container_item(item):
+                current = item.item_id
+                continue
+            groups[current].append(item)
+    return (
+        (None, "Carried", tuple(groups[None])),
+        *((item.item_id, item.name, tuple(groups[item.item_id])) for item in containers),
+    )
 
 
 def _is_container_item(item: InventoryItem) -> bool:
@@ -1041,7 +1128,7 @@ def _action_bar_tooltip(
                 (
                     spell_tooltip,
                     f"Shortcut: {hotkey}",
-                    "Click to cast; Shift+click rolls the action check with its modifier.",
+                    f"Click to cast; Shift+{hotkey} or Shift+click rolls the action check.",
                     "Shift+right-click to remove.",
                 )
             )
@@ -1051,9 +1138,9 @@ def _action_bar_tooltip(
         f"Shortcut: {hotkey}",
     ]
     if action.kind == ActionBarActionKind.SPELL:
-        lines.append("Click to cast; Shift+click rolls the action check with its modifier.")
+        lines.append(f"Click to cast; Shift+{hotkey} or Shift+click rolls the action check.")
     else:
-        lines.append("Click to use; Shift+click rolls the action check with its modifier.")
+        lines.append(f"Click to use; Shift+{hotkey} or Shift+click rolls the action check.")
     lines.append("Shift+right-click to remove.")
     return "\n".join(lines)
 
@@ -1697,6 +1784,34 @@ def _action_bar_button_class(qt, session: ActionBarSession, on_activate=None):
             super().mousePressEvent(event)
 
     return ShiftRemovableActionButton
+
+
+def _action_bar_shift_shortcut(qt, parent, hotkey: str, callback):
+    """Bind Shift+slot separately from the button's normal activation shortcut."""
+    qt_gui = getattr(qt, "QtGui", None)
+    shortcut_class = getattr(qt_gui, "QShortcut", None)
+    key_sequence_class = getattr(qt_gui, "QKeySequence", None)
+    if shortcut_class is None or key_sequence_class is None:
+        return None
+    shortcut = shortcut_class(key_sequence_class(f"Shift+{hotkey}"), parent)
+    context = _qt_shortcut_context(qt, "WindowShortcut")
+    if context is not None and hasattr(shortcut, "setContext"):
+        shortcut.setContext(context)
+    if hasattr(shortcut, "activated"):
+        shortcut.activated.connect(callback)
+    return shortcut
+
+
+def _qt_shortcut_context(qt, name: str):
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    context_namespace = getattr(qt_namespace, "ShortcutContext", qt_namespace)
+    return getattr(context_namespace, name, None)
+
+
+def _qt_alignment(qt, name: str):
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    alignment_namespace = getattr(qt_namespace, "AlignmentFlag", qt_namespace)
+    return getattr(alignment_namespace, name, None)
 
 
 def _is_shift_left_click(qt, event) -> bool:

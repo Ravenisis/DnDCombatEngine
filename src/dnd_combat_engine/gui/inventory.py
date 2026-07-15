@@ -17,6 +17,7 @@ class InventoryWidget:
         on_sell: Any = None,
         on_currency_change: Any = None,
         on_add_item: Any = None,
+        on_move: Any = None,
         money_log_entries: list[str] | None = None,
         money_log_current: dict | None = None,
     ) -> Any:
@@ -37,10 +38,18 @@ class InventoryWidget:
                 money_log_current,
             )
         )
-        sections = widgets._inventory_sections(character.inventory)
-        for section_name, items in sections:
+        sections = widgets._inventory_storage_sections(character.inventory)
+        for container_id, section_name, items in sections:
             layout.addWidget(
-                widgets._inventory_section(qt, section_name, items, on_consume, on_sell)
+                widgets._inventory_section(
+                    qt,
+                    section_name,
+                    items,
+                    on_consume,
+                    on_sell,
+                    on_move,
+                    container_id,
+                )
             )
         if hasattr(layout, "addStretch"):
             layout.addStretch(1)

@@ -37,12 +37,15 @@ continues to use the same controller and rules engine path.
 3. Local loopback multiplayer smoke test. Completed: independent host and guest
    app instances discover a session, join by code, activate, disconnect, and
    close through the same isolated JSON store.
-4. WebSocket relay protocol for campaign state messages.
+4. WebSocket relay protocol for campaign state messages. Completed: connected
+   session subscribers receive revisioned HP, initiative, hit-roll, and action
+   result events, while JSON snapshots support reconnect and state recovery.
 5. DM lobby with connected players, ready checks, and character assignment.
 6. Action synchronization through the unified combat action resolver.
 
-The completed loopback test validates the backend contract and persistence
-boundary. It does not open a network listener; the WebSocket relay slice is the
-first Internet transport implementation.
+The completed lifecycle and WebSocket loopback tests validate the backend,
+persistence, subscription, and same-session broadcast boundaries on a local
+network listener. Public relay deployment and desktop lobby controls remain
+future work.
 7. Conflict handling, reconnect, and session recovery.
 8. Public beta relay deployment and connection diagnostics.

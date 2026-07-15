@@ -304,7 +304,7 @@ def test_action_bar_button_text_wraps_with_hotkey_first() -> None:
             "Mass Healing Word rank 3",
             "Type: Spell",
             "Shortcut: 1",
-            "Click to cast; Shift+click rolls the action check with its modifier.",
+            "Click to cast; Shift+1 or Shift+click rolls the action check.",
             "Shift+right-click to remove.",
         )
     )
@@ -356,6 +356,97 @@ def test_action_bar_spell_tooltip_uses_spell_metadata() -> None:
     assert "Damage: 4d6 radiant" in tooltip
     assert "Shortcut: 1" in tooltip
     assert "Shift+right-click to remove." in tooltip
+
+
+def test_action_bar_shift_shortcuts_roll_checks_and_buttons_are_wider() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui.action_bar import ActionBarSession
+    from dnd_combat_engine.gui.widgets import ActionBarWidget
+    from dnd_combat_engine.models import ActionBar, ActionBarActionKind, ActionBarButton
+
+    class Signal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+        def emit(self) -> None:
+            self.callback()
+
+    class Widget:
+        pass
+
+    class Layout:
+        def __init__(self, parent) -> None:
+            parent.layout = self
+            self.widgets = []
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+        def setAlignment(self, alignment) -> None:  # noqa: N802
+            self.alignment = alignment
+
+    class Button:
+        def __init__(self, text: str) -> None:
+            self.text = text
+            self.clicked = Signal()
+
+        def setFixedSize(self, width: int, height: int) -> None:  # noqa: N802
+            self.fixed_size = (width, height)
+
+        def setStyleSheet(self, stylesheet: str) -> None:  # noqa: N802
+            self.stylesheet = stylesheet
+
+        def setShortcut(self, shortcut: str) -> None:  # noqa: N802
+            self.shortcut = shortcut
+
+        def setText(self, text: str) -> None:  # noqa: N802
+            self.text = text
+
+        def setEnabled(self, enabled: bool) -> None:  # noqa: N802
+            self.enabled = enabled
+
+        def setToolTip(self, tooltip: str) -> None:  # noqa: N802
+            self.tooltip = tooltip
+
+    class Shortcut:
+        def __init__(self, sequence, parent) -> None:
+            self.sequence = sequence
+            self.parent = parent
+            self.activated = Signal()
+
+        def setContext(self, context) -> None:  # noqa: N802
+            self.context = context
+
+    qt = SimpleNamespace(
+        QtCore=SimpleNamespace(
+            Qt=SimpleNamespace(
+                AlignmentFlag=SimpleNamespace(AlignCenter="center"),
+                ShortcutContext=SimpleNamespace(WindowShortcut="window"),
+            )
+        ),
+        QtGui=SimpleNamespace(QShortcut=Shortcut, QKeySequence=lambda value: value),
+        QtWidgets=SimpleNamespace(QWidget=Widget, QHBoxLayout=Layout, QPushButton=Button),
+    )
+    session = ActionBarSession(
+        ActionBar(
+            buttons=(
+                ActionBarButton(1, ActionBarActionKind.ABILITY, "attack", "Warhammer"),
+            )
+        )
+    )
+    activated = []
+
+    widget = ActionBarWidget.create(
+        qt,
+        session,
+        lambda slot, shifted: activated.append((slot, shifted)),
+    )
+
+    assert all(button.fixed_size == (100, 64) for button in widget.layout.widgets)
+    assert widget._dnd_shift_shortcuts[0].sequence == "Shift+1"  # noqa: SLF001
+    widget._dnd_shift_shortcuts[0].activated.emit()  # noqa: SLF001
+    assert activated == [(1, True)]
 
 
 def test_spell_ability_and_inventory_tooltips_include_useful_details() -> None:
@@ -554,6 +645,12 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
         def setPlaceholderText(self, value: str) -> None:  # noqa: N802
             self.placeholder = value
 
+        def setFixedWidth(self, value: int) -> None:  # noqa: N802
+            self.fixed_width = value
+
+        def setAlignment(self, value) -> None:  # noqa: N802
+            self.alignment = value
+
     class FakeButton(FakeWidget):
         def __init__(self, text: str) -> None:
             super().__init__(text)
@@ -582,6 +679,9 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
         def show(self) -> None:
             self.visible = True
 
+        def close(self) -> None:
+            self.closed = True
+
     class FakeLayout:
         def __init__(self, parent) -> None:
             parent.layout = self
@@ -595,6 +695,7 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
 
     class FakeQtWidgets:
         QWidget = FakeWidget
+        QFrame = FakeDialog
         QLabel = FakeLabel
         QLineEdit = FakeLineEdit
         QPushButton = FakeButton
@@ -611,7 +712,12 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
         return purse["value"]
 
     header = _inventory_header(
-        SimpleNamespace(QtWidgets=FakeQtWidgets),
+        SimpleNamespace(
+            QtCore=SimpleNamespace(
+                Qt=SimpleNamespace(AlignmentFlag=SimpleNamespace(AlignLeft="left"))
+            ),
+            QtWidgets=FakeQtWidgets,
+        ),
         "Ravenisis",
         purse["value"],
         change_currency,
@@ -621,6 +727,8 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     deposit_button = header.layout.widgets[3].layout.widgets[0]
 
     ledger.setText("1GP")
+    assert ledger.fixed_width == 144
+    assert ledger.alignment == "left"
     deposit_button.clicked.emit()
     money_log_button.clicked.emit()
 
@@ -629,6 +737,72 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     assert "Opening balance: 2GP" in log_text
     assert "Deposit: 1GP (+1GP) -> 3GP" in log_text
     assert "Current balance: 3GP" in log_text
+    close_button = dialog.layout.widgets[1]
+    close_button.clicked.emit()
+    assert dialog.closed is True
+
+
+def test_dialog_close_control_rejects_embedded_dialog() -> None:
+    from types import SimpleNamespace
+
+    from dnd_combat_engine.gui import main_window
+
+    class Signal:
+        def connect(self, callback) -> None:
+            self.callback = callback
+
+        def emit(self) -> None:
+            self.callback()
+
+    class Widget:
+        pass
+
+    class Layout:
+        def __init__(self, parent) -> None:
+            parent.layout = self
+            self.widgets = []
+
+        def addStretch(self, value: int) -> None:  # noqa: N802
+            self.stretch = value
+
+        def addWidget(self, widget) -> None:  # noqa: N802
+            self.widgets.append(widget)
+
+    class ToolButton:
+        def __init__(self) -> None:
+            self.clicked = Signal()
+
+        def setText(self, text: str) -> None:  # noqa: N802
+            self.text = text
+
+        def setToolTip(self, tooltip: str) -> None:  # noqa: N802
+            self.tooltip = tooltip
+
+        def setFixedSize(self, width: int, height: int) -> None:  # noqa: N802
+            self.size = (width, height)
+
+    class Dialog:
+        def reject(self) -> None:
+            self.rejected = True
+
+    outer = SimpleNamespace(widgets=[])
+    outer.addWidget = outer.widgets.append
+    dialog = Dialog()
+    qt = SimpleNamespace(
+        QtWidgets=SimpleNamespace(
+            QWidget=Widget,
+            QHBoxLayout=Layout,
+            QToolButton=ToolButton,
+        )
+    )
+
+    main_window._add_dialog_close_control(qt, dialog, outer)
+
+    header = outer.widgets[0]
+    close_button = header.layout.widgets[0]
+    assert close_button.text == "X"
+    close_button.clicked.emit()
+    assert dialog.rejected is True
 
 
 def test_inventory_money_log_records_buy_and_sell_transactions() -> None:

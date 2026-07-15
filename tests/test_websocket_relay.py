@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 
 from dnd_combat_engine.models import Campaign, HostedCampaignSession, HostedCampaignStatus
@@ -62,6 +63,55 @@ async def _run_loopback_relay(tmp_path: Path) -> None:
             url, {"action": "activate", "session_id": session.session_id}
         )
         assert _response_session(live).status is HostedCampaignStatus.LIVE
+
+        from websockets.asyncio.client import connect
+
+        async with connect(url) as host_socket, connect(url) as guest_socket:
+            await host_socket.send(
+                json.dumps(
+                    {
+                        "action": "subscribe",
+                        "session_id": session.session_id,
+                        "source_player_id": "outsider",
+                    }
+                )
+            )
+            assert json.loads(await host_socket.recv())["ok"] is False
+            for socket_client, player_id in (
+                (host_socket, "host"),
+                (guest_socket, "fluxor"),
+            ):
+                await socket_client.send(
+                    json.dumps(
+                        {
+                            "action": "subscribe",
+                            "session_id": session.session_id,
+                            "source_player_id": player_id,
+                        }
+                    )
+                )
+                subscribed = json.loads(await socket_client.recv())
+                assert subscribed["subscribed"] == session.session_id
+            await host_socket.send(
+                json.dumps(
+                    {
+                        "action": "publish_state",
+                        "session_id": session.session_id,
+                        "source_player_id": "host",
+                        "character_id": "fluxor",
+                        "kind": "initiative_roll",
+                        "payload": {"total": 18, "natural": 16},
+                    }
+                )
+            )
+            host_event = json.loads(await host_socket.recv())
+            guest_event = json.loads(await guest_socket.recv())
+            assert host_event["event"]["revision"] == 1
+            assert guest_event == host_event
+        synchronized = await send_relay_request(
+            url, {"action": "state", "session_id": session.session_id}
+        )
+        assert synchronized["state"]["initiative_rolls"] == {"fluxor": 18}  # type: ignore[index]
 
         left = await send_relay_request(
             url, {"action": "leave", "session_id": session.session_id, "player_id": "fluxor"}

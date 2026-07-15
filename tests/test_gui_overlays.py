@@ -58,3 +58,34 @@ def test_embedded_popup_is_a_child_and_centers_over_its_parent() -> None:
     assert popup.object_name == "EmbeddedPopup"
     assert popup.position == (420, 140)
     assert popup.shown and popup.raised and popup.activated
+
+
+def test_embedded_popup_closes_with_escape() -> None:
+    class Popup:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+
+        def close(self) -> None:
+            self.closed = True
+
+    class Event:
+        def key(self) -> int:
+            return 27
+
+        def accept(self) -> None:
+            self.accepted = True
+
+    qt = SimpleNamespace(
+        QtCore=SimpleNamespace(
+            Qt=SimpleNamespace(Key=SimpleNamespace(Key_Escape=27))
+        ),
+        QtWidgets=SimpleNamespace(QFrame=Popup),
+    )
+    popup = create_embedded_popup(qt, object())
+    assert popup is not None
+    event = Event()
+
+    popup.keyPressEvent(event)
+
+    assert popup.closed is True
+    assert event.accepted is True

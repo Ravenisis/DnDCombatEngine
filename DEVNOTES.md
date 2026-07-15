@@ -14,6 +14,27 @@ regression test before implementing its fix.
 
 ## Current Candidate Changes
 
+- Inventory stacks now persist `container_id`, `equipped_slot`, detailed
+  subcategories, and structured modifiers. `InventoryService` owns validated
+  move/equip/unequip operations and computes Base/Gear/Current stat summaries.
+- The Character > Equipment overlay shares one inventory-item drag payload with
+  bag storage drop zones, so Qt is rendering persisted domain state instead of
+  maintaining a second UI-only loadout.
+- Hosted campaign state now uses revisioned, typed events for HP, initiative,
+  hit rolls, and action results. The JSON-backed backend saves reconnectable
+  snapshots and the WebSocket relay broadcasts events to same-session subscribers.
+- The repo-local SRD equipment catalog has a repeatable enrichment script and
+  explicit ammunition, weapon, armor, and consumable subcategories in both the
+  development and packaged data copies.
+- All seed character inventories are refreshed by
+  `scripts/enrich_character_inventories.py`, which preserves quantities and
+  placement state while merging canonical SRD tooltips, prices, tags, weights,
+  categories, and subcategories into each stack.
+- Action Bar slots now have dedicated Shift-modified shortcuts for hit checks,
+  plus a real Qt regression test for `Shift+1`; popup Escape handling and
+  visible close controls are shared through the overlay/dialog helpers.
+- Ravenisis's current Pouch inventory now carries complete tooltip metadata and
+  corrected categories in both development and packaged seed data.
 - GitHub-hosted test and package workflows use Node.js 24-backed releases of
   checkout, setup-python, and upload-artifact; Python coverage and packaging
   behavior remain unchanged.
@@ -186,11 +207,13 @@ winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-sourc
 
 Latest verified local build:
 
-- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 4,202,962 bytes
-- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 38,408,297 bytes
-- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 43,904,954 bytes
-- Verified with `ruff`, `370` coverage-enforced tests at `90.14%`, mypy, a
-  PyInstaller rebuild, an Inno Setup rebuild, and a WiX MSI rebuild.
+- `dist/DnDCombatEngine/DnDCombatEngine.exe` - 6,711,287 bytes
+- `dist/DnDCombatEngine-1.0.3-windows.zip` - 73,305,907 bytes
+- `dist/installer/DnDCombatEngine-1.0.3-Setup.exe` - 51,676,586 bytes
+- `dist/msi/DnDCombatEngine-1.0.3-x64.msi` - 60,688,653 bytes
+- Verified with `ruff`, `402` coverage-enforced tests at `90.02%`, mypy, a
+  PyInstaller rebuild, a portable ZIP rebuild, an Inno Setup rebuild, and a
+  WiX MSI rebuild.
 
 Latest verified local install smoke test:
 

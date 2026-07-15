@@ -75,13 +75,14 @@
   {
     "item_id": "arrows_20",
     "name": "Arrows (20)",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 100,
     "notes": "SRD ammunition. Amount: 20. Typical storage: Quiver.",
     "tags": [
       "ammunition"
-    ]
+    ],
+    "subcategory": "arrow"
   },
   {
     "item_id": "backpack",
@@ -332,13 +333,14 @@
   {
     "item_id": "bolts_20",
     "name": "Bolts (20)",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 100,
     "notes": "SRD ammunition. Amount: 20. Typical storage: Case.",
     "tags": [
       "ammunition"
-    ]
+    ],
+    "subcategory": "crossbow_bolt"
   },
   {
     "item_id": "book",
@@ -547,24 +549,26 @@
   {
     "item_id": "bullets_firearm_10",
     "name": "Bullets, Firearm (10)",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 2.0,
     "purchase_price_cp": 300,
     "notes": "SRD ammunition. Amount: 10. Typical storage: Pouch.",
     "tags": [
       "ammunition"
-    ]
+    ],
+    "subcategory": "bullet"
   },
   {
     "item_id": "bullets_sling_20",
     "name": "Bullets, Sling (20)",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 4,
     "notes": "SRD ammunition. Amount: 20. Typical storage: Pouch.",
     "tags": [
       "ammunition"
-    ]
+    ],
+    "subcategory": "bullet"
   },
   {
     "item_id": "burglar_s_pack",
@@ -615,13 +619,14 @@
   {
     "item_id": "case_crossbow_bolt",
     "name": "Case, Crossbow Bolt",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 100,
     "notes": "SRD adventuring gear. A Crossbow Bolt Case holds up to 20 Bolts.",
     "tags": [
       "adventuring_gear"
-    ]
+    ],
+    "subcategory": "crossbow_bolt"
   },
   {
     "item_id": "case_map_or_scroll",
@@ -1954,13 +1959,14 @@
   {
     "item_id": "needles_50",
     "name": "Needles (50)",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 100,
     "notes": "SRD ammunition. Amount: 50. Typical storage: Pouch.",
     "tags": [
       "ammunition"
-    ]
+    ],
+    "subcategory": "needle"
   },
   {
     "item_id": "net",
@@ -2157,7 +2163,7 @@
   {
     "item_id": "quiver_of_ehlonna",
     "name": "Quiver of Ehlonna",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 2.0,
     "purchase_price_cp": 0,
     "notes": "SRD magic item. Uncommon wondrous item. Extradimensional quiver that stores many arrows, bolts, bows, or similar objects.",
@@ -2165,7 +2171,8 @@
       "magic item",
       "container",
       "ammunition"
-    ]
+    ],
+    "subcategory": "special_ammunition"
   },
   {
     "item_id": "ram_portable",
@@ -3118,7 +3125,7 @@
   {
     "item_id": "wand_of_lightning_bolts",
     "name": "Wand of Lightning Bolts",
-    "category": "adventuring_gear",
+    "category": "ammunition",
     "weight": 1.0,
     "purchase_price_cp": 0,
     "notes": "SRD magic item. Rare wand, requires attunement by a spellcaster. Holds charges to cast Lightning Bolt.",
@@ -3127,7 +3134,8 @@
       "focus",
       "requires attunement",
       "wand"
-    ]
+    ],
+    "subcategory": "crossbow_bolt"
   },
   {
     "item_id": "wand_of_magic_detection",
@@ -3315,7 +3323,8 @@
     "tags": [
       "armor",
       "magic item"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "animated_shield",
@@ -3329,7 +3338,8 @@
       "shield",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "armor_plus1",
@@ -3342,7 +3352,8 @@
       "armor",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "armor_plus2",
@@ -3355,7 +3366,8 @@
       "armor",
       "magic item",
       "bonus:+2"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "armor_plus3",
@@ -3368,7 +3380,8 @@
       "armor",
       "magic item",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "armor_of_resistance",
@@ -3381,7 +3394,8 @@
       "armor",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "armor_of_vulnerability",
@@ -3395,7 +3409,8 @@
       "magic item",
       "requires attunement",
       "cursed"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "breastplate",
@@ -3407,7 +3422,8 @@
     "tags": [
       "armor",
       "ac:14 + Dex modifier (max 2)"
-    ]
+    ],
+    "subcategory": "medium_armor"
   },
   {
     "item_id": "chain_mail",
@@ -3419,7 +3435,8 @@
     "tags": [
       "armor",
       "ac:16"
-    ]
+    ],
+    "subcategory": "heavy_armor"
   },
   {
     "item_id": "chain_shirt",
@@ -3431,7 +3448,8 @@
     "tags": [
       "armor",
       "ac:13 + Dex modifier (max 2)"
-    ]
+    ],
+    "subcategory": "medium_armor"
   },
   {
     "item_id": "demon_armor",
@@ -3445,7 +3463,8 @@
       "magic item",
       "requires attunement",
       "cursed"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "elven_chain",
@@ -3457,7 +3476,8 @@
     "tags": [
       "armor",
       "magic item"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "glamoured_studded_leather",
@@ -3470,7 +3490,8 @@
       "armor",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "half_plate_armor",
@@ -3482,7 +3503,8 @@
     "tags": [
       "armor",
       "ac:15 + Dex modifier (max 2)"
-    ]
+    ],
+    "subcategory": "medium_armor"
   },
   {
     "item_id": "hide_armor",
@@ -3494,7 +3516,8 @@
     "tags": [
       "armor",
       "ac:12 + Dex modifier (max 2)"
-    ]
+    ],
+    "subcategory": "medium_armor"
   },
   {
     "item_id": "leather_armor",
@@ -3506,7 +3529,8 @@
     "tags": [
       "armor",
       "ac:11 + Dex modifier"
-    ]
+    ],
+    "subcategory": "light_armor"
   },
   {
     "item_id": "mariner_s_armor",
@@ -3518,7 +3542,8 @@
     "tags": [
       "armor",
       "magic item"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "mithral_armor",
@@ -3530,7 +3555,8 @@
     "tags": [
       "armor",
       "magic item"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "padded_armor",
@@ -3542,7 +3568,8 @@
     "tags": [
       "armor",
       "ac:11 + Dex modifier"
-    ]
+    ],
+    "subcategory": "light_armor"
   },
   {
     "item_id": "plate_armor",
@@ -3554,7 +3581,8 @@
     "tags": [
       "armor",
       "ac:18"
-    ]
+    ],
+    "subcategory": "heavy_armor"
   },
   {
     "item_id": "plate_armor_of_etherealness",
@@ -3567,7 +3595,8 @@
       "armor",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_armor"
   },
   {
     "item_id": "ring_mail",
@@ -3579,7 +3608,8 @@
     "tags": [
       "armor",
       "ac:14"
-    ]
+    ],
+    "subcategory": "heavy_armor"
   },
   {
     "item_id": "scale_mail",
@@ -3591,7 +3621,8 @@
     "tags": [
       "armor",
       "ac:14 + Dex modifier (max 2)"
-    ]
+    ],
+    "subcategory": "medium_armor"
   },
   {
     "item_id": "sentinel_shield",
@@ -3604,7 +3635,8 @@
       "armor",
       "shield",
       "magic item"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield",
@@ -3616,7 +3648,8 @@
     "tags": [
       "armor",
       "ac:+2"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield_plus1",
@@ -3630,7 +3663,8 @@
       "shield",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield_plus2",
@@ -3644,7 +3678,8 @@
       "shield",
       "magic item",
       "bonus:+2"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield_plus3",
@@ -3658,7 +3693,8 @@
       "shield",
       "magic item",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield_of_missile_attraction",
@@ -3673,7 +3709,8 @@
       "magic item",
       "requires attunement",
       "cursed"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "shield_of_the_cavalier",
@@ -3687,7 +3724,8 @@
       "shield",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "shield"
   },
   {
     "item_id": "splint_armor",
@@ -3699,7 +3737,8 @@
     "tags": [
       "armor",
       "ac:17"
-    ]
+    ],
+    "subcategory": "heavy_armor"
   },
   {
     "item_id": "studded_leather_armor",
@@ -3711,7 +3750,8 @@
     "tags": [
       "armor",
       "ac:12 + Dex modifier"
-    ]
+    ],
+    "subcategory": "light_armor"
   },
   {
     "item_id": "acid",
@@ -3722,7 +3762,8 @@
     "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a vial of Acid. Target one creature or object you can see within 20 feet of yourself.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "adventuring_consumable"
   },
   {
     "item_id": "alchemist_s_fire",
@@ -3733,7 +3774,8 @@
     "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a flask of Alchemist's Fire. Target one creature or object you can see within 20 feet of yourself.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "adventuring_consumable"
   },
   {
     "item_id": "antitoxin",
@@ -3744,7 +3786,8 @@
     "notes": "SRD adventuring gear. As a Bonus Action, you can drink a vial of Antitoxin to gain Advantage on saving throws to avoid or end the Poisoned condition for 1 hour.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "bead_of_force",
@@ -3757,7 +3800,8 @@
       "magic item",
       "consumable",
       "rarity:rare"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "bead_of_nourishment",
@@ -3770,7 +3814,8 @@
       "magic item",
       "consumable",
       "rarity:common"
-    ]
+    ],
+    "subcategory": "food"
   },
   {
     "item_id": "candle",
@@ -3781,7 +3826,8 @@
     "notes": "SRD adventuring gear. For 1 hour, a lit Candle sheds Bright Light in a 5-foot radius and Dim Light for an additional 5 feet.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "light_source"
   },
   {
     "item_id": "driftseed",
@@ -3793,7 +3839,8 @@
     "tags": [
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "dust_of_disappearance",
@@ -3806,7 +3853,8 @@
       "magic item",
       "consumable",
       "rarity:uncommon"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "dust_of_dryness",
@@ -3819,7 +3867,8 @@
       "magic item",
       "consumable",
       "rarity:uncommon"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "dust_of_sneezing_and_choking",
@@ -3832,7 +3881,8 @@
       "magic item",
       "consumable",
       "rarity:uncommon"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "elemental_gem",
@@ -3845,7 +3895,8 @@
       "magic item",
       "consumable",
       "rarity:uncommon"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "elixir_of_health",
@@ -3858,7 +3909,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "flask",
@@ -3869,7 +3921,8 @@
     "notes": "SRD adventuring gear. A Flask holds up to 1 pint.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "adventuring_consumable"
   },
   {
     "item_id": "holy_water",
@@ -3880,7 +3933,8 @@
     "notes": "SRD adventuring gear. When you take the Attack action, you can replace one of your attacks with throwing a flask of Holy Water. Target one creature you can see within 20 feet of yourself.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "adventuring_consumable"
   },
   {
     "item_id": "keoghtom_s_ointment",
@@ -3893,7 +3947,8 @@
       "magic item",
       "consumable",
       "healing"
-    ]
+    ],
+    "subcategory": "healing_consumable"
   },
   {
     "item_id": "necklace_of_fireballs",
@@ -3906,7 +3961,8 @@
       "magic item",
       "consumable",
       "rarity:rare"
-    ]
+    ],
+    "subcategory": "magic_consumable"
   },
   {
     "item_id": "oil",
@@ -3917,7 +3973,8 @@
     "notes": "SRD adventuring gear. You can douse a creature, object, or space with Oil or use it as fuel, as detailed below. Dousing a Creature or an Object.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "light_source"
   },
   {
     "item_id": "oil_of_etherealness",
@@ -3930,7 +3987,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "oil_of_sharpness",
@@ -3943,7 +4001,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "oil_of_slipperiness",
@@ -3956,7 +4015,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "oil_of_taggit",
@@ -3969,7 +4029,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "poison_basic",
@@ -3980,7 +4041,8 @@
     "notes": "SRD adventuring gear. As a Bonus Action, you can use a vial of Basic Poison to coat one weapon or up to three pieces of ammunition. A creature that takes Piercing or Slashing damage from the poisoned weapon or ammunition takes an extra 1d4 Poison damage.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "potion_of_animal_friendship",
@@ -3993,7 +4055,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_clairvoyance",
@@ -4006,7 +4069,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_climbing",
@@ -4019,7 +4083,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_delusion",
@@ -4033,7 +4098,8 @@
       "magic item",
       "cursed",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_diminution",
@@ -4046,7 +4112,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_fire_breath",
@@ -4059,7 +4126,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_flying",
@@ -4072,7 +4140,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_gaseous_form",
@@ -4085,7 +4154,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_giant_strength_cloud",
@@ -4098,7 +4168,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_giant_strength_fire",
@@ -4111,7 +4182,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_giant_strength_frost_or_stone",
@@ -4124,7 +4196,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_giant_strength_hill",
@@ -4137,7 +4210,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_giant_strength_storm",
@@ -4150,7 +4224,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_growth",
@@ -4163,7 +4238,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_healing",
@@ -4176,7 +4252,8 @@
       "consumable",
       "potion",
       "healing"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_healing_greater",
@@ -4189,7 +4266,8 @@
       "potion",
       "healing",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_healing_superior",
@@ -4203,7 +4281,8 @@
       "magic item",
       "consumable",
       "healing"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_healing_supreme",
@@ -4217,7 +4296,8 @@
       "magic item",
       "consumable",
       "healing"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_heroism",
@@ -4230,7 +4310,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_invisibility",
@@ -4243,7 +4324,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_invulnerability",
@@ -4256,7 +4338,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_longevity",
@@ -4269,7 +4352,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_maximum_power",
@@ -4282,7 +4366,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_mind_control_beast",
@@ -4295,7 +4380,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_mind_control_humanoid",
@@ -4308,7 +4394,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_mind_control_monster",
@@ -4321,7 +4408,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_mind_reading",
@@ -4334,7 +4422,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_poison",
@@ -4347,7 +4436,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_possibility",
@@ -4360,7 +4450,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_resistance",
@@ -4373,7 +4464,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_speed",
@@ -4386,7 +4478,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_vitality",
@@ -4399,7 +4492,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_watchful_rest",
@@ -4412,7 +4506,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "potion_of_water_breathing",
@@ -4425,7 +4520,8 @@
       "potion",
       "magic item",
       "consumable"
-    ]
+    ],
+    "subcategory": "potion"
   },
   {
     "item_id": "rations",
@@ -4436,7 +4532,8 @@
     "notes": "SRD adventuring gear. Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See \"Malnutrition\" in \"Rules Glossary\" for the risks of not eating.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "food"
   },
   {
     "item_id": "scroll_of_protection",
@@ -4449,7 +4546,8 @@
       "scroll",
       "magic item",
       "rarity:rare"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "serpent_venom",
@@ -4461,7 +4559,8 @@
     "tags": [
       "poison",
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "spell_scroll_cantrip",
@@ -4472,7 +4571,8 @@
     "notes": "SRD adventuring gear.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_1",
@@ -4483,7 +4583,8 @@
     "notes": "SRD adventuring gear.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_2",
@@ -4496,7 +4597,8 @@
       "scroll",
       "magic item",
       "spell level:2"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_3",
@@ -4509,7 +4611,8 @@
       "scroll",
       "magic item",
       "spell level:3"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_4",
@@ -4522,7 +4625,8 @@
       "scroll",
       "magic item",
       "spell level:4"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_5",
@@ -4535,7 +4639,8 @@
       "scroll",
       "magic item",
       "spell level:5"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_6",
@@ -4548,7 +4653,8 @@
       "scroll",
       "magic item",
       "spell level:6"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_7",
@@ -4561,7 +4667,8 @@
       "scroll",
       "magic item",
       "spell level:7"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_8",
@@ -4574,7 +4681,8 @@
       "scroll",
       "magic item",
       "spell level:8"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "spell_scroll_level_9",
@@ -4587,7 +4695,8 @@
       "scroll",
       "magic item",
       "spell level:9"
-    ]
+    ],
+    "subcategory": "spell_scroll"
   },
   {
     "item_id": "torch",
@@ -4598,7 +4707,8 @@
     "notes": "SRD adventuring gear. A Torch burns for 1 hour, casting Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. When you take the Attack action, you can attack with the Torch, using it as a Simple Melee weapon.",
     "tags": [
       "consumable"
-    ]
+    ],
+    "subcategory": "light_source"
   },
   {
     "item_id": "torpor",
@@ -4610,7 +4720,8 @@
     "tags": [
       "poison",
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "truth_serum",
@@ -4622,7 +4733,8 @@
     "tags": [
       "poison",
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "wyvern_poison",
@@ -4634,7 +4746,8 @@
     "tags": [
       "poison",
       "consumable"
-    ]
+    ],
+    "subcategory": "poison_and_antitoxin"
   },
   {
     "item_id": "alchemist_s_supplies",
@@ -6458,7 +6571,7 @@
   {
     "item_id": "ammunition_plus1",
     "name": "Ammunition +1",
-    "category": "weapon",
+    "category": "ammunition",
     "weight": 0.0,
     "purchase_price_cp": 0,
     "notes": "SRD Uncommon magic ammunition. Grants +1 bonus to attack and damage rolls when fired, then loses its magic after a hit.",
@@ -6466,12 +6579,13 @@
       "ammunition",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "special_ammunition"
   },
   {
     "item_id": "ammunition_plus2",
     "name": "Ammunition +2",
-    "category": "weapon",
+    "category": "ammunition",
     "weight": 0.0,
     "purchase_price_cp": 0,
     "notes": "SRD Rare magic ammunition. Grants +2 bonus to attack and damage rolls when fired, then loses its magic after a hit.",
@@ -6479,12 +6593,13 @@
       "ammunition",
       "magic item",
       "bonus:+2"
-    ]
+    ],
+    "subcategory": "special_ammunition"
   },
   {
     "item_id": "ammunition_plus3",
     "name": "Ammunition +3",
-    "category": "weapon",
+    "category": "ammunition",
     "weight": 0.0,
     "purchase_price_cp": 0,
     "notes": "SRD Very rare magic ammunition. Grants +3 bonus to attack and damage rolls when fired, then loses its magic after a hit.",
@@ -6492,12 +6607,13 @@
       "ammunition",
       "magic item",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "special_ammunition"
   },
   {
     "item_id": "arrow_of_slaying",
     "name": "Arrow of Slaying",
-    "category": "weapon",
+    "category": "ammunition",
     "weight": 0.0,
     "purchase_price_cp": 0,
     "notes": "SRD Very rare magic ammunition. Deals extra damage against a designated creature type on a failed save.",
@@ -6505,7 +6621,8 @@
       "ammunition",
       "magic item",
       "rarity:very rare"
-    ]
+    ],
+    "subcategory": "arrow"
   },
   {
     "item_id": "battleaxe",
@@ -6518,7 +6635,8 @@
       "weapon",
       "damage:1d8 Slashing",
       "mastery:Topple"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "berserker_axe",
@@ -6533,7 +6651,8 @@
       "requires attunement",
       "cursed",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "blowgun",
@@ -6546,7 +6665,8 @@
       "weapon",
       "damage:1 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "martial_ranged_weapon"
   },
   {
     "item_id": "club",
@@ -6559,7 +6679,8 @@
       "weapon",
       "damage:1d4 Bludgeoning",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "dagger",
@@ -6572,7 +6693,8 @@
       "weapon",
       "damage:1d4 Piercing",
       "mastery:Nick"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "dagger_of_venom",
@@ -6586,7 +6708,8 @@
       "magic item",
       "bonus:+1",
       "poison"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "dancing_sword",
@@ -6599,7 +6722,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "dart",
@@ -6612,7 +6736,8 @@
       "weapon",
       "damage:1d4 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "defender",
@@ -6626,7 +6751,8 @@
       "magic item",
       "requires attunement",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "dragon_slayer",
@@ -6639,7 +6765,8 @@
       "weapon",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "dwarven_thrower",
@@ -6653,7 +6780,8 @@
       "magic item",
       "requires attunement",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "energy_bow",
@@ -6666,7 +6794,8 @@
       "weapon",
       "magic item",
       "rarity:rare"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "flail",
@@ -6679,7 +6808,8 @@
       "weapon",
       "damage:1d8 Bludgeoning",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "flame_tongue",
@@ -6693,7 +6823,8 @@
       "magic item",
       "requires attunement",
       "damage:fire"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "frost_brand",
@@ -6707,7 +6838,8 @@
       "magic item",
       "requires attunement",
       "damage:cold"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "giant_slayer",
@@ -6719,7 +6851,8 @@
     "tags": [
       "weapon",
       "magic item"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "glaive",
@@ -6732,7 +6865,8 @@
       "weapon",
       "damage:1d10 Slashing",
       "mastery:Graze"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "greataxe",
@@ -6745,7 +6879,8 @@
       "weapon",
       "damage:1d12 Slashing",
       "mastery:Cleave"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "greatclub",
@@ -6758,7 +6893,8 @@
       "weapon",
       "damage:1d8 Bludgeoning",
       "mastery:Push"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "greatsword",
@@ -6771,7 +6907,8 @@
       "weapon",
       "damage:2d6 Slashing",
       "mastery:Graze"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "halberd",
@@ -6784,12 +6921,13 @@
       "weapon",
       "damage:1d10 Slashing",
       "mastery:Cleave"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "hammer_of_thunderbolts",
     "name": "Hammer of Thunderbolts",
-    "category": "weapon",
+    "category": "ammunition",
     "weight": 10.0,
     "purchase_price_cp": 0,
     "notes": "SRD magic item. Legendary magic maul, requires attunement. Works with giant-strength items and can unleash thunderous power.",
@@ -6798,7 +6936,8 @@
       "magic item",
       "requires attunement",
       "damage:thunder"
-    ]
+    ],
+    "subcategory": "crossbow_bolt"
   },
   {
     "item_id": "hand_crossbow",
@@ -6811,7 +6950,8 @@
       "weapon",
       "damage:1d6 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "martial_ranged_weapon"
   },
   {
     "item_id": "handaxe",
@@ -6824,7 +6964,8 @@
       "weapon",
       "damage:1d6 Slashing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "heavy_crossbow",
@@ -6837,7 +6978,8 @@
       "weapon",
       "damage:1d10 Piercing",
       "mastery:Push"
-    ]
+    ],
+    "subcategory": "martial_ranged_weapon"
   },
   {
     "item_id": "holy_avenger",
@@ -6851,7 +6993,8 @@
       "magic item",
       "requires attunement",
       "damage:radiant"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "javelin",
@@ -6864,7 +7007,8 @@
       "weapon",
       "damage:1d6 Piercing",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "javelin_of_lightning",
@@ -6877,7 +7021,8 @@
       "weapon",
       "magic item",
       "damage:lightning"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "lance",
@@ -6890,7 +7035,8 @@
       "weapon",
       "damage:1d10 Piercing",
       "mastery:Topple"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "light_crossbow",
@@ -6903,7 +7049,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "simple_ranged_weapon"
   },
   {
     "item_id": "light_hammer",
@@ -6916,7 +7063,8 @@
       "weapon",
       "damage:1d4 Bludgeoning",
       "mastery:Nick"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "longbow",
@@ -6929,7 +7077,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "martial_ranged_weapon"
   },
   {
     "item_id": "longsword",
@@ -6942,7 +7091,8 @@
       "weapon",
       "damage:1d8 Slashing",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "luck_blade",
@@ -6955,7 +7105,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "mace",
@@ -6968,7 +7119,8 @@
       "weapon",
       "damage:1d6 Bludgeoning",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "mace_of_disruption",
@@ -6982,7 +7134,8 @@
       "magic item",
       "requires attunement",
       "damage:radiant"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "mace_of_smiting",
@@ -6995,7 +7148,8 @@
       "weapon",
       "magic item",
       "damage:force"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "mace_of_terror",
@@ -7008,7 +7162,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "maul",
@@ -7021,7 +7176,8 @@
       "weapon",
       "damage:2d6 Bludgeoning",
       "mastery:Topple"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "morningstar",
@@ -7034,7 +7190,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "musket",
@@ -7047,7 +7204,8 @@
       "weapon",
       "damage:1d12 Piercing",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "nine_lives_stealer",
@@ -7061,7 +7219,8 @@
       "magic item",
       "requires attunement",
       "critical"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "oathbow",
@@ -7074,7 +7233,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "pike",
@@ -7087,7 +7247,8 @@
       "weapon",
       "damage:1d10 Piercing",
       "mastery:Push"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "pistol",
@@ -7100,7 +7261,8 @@
       "weapon",
       "damage:1d10 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "quarterstaff",
@@ -7113,7 +7275,8 @@
       "weapon",
       "damage:1d6 Bludgeoning",
       "mastery:Topple"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "quarterstaff_of_the_acrobat",
@@ -7126,7 +7289,8 @@
       "weapon",
       "magic item",
       "rarity:uncommon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "rapier",
@@ -7139,7 +7303,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "scimitar",
@@ -7152,7 +7317,8 @@
       "weapon",
       "damage:1d6 Slashing",
       "mastery:Nick"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "scimitar_of_speed",
@@ -7166,7 +7332,8 @@
       "magic item",
       "requires attunement",
       "bonus:+2"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "shortbow",
@@ -7179,7 +7346,8 @@
       "weapon",
       "damage:1d6 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "simple_ranged_weapon"
   },
   {
     "item_id": "shortsword",
@@ -7192,7 +7360,8 @@
       "weapon",
       "damage:1d6 Piercing",
       "mastery:Vex"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "sickle",
@@ -7205,7 +7374,8 @@
       "weapon",
       "damage:1d4 Slashing",
       "mastery:Nick"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "sling",
@@ -7218,7 +7388,8 @@
       "weapon",
       "damage:1d4 Bludgeoning",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "simple_ranged_weapon"
   },
   {
     "item_id": "spear",
@@ -7231,7 +7402,8 @@
       "weapon",
       "damage:1d6 Piercing",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "simple_melee_weapon"
   },
   {
     "item_id": "staff_of_charming",
@@ -7245,7 +7417,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_fire",
@@ -7259,7 +7432,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_frost",
@@ -7273,7 +7447,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_healing",
@@ -7287,7 +7462,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_power",
@@ -7301,7 +7477,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_striking",
@@ -7315,7 +7492,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_swarming_insects",
@@ -7329,7 +7507,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "staff_of_the_woodlands",
@@ -7343,7 +7522,8 @@
       "focus",
       "requires attunement",
       "weapon"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "sun_blade",
@@ -7357,7 +7537,8 @@
       "magic item",
       "requires attunement",
       "damage:radiant"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "sword_of_answering",
@@ -7370,7 +7551,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "sword_of_life_stealing",
@@ -7384,7 +7566,8 @@
       "magic item",
       "requires attunement",
       "damage:necrotic"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "sword_of_sharpness",
@@ -7397,7 +7580,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "sword_of_wounding",
@@ -7411,7 +7595,8 @@
       "magic item",
       "requires attunement",
       "damage:necrotic"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "thunderous_greatclub",
@@ -7424,7 +7609,8 @@
       "weapon",
       "magic item",
       "damage:thunder"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "trident",
@@ -7437,7 +7623,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Topple"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "trident_of_fish_command",
@@ -7450,7 +7637,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "vicious_weapon",
@@ -7463,7 +7651,8 @@
       "weapon",
       "magic item",
       "critical"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "vorpal_sword",
@@ -7478,7 +7667,8 @@
       "requires attunement",
       "bonus:+3",
       "critical"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "war_pick",
@@ -7491,7 +7681,8 @@
       "weapon",
       "damage:1d8 Piercing",
       "mastery:Sap"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "warhammer",
@@ -7504,7 +7695,8 @@
       "weapon",
       "damage:1d8 Bludgeoning",
       "mastery:Push"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "weapon_plus1",
@@ -7517,7 +7709,8 @@
       "weapon",
       "magic item",
       "bonus:+1"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "weapon_plus2",
@@ -7530,7 +7723,8 @@
       "weapon",
       "magic item",
       "bonus:+2"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "weapon_plus3",
@@ -7543,7 +7737,8 @@
       "weapon",
       "magic item",
       "bonus:+3"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "weapon_of_warning",
@@ -7556,7 +7751,8 @@
       "weapon",
       "magic item",
       "requires attunement"
-    ]
+    ],
+    "subcategory": "magic_weapon"
   },
   {
     "item_id": "whip",
@@ -7569,7 +7765,8 @@
       "weapon",
       "damage:1d4 Slashing",
       "mastery:Slow"
-    ]
+    ],
+    "subcategory": "martial_melee_weapon"
   },
   {
     "item_id": "airship",

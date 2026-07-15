@@ -7,7 +7,7 @@ from dnd_combat_engine.models.character import Character
 from dnd_combat_engine.models.effects import EffectDefinition
 from dnd_combat_engine.models.encounters import Encounter
 from dnd_combat_engine.models.monsters import Monster
-from dnd_combat_engine.models.multiplayer import HostedCampaignSession
+from dnd_combat_engine.models.multiplayer import HostedCampaignSession, HostedCampaignState
 from dnd_combat_engine.models.spells import Spell
 from dnd_combat_engine.models.srd_catalog import SrdCatalog
 from dnd_combat_engine.persistence.json_store import JsonFileStore
@@ -62,6 +62,18 @@ class PersistenceService:
     def list_hosted_session_ids(self) -> list[str]:
         """List saved hosted campaign session ids."""
         return self.store.list_ids("hosted_sessions")
+
+    def save_hosted_state(self, state: HostedCampaignState) -> None:
+        """Save the synchronized state for a hosted session."""
+        self.store.save("hosted_session_states", state.session_id, state.to_dict())
+
+    def load_hosted_state(self, session_id: str) -> HostedCampaignState:
+        """Load synchronized state, returning an empty snapshot when none exists."""
+        try:
+            payload = self.store.load("hosted_session_states", session_id)
+        except FileNotFoundError:
+            return HostedCampaignState(session_id)
+        return HostedCampaignState.from_dict(payload)
 
     def save_spell(self, spell: Spell) -> None:
         """Save a spell as a JSON document."""

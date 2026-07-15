@@ -1,377 +1,425 @@
 {
-    "abilities":  {
-                      "charisma":  9,
-                      "constitution":  18,
-                      "dexterity":  13,
-                      "intelligence":  10,
-                      "strength":  12,
-                      "wisdom":  15
-                  },
-    "armor":  {
-                  "armor_class":  20,
-                  "name":  "Plate and Shield",
-                  "stealth_disadvantage":  true
-              },
-    "character_id":  "ravenisis",
-    "conditions":  [
-
-                   ],
-    "features":  [
-                     "Cleric 6",
-                     "Hill Dwarf",
-                     "Folk Hero",
-                     "Life Domain",
-                     "Disciple of Life",
-                     "Channel Divinity: Turn Undead",
-                     "Channel Divinity: Preserve Life",
-                     "Destroy Undead",
-                     "Blessed Healer",
-                     "Dwarven Resilience",
-                     "Darkvision 60 ft.",
-                     "Cantrips: Light, Sacred Flame, Thaumaturgy",
-                     "Domain Spells: Bless, Cure Wounds, Lesser Restoration, Spiritual Weapon, Beacon of Hope, Revivify",
-                     "Prepared Spells: Guiding Bolt"
-                 ],
-    "hit_points":  {
-                       "current":  63,
-                       "maximum":  63,
-                       "temporary":  0
-                   },
-    "inventory":  [
-                      {
-                          "category":  "other",
-                          "item_id":  "bag_of_holding",
-                          "name":  "Bag of Holding",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "armor",
-                          "item_id":  "shield",
-                          "name":  "Shield",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "armor"
-                                   ],
-                          "weight":  6.0
-                      },
-                      {
-                          "category":  "armor",
-                          "item_id":  "plate",
-                          "name":  "Plate",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "armor"
-                                   ],
-                          "weight":  65.0
-                      },
-                      {
-                          "category":  "weapon",
-                          "item_id":  "handaxe",
-                          "name":  "Handaxe",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "weapon"
-                                   ],
-                          "weight":  2.0
-                      },
-                      {
-                          "category":  "weapon",
-                          "item_id":  "warhammer",
-                          "name":  "Warhammer",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "weapon"
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "backpack",
-                          "name":  "Backpack",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "other",
-                          "item_id":  "clothes_common",
-                          "name":  "Clothes, Common",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  3.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "pouch",
-                          "name":  "Pouch",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  1.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "holy_symbol",
-                          "name":  "Holy Symbol",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "spellcasting_focus"
-                                   ],
-                          "weight":  0.0
-                      },
-                      {
-                          "category":  "tool",
-                          "item_id":  "playing_card_set",
-                          "name":  "Playing Card Set",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "tool"
-                                   ],
-                          "weight":  0.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "rope",
-                          "name":  "Rope",
-                          "notes":  null,
-                          "quantity":  2,
-                          "tags":  [
-
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "bullseye_lantern",
-                          "name":  "Bullseye Lantern",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  2.0
-                      },
-                      {
-                          "category":  "consumable",
-                          "item_id":  "healers_kit",
-                          "name":  "Healer\u0027s Kit",
-                          "notes":  null,
-                          "quantity":  3,
-                          "tags":  [
-
-                                   ],
-                          "weight":  3.0
-                      },
-                      {
-                          "category":  "weapon",
-                          "item_id":  "arrows",
-                          "name":  "Arrows",
-                          "notes":  null,
-                          "quantity":  20,
-                          "tags":  [
-                                       "ammunition"
-                                   ],
-                          "weight":  0.05
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "crowbar",
-                          "name":  "Crowbar",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "hammer",
-                          "name":  "Hammer",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  3.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "piton",
-                          "name":  "Piton",
-                          "notes":  null,
-                          "quantity":  10,
-                          "tags":  [
-
-                                   ],
-                          "weight":  0.25
-                      },
-                      {
-                          "category":  "consumable",
-                          "item_id":  "rations_1_day",
-                          "name":  "Rations (1 day)",
-                          "notes":  null,
-                          "quantity":  8,
-                          "tags":  [
-
-                                   ],
-                          "weight":  2.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "tinderbox",
-                          "name":  "Tinderbox",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  1.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "torch",
-                          "name":  "Torch",
-                          "notes":  null,
-                          "quantity":  10,
-                          "tags":  [
-
-                                   ],
-                          "weight":  1.0
-                      },
-                      {
-                          "category":  "adventuring_gear",
-                          "item_id":  "waterskin",
-                          "name":  "Waterskin",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-
-                                   ],
-                          "weight":  5.0
-                      },
-                      {
-                          "category":  "tool",
-                          "item_id":  "masons_tools",
-                          "name":  "Mason\u0027s Tools",
-                          "notes":  null,
-                          "quantity":  1,
-                          "tags":  [
-                                       "tool"
-                                   ],
-                          "weight":  8.0
-                      },
-                      {
-                          "category":  "consumable",
-                          "item_id":  "potion_of_healing_greater",
-                          "name":  "Potion of Healing (Greater)",
-                          "notes":  null,
-                          "purchase_price_cp":  50000,
-                          "quantity":  1,
-                          "tags":  [
-                                       "potion"
-                                   ],
-                          "weight":  0.5
-                      }
-                  ],
-    "level":  6,
-    "name":  "Ravenisis",
-    "currency":  {
-                     "cp":  0,
-                     "gp":  0,
-                     "pp":  0,
-                     "sp":  0
-                 },
-    "resources":  {
-                      "channel_divinity":  {
-                                               "current":  2,
-                                               "maximum":  2,
-                                               "name":  "channel_divinity"
-                                           },
-                      "hit_dice":  {
-                                       "current":  6,
-                                       "maximum":  6,
-                                       "name":  "hit_dice"
-                                   },
-                      "spell_slot_1":  {
-                                           "current":  4,
-                                           "maximum":  4,
-                                           "name":  "spell_slot_1"
-                                       },
-                      "spell_slot_2":  {
-                                           "current":  3,
-                                           "maximum":  3,
-                                           "name":  "spell_slot_2"
-                                       },
-                      "spell_slot_3":  {
-                                           "current":  3,
-                                           "maximum":  3,
-                                           "name":  "spell_slot_3"
-                                       }
-                  },
-    "skills":  [
-                   "animal_handling",
-                   "insight",
-                   "medicine",
-                   "survival"
-               ],
-    "saving_throw_proficiencies":  [
-                                       "wisdom",
-                                       "charisma"
-                                   ],
-    "weapons":  [
-                    {
-                        "damage":  [
-                                       {
-                                           "damage_type":  "slashing",
-                                           "dice":  "1d6+1"
-                                       }
-                                   ],
-                        "name":  "Handaxe",
-                        "properties":  [
-                                           "simple",
-                                           "light",
-                                           "thrown",
-                                           "vex"
-                                       ],
-                        "range_long":  60,
-                        "range_normal":  20
-                    },
-                    {
-                        "damage":  [
-                                       {
-                                           "damage_type":  "bludgeoning",
-                                           "dice":  "1d8+1"
-                                       }
-                                   ],
-                        "name":  "Warhammer",
-                        "properties":  [
-                                           "martial",
-                                           "versatile",
-                                           "push"
-                                       ],
-                        "range_long":  null,
-                        "range_normal":  null
-                    }
-                ],
-    "schema_version":  1
+  "abilities": {
+    "charisma": 9,
+    "constitution": 18,
+    "dexterity": 13,
+    "intelligence": 10,
+    "strength": 12,
+    "wisdom": 15
+  },
+  "armor": {
+    "armor_class": 20,
+    "name": "Plate and Shield",
+    "stealth_disadvantage": true
+  },
+  "character_id": "ravenisis",
+  "conditions": [],
+  "features": [
+    "Cleric 6",
+    "Hill Dwarf",
+    "Folk Hero",
+    "Life Domain",
+    "Disciple of Life",
+    "Channel Divinity: Turn Undead",
+    "Channel Divinity: Preserve Life",
+    "Destroy Undead",
+    "Blessed Healer",
+    "Dwarven Resilience",
+    "Darkvision 60 ft.",
+    "Cantrips: Light, Sacred Flame, Thaumaturgy",
+    "Domain Spells: Bless, Cure Wounds, Lesser Restoration, Spiritual Weapon, Beacon of Hope, Revivify"
+  ],
+  "hit_points": {
+    "current": 63,
+    "maximum": 63,
+    "temporary": 0
+  },
+  "inventory": [
+    {
+      "category": "adventuring_gear",
+      "item_id": "bag_of_holding",
+      "name": "Bag of Holding",
+      "notes": "Wondrous item. Stores far more than its outside dimensions suggest while keeping a fixed carried weight.",
+      "purchase_price_cp": 400000,
+      "quantity": 1,
+      "subcategory": "container",
+      "tags": [
+        "container",
+        "wondrous item"
+      ],
+      "weight": 15.0
+    },
+    {
+      "category": "armor",
+      "item_id": "shield",
+      "name": "Shield",
+      "notes": "SRD armor. Armor Class: +2. Strength: \u2014. Stealth: \u2014.",
+      "purchase_price_cp": 1000,
+      "quantity": 1,
+      "subcategory": "shield",
+      "tags": [
+        "ac:+2",
+        "armor"
+      ],
+      "weight": 6.0
+    },
+    {
+      "category": "armor",
+      "item_id": "plate",
+      "name": "Plate",
+      "notes": "SRD armor. Armor Class: 18. Strength: Str 15. Stealth: Disadvantage.",
+      "purchase_price_cp": 150000,
+      "quantity": 1,
+      "subcategory": "heavy_armor",
+      "tags": [
+        "ac:18",
+        "armor"
+      ],
+      "weight": 65.0
+    },
+    {
+      "category": "weapon",
+      "item_id": "handaxe",
+      "name": "Handaxe",
+      "notes": "SRD weapon. Damage: 1d6 Slashing. Properties: Light, Thrown (Range 20/60). Mastery: Vex.",
+      "purchase_price_cp": 500,
+      "quantity": 1,
+      "subcategory": "simple_melee_weapon",
+      "tags": [
+        "damage:1d6 Slashing",
+        "mastery:Vex",
+        "weapon"
+      ],
+      "weight": 2.0
+    },
+    {
+      "category": "weapon",
+      "item_id": "warhammer",
+      "name": "Warhammer",
+      "notes": "SRD weapon. Damage: 1d8 Bludgeoning. Properties: Versatile (1d10). Mastery: Push.",
+      "purchase_price_cp": 1500,
+      "quantity": 1,
+      "subcategory": "martial_melee_weapon",
+      "tags": [
+        "damage:1d8 Bludgeoning",
+        "mastery:Push",
+        "weapon"
+      ],
+      "weight": 5.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "backpack",
+      "name": "Backpack",
+      "notes": "SRD adventuring gear. A Backpack holds up to 30 pounds within 1 cubic foot. It can also serve as a saddlebag.",
+      "purchase_price_cp": 200,
+      "quantity": 1,
+      "subcategory": "container",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 5.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "clothes_common",
+      "name": "Clothes, Common",
+      "notes": "SRD adventuring gear. A practical set of common clothes.",
+      "purchase_price_cp": 50,
+      "quantity": 1,
+      "subcategory": "clothing",
+      "tags": [
+        "adventuring_gear",
+        "clothing"
+      ],
+      "weight": 3.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "pouch",
+      "name": "Pouch",
+      "notes": "SRD adventuring gear. A Pouch holds up to 6 pounds within one-fifth of a cubic foot.",
+      "purchase_price_cp": 50,
+      "quantity": 1,
+      "subcategory": "container",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 1.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "holy_symbol",
+      "name": "Holy Symbol",
+      "notes": "SRD holy symbol. An amulet, emblem, or reliquary used as a spellcasting focus when the character's class permits it.",
+      "purchase_price_cp": 500,
+      "quantity": 1,
+      "subcategory": "spellcasting_focus",
+      "tags": [
+        "holy symbol",
+        "spellcasting_focus"
+      ],
+      "weight": 0.0
+    },
+    {
+      "category": "tool",
+      "item_id": "playing_card_set",
+      "name": "Playing Card Set",
+      "notes": "SRD gaming set variant. Proficiency applies to checks made with this tool.",
+      "purchase_price_cp": 50,
+      "quantity": 1,
+      "subcategory": "gaming_set",
+      "tags": [
+        "gaming set",
+        "tool"
+      ],
+      "weight": 0.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "rope",
+      "name": "Rope",
+      "notes": "SRD adventuring gear. As a Utilize action, you can tie a knot with Rope if you succeed on a DC 10 Dexterity (Sleight of Hand) check. The Rope can be burst with a successful DC 20 Strength (Athletics) check.",
+      "purchase_price_cp": 100,
+      "quantity": 2,
+      "subcategory": "climbing_gear",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 5.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "bullseye_lantern",
+      "name": "Bullseye Lantern",
+      "notes": "SRD adventuring gear. A Bullseye Lantern burns Oil as fuel to cast Bright Light in a 60-foot Cone and Dim Light for an additional 60 feet.",
+      "purchase_price_cp": 1000,
+      "quantity": 1,
+      "subcategory": "light_source",
+      "tags": [
+        "adventuring_gear",
+        "light_source"
+      ],
+      "weight": 2.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "healers_kit",
+      "name": "Healer's Kit",
+      "notes": "SRD adventuring gear. A Healer's Kit has ten uses. As a Utilize action, you can expend one of its uses to stabilize an Unconscious creature that has 0 Hit Points without needing to make a Wisdom (Medicine) check.",
+      "purchase_price_cp": 500,
+      "quantity": 3,
+      "subcategory": "healing_kit",
+      "tags": [
+        "adventuring_gear",
+        "limited_use"
+      ],
+      "weight": 3.0
+    },
+    {
+      "category": "ammunition",
+      "item_id": "arrows",
+      "name": "Arrows",
+      "notes": "SRD ammunition. Amount: 20. Typical storage: Quiver.",
+      "purchase_price_cp": 5,
+      "quantity": 20,
+      "subcategory": "arrow",
+      "tags": [
+        "ammunition"
+      ],
+      "weight": 0.05
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "crowbar",
+      "name": "Crowbar",
+      "notes": "SRD adventuring gear. Using a Crowbar gives you Advantage on Strength checks where the Crowbar's leverage can be applied.",
+      "purchase_price_cp": 200,
+      "quantity": 1,
+      "subcategory": "adventuring_gear",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 5.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "hammer",
+      "name": "Hammer",
+      "notes": "SRD adventuring gear. Useful for pitons, nails, stakes, and improvised camp repairs.",
+      "purchase_price_cp": 100,
+      "quantity": 1,
+      "subcategory": "artisan_or_utility_tool",
+      "tags": [
+        "adventuring_gear",
+        "tool"
+      ],
+      "weight": 3.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "piton",
+      "name": "Piton",
+      "notes": "SRD adventuring gear. Spike used with rope for climbing, anchoring, or securing doors.",
+      "purchase_price_cp": 5,
+      "quantity": 10,
+      "subcategory": "climbing_gear",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 0.25
+    },
+    {
+      "category": "consumable",
+      "item_id": "rations_1_day",
+      "name": "Rations (1 day)",
+      "notes": "SRD adventuring gear. Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See \"Malnutrition\" in \"Rules Glossary\" for the risks of not eating.",
+      "purchase_price_cp": 50,
+      "quantity": 8,
+      "subcategory": "food",
+      "tags": [
+        "consumable"
+      ],
+      "weight": 2.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "tinderbox",
+      "name": "Tinderbox",
+      "notes": "SRD adventuring gear. A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch\u2014or anything else with exposed fuel\u2014takes a Bonus Action.",
+      "purchase_price_cp": 50,
+      "quantity": 1,
+      "subcategory": "firemaking_gear",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 1.0
+    },
+    {
+      "category": "consumable",
+      "item_id": "torch",
+      "name": "Torch",
+      "notes": "SRD adventuring gear. A Torch burns for 1 hour, casting Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. When you take the Attack action, you can attack with the Torch, using it as a Simple Melee weapon.",
+      "purchase_price_cp": 1,
+      "quantity": 10,
+      "subcategory": "light_source",
+      "tags": [
+        "consumable",
+        "light_source"
+      ],
+      "weight": 1.0
+    },
+    {
+      "category": "adventuring_gear",
+      "item_id": "waterskin",
+      "name": "Waterskin",
+      "notes": "SRD adventuring gear. A Waterskin holds up to 4 pints. If you don't drink sufficient water, you risk dehydration (see \"Rules Glossary\").",
+      "purchase_price_cp": 20,
+      "quantity": 1,
+      "subcategory": "container",
+      "tags": [
+        "adventuring_gear"
+      ],
+      "weight": 5.0
+    },
+    {
+      "category": "tool",
+      "item_id": "masons_tools",
+      "name": "Mason's Tools",
+      "notes": "SRD tool. Ability: Strength. Utilize: Chisel a symbol or hole in stone (DC 10). Craft: Block and Tackle.",
+      "purchase_price_cp": 1000,
+      "quantity": 1,
+      "subcategory": "artisan_or_utility_tool",
+      "tags": [
+        "tool"
+      ],
+      "weight": 8.0
+    },
+    {
+      "category": "consumable",
+      "item_id": "potion_of_healing_greater",
+      "name": "Potion of Healing (Greater)",
+      "notes": "Magic potion. Drink or administer it to restore 4d4 + 4 hit points.",
+      "purchase_price_cp": 50000,
+      "quantity": 1,
+      "subcategory": "potion",
+      "tags": [
+        "consumable",
+        "healing",
+        "potion"
+      ],
+      "weight": 0.5
+    }
+  ],
+  "level": 6,
+  "name": "Ravenisis",
+  "resources": {
+    "channel_divinity": {
+      "current": 2,
+      "maximum": 2,
+      "name": "channel_divinity"
+    },
+    "hit_dice": {
+      "current": 6,
+      "maximum": 6,
+      "name": "hit_dice"
+    },
+    "spell_slot_1": {
+      "current": 4,
+      "maximum": 4,
+      "name": "spell_slot_1"
+    },
+    "spell_slot_2": {
+      "current": 3,
+      "maximum": 3,
+      "name": "spell_slot_2"
+    },
+    "spell_slot_3": {
+      "current": 3,
+      "maximum": 3,
+      "name": "spell_slot_3"
+    }
+  },
+  "schema_version": 1,
+  "skills": [
+    "animal_handling",
+    "insight",
+    "medicine",
+    "survival"
+  ],
+  "weapons": [
+    {
+      "damage": [
+        {
+          "damage_type": "slashing",
+          "dice": "1d6+1"
+        }
+      ],
+      "name": "Handaxe",
+      "properties": [
+        "simple",
+        "light",
+        "thrown",
+        "vex"
+      ],
+      "range_long": 60,
+      "range_normal": 20
+    },
+    {
+      "damage": [
+        {
+          "damage_type": "bludgeoning",
+          "dice": "1d8+1"
+        }
+      ],
+      "name": "Warhammer",
+      "properties": [
+        "martial",
+        "versatile",
+        "push"
+      ],
+      "range_long": null,
+      "range_normal": null
+    }
+  ]
 }

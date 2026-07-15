@@ -14,10 +14,26 @@ def create_embedded_popup(qt: Any, parent: Any) -> Any | None:
     )
     if widget_class is None:
         return None
+
+    class EscapeClosablePopup(widget_class):
+        def keyPressEvent(self, event: Any) -> None:  # noqa: N802
+            if _is_escape_event(qt, event):
+                callback = getattr(self, "_dnd_escape_callback", None)
+                if callable(callback):
+                    callback()
+                elif hasattr(self, "close"):
+                    self.close()
+                if hasattr(event, "accept"):
+                    event.accept()
+                return
+            handler = getattr(super(), "keyPressEvent", None)
+            if callable(handler):
+                handler(event)
+
     try:
-        popup = widget_class(parent)
+        popup = EscapeClosablePopup(parent)
     except TypeError:
-        popup = widget_class()
+        popup = EscapeClosablePopup()
     if hasattr(popup, "setObjectName"):
         popup.setObjectName("EmbeddedPopup")
     return popup
@@ -63,3 +79,14 @@ def _center_over_parent(parent: Any, popup: Any) -> None:
 def _dimension(widget: Any, name: str) -> int:
     value = getattr(widget, name, None)
     return int(value()) if callable(value) else 0
+
+
+def _is_escape_event(qt: Any, event: Any) -> bool:
+    if not hasattr(event, "key"):
+        return False
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    key_namespace = getattr(qt_namespace, "Key", qt_namespace)
+    escape = getattr(key_namespace, "Key_Escape", None)
+    if escape is None:
+        escape = getattr(qt_namespace, "Key_Escape", None)
+    return escape is not None and event.key() == escape

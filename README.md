@@ -1,5 +1,25 @@
 # DnDCombatEngine
 
+## Download And Install The Latest Release
+
+1. Open the [DnDCombatEngine Releases page](https://github.com/Ravenisis/DnDCombatEngine/releases).
+2. Select the release with the highest version number, then expand **Assets** if the files are hidden.
+3. Download `DnDCombatEngine-<version>-x64.msi` for the standard Windows installation. The `Setup.exe` file is also available as a guided installer.
+4. Open the downloaded installer, approve the Windows security prompt, and follow the installation steps.
+5. Launch **DnDCombatEngine** from the Windows Start Menu or its desktop shortcut.
+
+Do not download the automatically generated **Source code** archives unless you plan to run or build the Python project yourself.
+
+### Which Download Should I Choose?
+
+| Download | Best for | What it does |
+| --- | --- | --- |
+| `DnDCombatEngine-<version>-x64.msi` | Most Windows users | Uses the standard Windows Installer service, registers the application for repair and uninstall, and creates normal Start Menu entries. This is the recommended download. |
+| `DnDCombatEngine-<version>-Setup.exe` | Users who prefer a guided setup wizard | Runs the Inno Setup installer with a familiar step-by-step interface and creates installed shortcuts and an uninstaller. |
+| `DnDCombatEngine-<version>-windows.zip` | Portable use or troubleshooting | Contains the packaged application folder without installing anything. Extract the entire archive, then run `DnDCombatEngine.exe`. Windows does not create uninstall records or shortcuts automatically. |
+
+The `.msi` and `Setup.exe` contain the same application. Install only one of them. The `.zip` must remain fully extracted because the executable depends on the bundled files beside it.
+
 DnDCombatEngine is a Windows desktop campaign controller for Dungeons & Dragons
 combat. It is being built for the table: import characters, choose a party
 leader, select targets, press action-bar buttons, track resources, and keep the
@@ -81,11 +101,15 @@ See [Import Character Sheet](docs/import-character-sheet.md).
 - Action bar with spell, ability, attack, save, and quick-roll workflows.
 - Spell slot tracking and rest recovery.
 - Inventory window with containers, item icons, quantities, currency, money log,
-  and consumable use.
+  consumable use, and drag-and-drop storage.
+- Equipment window with body-positioned gear slots and base-versus-equipped stat
+  comparisons.
 - PDF and URL character sheet import with editable confirmation.
 - JSON-backed data for campaigns, characters, monsters, spells, actions, and
   encounters.
 - Windows EXE, guided installer, and MSI packaging.
+- Hosted-session backend snapshots and live WebSocket event broadcasts for HP,
+  initiative, hit rolls, and action results.
 
 ## Documentation
 
