@@ -348,6 +348,8 @@ def _inventory_header(
     if hasattr(money_log_button, "setToolTip"):
         money_log_button.setToolTip("Show currency changes made while this inventory is open.")
     ledger = qt.QtWidgets.QLineEdit()
+    if hasattr(ledger, "setObjectName"):
+        ledger.setObjectName("CurrencyLedgerInput")
     if hasattr(ledger, "setPlaceholderText"):
         ledger.setPlaceholderText("1PP 100GP")
     if hasattr(ledger, "setFixedWidth"):
@@ -356,9 +358,21 @@ def _inventory_header(
     if alignment is not None and hasattr(ledger, "setAlignment"):
         ledger.setAlignment(alignment)
     buttons = qt.QtWidgets.QWidget()
-    button_layout = qt.QtWidgets.QVBoxLayout(buttons)
+    if hasattr(buttons, "setObjectName"):
+        buttons.setObjectName("CurrencyLedgerActions")
+    if hasattr(buttons, "setFixedWidth"):
+        buttons.setFixedWidth(144)
+    button_layout = qt.QtWidgets.QHBoxLayout(buttons)
+    if hasattr(button_layout, "setContentsMargins"):
+        button_layout.setContentsMargins(0, 0, 0, 0)
+    if hasattr(button_layout, "setSpacing"):
+        button_layout.setSpacing(4)
     deposit = qt.QtWidgets.QPushButton("Deposit")
     withdraw = qt.QtWidgets.QPushButton("Withdraw")
+    if hasattr(deposit, "setObjectName"):
+        deposit.setObjectName("CurrencyDepositButton")
+    if hasattr(withdraw, "setObjectName"):
+        withdraw.setObjectName("CurrencyWithdrawButton")
     if hasattr(deposit, "setStyleSheet"):
         deposit.setStyleSheet("background:#1f7a3a; color:white;")
     if hasattr(withdraw, "setStyleSheet"):
@@ -423,8 +437,8 @@ def _inventory_header(
         _inventory_header_add(layout, add_item_button, 0, 1)
     _inventory_header_add(layout, money_log_button, 0, 2)
     _inventory_header_add(layout, ledger, 1, 0, 1, 2)
-    _inventory_header_add(layout, buttons, 1, 2)
-    _inventory_header_add(layout, currency_grid, 0, 3, 2, 1)
+    _inventory_header_add(layout, buttons, 2, 0, 1, 2)
+    _inventory_header_add(layout, currency_grid, 0, 3, 3, 1)
     if hasattr(layout, "setColumnStretch"):
         layout.setColumnStretch(0, 1)
     return widget
@@ -449,9 +463,13 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
     dialog_class = getattr(qt.QtWidgets, "QDialog", None)
     if dialog_class is None:
         return None
-    dialog = create_embedded_popup(qt, parent)
+    owner = _owning_tool_window(parent)
+    popup_parent = owner if owner is not None else parent
+    dialog = create_embedded_popup(qt, popup_parent)
     if dialog is None:
         return None
+    if hasattr(dialog, "setObjectName"):
+        dialog.setObjectName("MoneyLogPopup")
     if hasattr(dialog, "setWindowTitle"):
         dialog.setWindowTitle(f"{character_name} Money Log")
     if hasattr(dialog, "resize"):
@@ -467,6 +485,8 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
     else:
         output = qt.QtWidgets.QLabel(text)
     layout.addWidget(output)
+    if hasattr(output, "setFocus"):
+        output.setFocus()
     close_button_class = getattr(qt.QtWidgets, "QPushButton", None)
     if close_button_class is not None:
         close_button = close_button_class("Close")
@@ -475,11 +495,45 @@ def _show_money_log(qt, parent, character_name: str, entries: list[str], current
         if hasattr(close_button, "clicked"):
             close_button.clicked.connect(lambda checked=False: dialog.close())
         layout.addWidget(close_button)
-    dialogs = getattr(parent, "_dnd_money_log_dialogs", [])
+    dialog._dnd_escape_shortcut = (  # noqa: SLF001
+        None if owner is not None else _escape_close_shortcut(qt, dialog)
+    )
+    dialogs = getattr(popup_parent, "_dnd_money_log_dialogs", [])
     dialogs.append(dialog)
-    parent._dnd_money_log_dialogs = dialogs  # noqa: SLF001
-    show_embedded_popup(parent, dialog)
+    popup_parent._dnd_money_log_dialogs = dialogs  # noqa: SLF001
+    if owner is not None:
+        child_popups = getattr(owner, "_dnd_child_popups", [])
+        child_popups.append(dialog)
+        owner._dnd_child_popups = child_popups  # noqa: SLF001
+    show_embedded_popup(popup_parent, dialog)
     return dialog
+
+
+def _owning_tool_window(widget):
+    """Find the movable tool window containing an embedded widget."""
+    current = widget
+    while current is not None:
+        if getattr(current, "_dnd_tool_window", False):
+            return current
+        parent_widget = getattr(current, "parentWidget", None)
+        current = parent_widget() if callable(parent_widget) else None
+    return None
+
+
+def _escape_close_shortcut(qt, dialog):
+    """Bind Escape across a popup and all focused descendants."""
+    qt_gui = getattr(qt, "QtGui", None)
+    shortcut_class = getattr(qt_gui, "QShortcut", None)
+    key_sequence_class = getattr(qt_gui, "QKeySequence", None)
+    if shortcut_class is None or key_sequence_class is None:
+        return None
+    shortcut = shortcut_class(key_sequence_class("Esc"), dialog)
+    context = _qt_shortcut_context(qt, "WidgetWithChildrenShortcut")
+    if context is not None and hasattr(shortcut, "setContext"):
+        shortcut.setContext(context)
+    if hasattr(shortcut, "activated"):
+        shortcut.activated.connect(dialog.close)
+    return shortcut
 
 
 def _money_log_lines(entries: list[str], current_purse: CurrencyPurse) -> tuple[str, ...]:

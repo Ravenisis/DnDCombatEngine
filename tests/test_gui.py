@@ -686,9 +686,11 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
         def __init__(self, parent) -> None:
             parent.layout = self
             self.widgets = []
+            self.placements = []
 
         def addWidget(self, widget, *args) -> None:  # noqa: N802
             self.widgets.append(widget)
+            self.placements.append((widget, args))
 
         def addStretch(self, stretch: int) -> None:  # noqa: N802
             self.stretch = stretch
@@ -725,10 +727,15 @@ def test_inventory_money_log_button_shows_session_currency_changes() -> None:
     money_log_button = header.layout.widgets[1]
     ledger = header.layout.widgets[2]
     deposit_button = header.layout.widgets[3].layout.widgets[0]
+    withdraw_button = header.layout.widgets[3].layout.widgets[1]
 
     ledger.setText("1GP")
     assert ledger.fixed_width == 144
     assert ledger.alignment == "left"
+    assert deposit_button.args == ("Deposit",)
+    assert withdraw_button.args == ("Withdraw",)
+    assert header.layout.placements[2][1] == (1, 0, 1, 2)
+    assert header.layout.placements[3][1] == (2, 0, 1, 2)
     deposit_button.clicked.emit()
     money_log_button.clicked.emit()
 

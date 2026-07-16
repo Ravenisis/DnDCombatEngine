@@ -582,6 +582,21 @@ def test_report_bug_dialog_requires_summary_before_accepting() -> None:
     assert MessageBox.warning_calls[-1][1:] == ("Report Bug", "Summary is required.")
 
 
+def test_multiline_fields_use_tab_for_focus_navigation() -> None:
+    class TextField:
+        tab_changes_focus = False
+
+        def setTabChangesFocus(self, enabled: bool) -> None:  # noqa: N802
+            self.tab_changes_focus = enabled
+
+    field = TextField()
+
+    main_window._enable_tab_focus_navigation(field)  # noqa: SLF001
+
+    assert field.tab_changes_focus is True
+    main_window._enable_tab_focus_navigation(object())  # noqa: SLF001
+
+
 def test_close_campaign_clears_active_state(monkeypatch) -> None:
     window = FakeWindow()
     state = main_window.GuiCampaignState(

@@ -19,6 +19,27 @@ from dnd_combat_engine.models import (
 from dnd_combat_engine.services import InventoryService
 
 
+def test_equipment_slot_positions_match_wearable_rows() -> None:
+    assert equipment.SLOT_POSITIONS == {
+        EquipmentSlot.HEAD: (0, 0),
+        EquipmentSlot.WAIST: (0, 2),
+        EquipmentSlot.NECK: (1, 0),
+        EquipmentSlot.LEGS: (1, 2),
+        EquipmentSlot.CHEST: (2, 0),
+        EquipmentSlot.FEET: (2, 2),
+        EquipmentSlot.BACK: (3, 0),
+        EquipmentSlot.RING_LEFT: (3, 2),
+        EquipmentSlot.HANDS: (4, 0),
+        EquipmentSlot.RING_RIGHT: (4, 2),
+    }
+    assert equipment.HAND_SLOTS == (
+        EquipmentSlot.MAIN_HAND,
+        EquipmentSlot.OFF_HAND,
+    )
+    assert equipment.SLOT_LABELS[EquipmentSlot.RING_LEFT] == "Ring 1"
+    assert equipment.SLOT_LABELS[EquipmentSlot.RING_RIGHT] == "Ring 2"
+
+
 def _equipped_character() -> Character:
     return Character(
         "hero",

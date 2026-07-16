@@ -82,6 +82,12 @@ def create_tool_popup(qt: Any, parent: Any, key: str) -> Any | None:
     class PersistentToolWindow(dialog_class):
         def keyPressEvent(self, event: Any) -> None:  # noqa: N802
             if _is_escape_event(qt, event):
+                child_popup = _top_visible_child_popup(self)
+                if child_popup is not None:
+                    child_popup.close()
+                    if hasattr(event, "accept"):
+                        event.accept()
+                    return
                 callback = getattr(self, "_dnd_escape_callback", None)
                 if callable(callback):
                     callback()
@@ -123,6 +129,16 @@ def create_tool_popup(qt: Any, parent: Any, key: str) -> Any | None:
     popup._dnd_geometry_restored = False
     popup._dnd_geometry_restore_attempted = False
     return popup
+
+
+def _top_visible_child_popup(widget: Any) -> Any | None:
+    """Return the most recently opened visible child overlay."""
+    popups = getattr(widget, "_dnd_child_popups", ())
+    for popup in reversed(popups):
+        is_visible = getattr(popup, "isVisible", None)
+        if not callable(is_visible) or is_visible():
+            return popup
+    return None
 
 
 def show_embedded_popup(parent: Any, popup: Any) -> None:

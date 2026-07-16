@@ -62,3 +62,41 @@ def test_create_app_upgrades_legacy_inventory_metadata(tmp_path: Path) -> None:
         assert by_id[item_id].subcategory == canonical.get("subcategory", "")
     assert by_id["warhammer"].category.value == "weapon"
     assert by_id["warhammer"].notes is not None
+
+
+def test_create_app_restores_legacy_channel_divinity_metadata(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[1] / "data" / "characters" / "ravenisis.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload["features"] = []
+    payload["resources"].pop("channel_divinity", None)
+    characters = tmp_path / "characters"
+    characters.mkdir()
+    (characters / "ravenisis.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    app = create_app(tmp_path)
+    ravenisis = app.characters.load("ravenisis")
+
+    assert "Channel Divinity: Turn Undead" in ravenisis.features
+    assert "Channel Divinity: Preserve Life" in ravenisis.features
+    assert ravenisis.resources["channel_divinity"].current == 2
+    assert ravenisis.resources["channel_divinity"].maximum == 2
+
+
+def test_create_app_merges_missing_channel_options_without_replacing_features(
+    tmp_path: Path,
+) -> None:
+    source = Path(__file__).resolve().parents[1] / "data" / "characters" / "ravenisis.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload["features"] = ["Custom Feature", "Channel Divinity: Turn Undead"]
+    payload["resources"].pop("channel_divinity", None)
+    characters = tmp_path / "characters"
+    characters.mkdir()
+    (characters / "ravenisis.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    app = create_app(tmp_path)
+    ravenisis = app.characters.load("ravenisis")
+
+    assert "Custom Feature" in ravenisis.features
+    assert "Channel Divinity: Turn Undead" in ravenisis.features
+    assert "Channel Divinity: Preserve Life" in ravenisis.features
+    assert ravenisis.resources["channel_divinity"].maximum == 2

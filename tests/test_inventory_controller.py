@@ -32,6 +32,8 @@ def test_inventory_controller_adds_removes_and_autosaves_items(tmp_path) -> None
 
     assert removed is True
     assert restored.inventory[0].quantity == 1
+    assert controller.quantity(restored, "torch") == 1
+    assert controller.quantity(restored, "missing") == 0
     assert controller.carried_weight(restored) == 1.0
 
 

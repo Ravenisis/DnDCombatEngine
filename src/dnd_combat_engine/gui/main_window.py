@@ -679,8 +679,16 @@ def _add_form_row(qt, layout, label: str, widget) -> None:
 
 
 def _add_labeled_text(qt, layout, label: str, widget) -> None:
+    _enable_tab_focus_navigation(widget)
     layout.addWidget(qt.QtWidgets.QLabel(label))
     layout.addWidget(widget)
+
+
+def _enable_tab_focus_navigation(widget) -> None:
+    """Make Tab and Shift+Tab traverse editable multiline fields."""
+    setter = getattr(widget, "setTabChangesFocus", None)
+    if callable(setter):
+        setter(True)
 
 
 def _bug_report_dialog_buttons(qt, dialog):
@@ -1192,6 +1200,7 @@ def _open_inventory_window(
                 state,
                 character_id,
                 item_id,
+                refresh_inventory,
             ),
             on_sell=lambda item_id: _sell_inventory_item(
                 window,
@@ -1201,6 +1210,7 @@ def _open_inventory_window(
                 character_id,
                 item_id,
                 money_log_state,
+                refresh_inventory,
             ),
             on_currency_change=lambda delta_cp: _change_character_currency(
                 window,
@@ -1465,6 +1475,7 @@ def _ask_inventory_item(qt, parent) -> InventoryItem | None:
     catalog_items = _srd_inventory_items()
     item_by_name = {item.name: item for item in catalog_items}
     srd_item = _combo_box(qt, ("Custom Item", *(item.name for item in catalog_items)))
+    _configure_srd_item_filter(qt, srd_item)
     _populate_srd_item_tooltips(qt, srd_item, item_by_name)
     name = qt.QtWidgets.QLineEdit()
     quantity = qt.QtWidgets.QLineEdit("1")
@@ -1546,6 +1557,61 @@ def _connect_srd_inventory_selection(
         _set_text_edit_text(notes, item.notes or "")
 
     signal.connect(apply_item)
+
+
+def _configure_srd_item_filter(qt, selector) -> None:
+    """Make the SRD item selector searchable with a filtered popup list."""
+    if not hasattr(selector, "setEditable"):
+        return
+    selector.setEditable(True)
+    insert_policy = getattr(
+        getattr(getattr(qt.QtWidgets, "QComboBox", None), "InsertPolicy", None),
+        "NoInsert",
+        None,
+    )
+    if insert_policy is not None and hasattr(selector, "setInsertPolicy"):
+        selector.setInsertPolicy(insert_policy)
+    completer = selector.completer() if hasattr(selector, "completer") else None
+    if completer is None:
+        return
+    qt_namespace = getattr(getattr(qt, "QtCore", None), "Qt", None)
+    case_insensitive = getattr(
+        getattr(qt_namespace, "CaseSensitivity", None),
+        "CaseInsensitive",
+        None,
+    )
+    match_contains = getattr(
+        getattr(qt_namespace, "MatchFlag", None),
+        "MatchContains",
+        None,
+    )
+    popup_completion = getattr(
+        getattr(getattr(qt.QtWidgets, "QCompleter", None), "CompletionMode", None),
+        "PopupCompletion",
+        None,
+    )
+    if case_insensitive is not None and hasattr(completer, "setCaseSensitivity"):
+        completer.setCaseSensitivity(case_insensitive)
+    if match_contains is not None and hasattr(completer, "setFilterMode"):
+        completer.setFilterMode(match_contains)
+    if popup_completion is not None and hasattr(completer, "setCompletionMode"):
+        completer.setCompletionMode(popup_completion)
+    line_edit = selector.lineEdit() if hasattr(selector, "lineEdit") else None
+    if line_edit is None:
+        return
+    if hasattr(line_edit, "setPlaceholderText"):
+        line_edit.setPlaceholderText("Type to filter SRD items")
+    text_edited = getattr(line_edit, "textEdited", None)
+    if text_edited is not None and hasattr(text_edited, "connect"):
+        text_edited.connect(lambda value: _show_filtered_srd_items(completer, value))
+
+
+def _show_filtered_srd_items(completer, value: str) -> None:
+    """Update and reveal the SRD completion popup for the current search text."""
+    if hasattr(completer, "setCompletionPrefix"):
+        completer.setCompletionPrefix(str(value))
+    if hasattr(completer, "complete"):
+        completer.complete()
 
 
 def _populate_srd_item_tooltips(qt, selector, item_by_name: dict[str, InventoryItem]) -> None:
@@ -1968,6 +2034,7 @@ def _consume_inventory_item(
     state: GuiCampaignState,
     character_id: str,
     item_id: str,
+    refresh_inventory=None,
 ) -> object:
     try:
         character = app.characters.load(character_id)
@@ -1976,13 +2043,14 @@ def _consume_inventory_item(
         _set_status(window, message)
         return message
     item = next((carried for carried in character.inventory if carried.item_id == item_id), None)
+    changed = False
     if item is None:
         message = f"{character.name} does not have {item_id}."
     elif item.category != ItemCategory.CONSUMABLE:
         message = f"{item.name} is not consumable."
     else:
         message = _consume_known_item(app, character, item)
-        app.inventory.remove_item(character, item.item_id, 1, autosave=True)
+        changed = app.inventory.remove_item(character, item.item_id, 1, autosave=True)
     _append_workspace(window, message)
     _record_campaign_activity(app, state, str(message), "inventory")
     _refresh_campaign_docks(window, qt, app, state)
@@ -1991,7 +2059,10 @@ def _consume_inventory_item(
         updated = app.characters.load(character_id)
     except KeyError:
         return 0
-    return app.inventory.quantity(updated, item_id)
+    remaining = app.inventory.quantity(updated, item_id)
+    if changed:
+        _schedule_inventory_refresh(qt, refresh_inventory)
+    return remaining
 
 
 def _sell_inventory_item(
@@ -2002,6 +2073,7 @@ def _sell_inventory_item(
     character_id: str,
     item_id: str,
     money_log_state: dict | None = None,
+    refresh_inventory=None,
 ) -> int | str:
     try:
         character = app.characters.load(character_id)
@@ -2010,6 +2082,7 @@ def _sell_inventory_item(
         _set_status(window, message)
         return message
     item = next((carried for carried in character.inventory if carried.item_id == item_id), None)
+    changed = False
     if item is None:
         message = f"{character.name} does not have {item_id}."
     else:
@@ -2018,6 +2091,7 @@ def _sell_inventory_item(
         if not removed:
             message = f"Could not sell {item.name}."
         else:
+            changed = True
             character.currency = character.currency.add_cp(sell_price)
             app.characters.save(character)
             _record_money_log_transaction(
@@ -2039,7 +2113,22 @@ def _sell_inventory_item(
         updated = app.characters.load(character_id)
     except KeyError:
         return 0
-    return app.inventory.quantity(updated, item_id)
+    remaining = app.inventory.quantity(updated, item_id)
+    if changed:
+        _schedule_inventory_refresh(qt, refresh_inventory)
+    return remaining
+
+
+def _schedule_inventory_refresh(qt, refresh_inventory) -> None:
+    """Refresh the inventory after the current Qt input handler completes."""
+    if not callable(refresh_inventory):
+        return
+    timer_class = getattr(getattr(qt, "QtCore", None), "QTimer", None)
+    single_shot = getattr(timer_class, "singleShot", None)
+    if callable(single_shot):
+        single_shot(0, refresh_inventory)
+        return
+    refresh_inventory()
 
 
 def _record_money_log_transaction(

@@ -7,6 +7,22 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Added
 
+- Reorganized the Equipment screen into paired Head/Waist, Neck/Legs,
+  Chest/Feet, Back/Ring 1, and Hands/Ring 2 rows, with Main Hand and Off Hand
+  centered together beneath the wearable slots.
+- Replaced equipped item-name text with inventory icons and added rich
+  mouseover tooltips plus accessible item names to every occupied slot.
+- Corrected nested Escape handling in Inventory: Escape closes an open Money
+  Log first, while Escape still closes Inventory when no child overlay is open.
+- Added real-time Inventory redraws after consuming or selling items. Stack
+  quantities, tooltips, currency, storage groups, and removed-item icons now
+  update immediately without closing and reopening the window.
+- Added automatic recovery of missing legacy class-feature metadata from the
+  bundled character reference. Existing Ravenisis saves now regain Turn Undead,
+  Preserve Life, and the level-6 Cleric's two Channel Divinity uses without
+  replacing HP, inventory, currency, spell slots, or campaign progress.
+- Added type-to-filter search to the Inventory SRD Item selector with a
+  case-insensitive narrowed popup list.
 - Added encrypted per-user GitHub bug-report credentials on Windows. The first
   report prompts for a fine-grained token, Preferences can replace or clear it,
   and subsequent reports upload automatically with local fallback on failure.
@@ -87,6 +103,11 @@ For architecture, build, and packaging details, see [DEVNOTES.md](DEVNOTES.md).
 
 ### Changed
 
+- Escape now closes the Money Log even while its text display has focus.
+- Repositioned Inventory Deposit and Withdraw controls side by side directly
+  below the currency ledger input.
+- Editable multiline text fields now use Tab and Shift+Tab to move forward and
+  backward through the form focus order instead of inserting tab characters.
 - Ring equipment slots now accept explicitly classified or whole-word ring
   items while rejecting Ring Mail, String, Ball Bearings, and other substring
   false positives.

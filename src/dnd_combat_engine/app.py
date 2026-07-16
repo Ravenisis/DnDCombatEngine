@@ -18,6 +18,8 @@ from dnd_combat_engine.controllers import (
     EncounterController,
     InventoryController,
 )
+from dnd_combat_engine.models.character import Character
+from dnd_combat_engine.models.class_resources import ensure_channel_divinity_resource
 from dnd_combat_engine.models.inventory import InventoryItem
 from dnd_combat_engine.persistence import JsonFileStore
 from dnd_combat_engine.rules import (
@@ -76,6 +78,7 @@ def create_app(data_root: Path | str | None = None) -> DnDCombatEngineApp:
     persistence_service = PersistenceService(JsonFileStore(resolved_data_root))
     inventory_service = InventoryService()
     _upgrade_saved_inventory_metadata(persistence_service, inventory_service)
+    _upgrade_saved_class_features(persistence_service)
     feature_engine = FeatureEngine(
         [
             BlessFeature(),
@@ -124,7 +127,7 @@ def _default_beta_report_path(data_root: Path) -> Path:
 
 def _github_token_path() -> Path:
     """Return a per-user path outside the repository for encrypted credentials."""
-    return user_data_root().parent / "settings" / "github_bug_report_token.bin"
+    return Path(user_data_root()).parent / "settings" / "github_bug_report_token.bin"
 
 
 def _upgrade_saved_inventory_metadata(
@@ -143,6 +146,68 @@ def _upgrade_saved_inventory_metadata(
         except (KeyError, OSError, TypeError, ValueError):
             # A damaged save must not prevent the rest of the application from opening.
             continue
+
+
+def _upgrade_saved_class_features(persistence: PersistenceService) -> None:
+    """Restore class-action metadata omitted by legacy character saves."""
+    references = _bundled_character_references()
+    for character_id in persistence.list_character_ids():
+        reference = references.get(character_id)
+        if reference is None:
+            continue
+        try:
+            character = persistence.load_character(character_id)
+            changed = False
+            if not character.features and reference.features:
+                character.features = reference.features
+                changed = True
+            else:
+                features = list(character.features)
+                known = {feature.casefold() for feature in features}
+                for feature in reference.features:
+                    if not _is_channel_divinity_upgrade_feature(feature, features):
+                        continue
+                    if feature.casefold() not in known:
+                        features.append(feature)
+                        known.add(feature.casefold())
+                        changed = True
+                character.features = tuple(features)
+            changed = ensure_channel_divinity_resource(character) or changed
+            if changed:
+                persistence.save_character(character)
+        except (KeyError, OSError, TypeError, ValueError):
+            # Upgrade valid saves independently so one damaged file cannot block startup.
+            continue
+
+
+def _bundled_character_references() -> dict[str, Character]:
+    """Load bundled characters used to repair missing legacy metadata."""
+    references: dict[str, Character] = {}
+    for character_path in sorted((bundled_data_root() / "characters").glob("*.json")):
+        try:
+            raw_character = json.loads(character_path.read_text(encoding="utf-8-sig"))
+            character = Character.from_dict(raw_character)
+        except (KeyError, OSError, json.JSONDecodeError, TypeError, ValueError):
+            continue
+        references[character.character_id] = character
+    return references
+
+
+def _is_channel_divinity_upgrade_feature(
+    feature: str,
+    existing_features: list[str],
+) -> bool:
+    """Return whether bundled feature metadata is required for Channel Divinity."""
+    lowered = feature.casefold()
+    if lowered.startswith("channel divinity:"):
+        return True
+    class_name, separator, level = lowered.rpartition(" ")
+    if not separator or not level.isdigit() or class_name not in {"cleric", "paladin"}:
+        return False
+    return not any(
+        existing.casefold().startswith(("cleric ", "paladin "))
+        for existing in existing_features
+    )
 
 
 def _bundled_inventory_references() -> tuple[InventoryItem, ...]:

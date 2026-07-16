@@ -21,18 +21,21 @@ STAT_LABELS = {
 }
 
 SLOT_POSITIONS = {
-    EquipmentSlot.HEAD: (0, 1),
+    EquipmentSlot.HEAD: (0, 0),
+    EquipmentSlot.WAIST: (0, 2),
     EquipmentSlot.NECK: (1, 0),
-    EquipmentSlot.BACK: (1, 2),
-    EquipmentSlot.CHEST: (2, 1),
-    EquipmentSlot.MAIN_HAND: (3, 0),
-    EquipmentSlot.OFF_HAND: (3, 2),
+    EquipmentSlot.LEGS: (1, 2),
+    EquipmentSlot.CHEST: (2, 0),
+    EquipmentSlot.FEET: (2, 2),
+    EquipmentSlot.BACK: (3, 0),
+    EquipmentSlot.RING_LEFT: (3, 2),
     EquipmentSlot.HANDS: (4, 0),
-    EquipmentSlot.WAIST: (4, 2),
-    EquipmentSlot.LEGS: (5, 1),
-    EquipmentSlot.RING_LEFT: (5, 0),
-    EquipmentSlot.RING_RIGHT: (5, 2),
-    EquipmentSlot.FEET: (6, 1),
+    EquipmentSlot.RING_RIGHT: (4, 2),
+}
+HAND_SLOTS = (EquipmentSlot.MAIN_HAND, EquipmentSlot.OFF_HAND)
+SLOT_LABELS = {
+    EquipmentSlot.RING_LEFT: "Ring 1",
+    EquipmentSlot.RING_RIGHT: "Ring 2",
 }
 
 
@@ -63,24 +66,54 @@ class EquipmentWidget:
         alignment = _alignment(qt, "AlignCenter")
         if alignment is not None and hasattr(outline, "setAlignment"):
             outline.setAlignment(alignment)
-        grid.addWidget(outline, 1, 1, 5, 1)
+        grid.addWidget(outline, 0, 1, 5, 1)
+        if hasattr(grid, "setColumnStretch"):
+            grid.setColumnStretch(0, 1)
+            grid.setColumnStretch(2, 1)
 
         equipped = {item.equipped_slot: item for item in character.inventory}
         for slot, (row, column) in SLOT_POSITIONS.items():
-            item = equipped.get(slot)
-            compatible_items = app.inventory.compatible_items(character, slot)
-            button = _equipment_slot_button(
-                qt,
-                slot,
-                item,
-                compatible_items,
-                on_equip,
-                on_unequip,
+            button = _slot_button_for_character(
+                app, qt, character, equipped, slot, on_equip, on_unequip
             )
             grid.addWidget(button, row, column)
+
+        hand_row = qt.QtWidgets.QWidget()
+        hand_layout = qt.QtWidgets.QHBoxLayout(hand_row)
+        if hasattr(hand_layout, "addStretch"):
+            hand_layout.addStretch(1)
+        for slot in HAND_SLOTS:
+            hand_layout.addWidget(
+                _slot_button_for_character(
+                    app, qt, character, equipped, slot, on_equip, on_unequip
+                )
+            )
+        if hasattr(hand_layout, "addStretch"):
+            hand_layout.addStretch(1)
+        grid.addWidget(hand_row, 5, 0, 1, 3)
         layout.addWidget(body)
         layout.addWidget(_equipment_stats_table(app, qt, character))
         return widget
+
+
+def _slot_button_for_character(
+    app,
+    qt,
+    character,
+    equipped,
+    slot: EquipmentSlot,
+    on_equip,
+    on_unequip,
+):
+    """Create one equipment button with the character's compatible inventory."""
+    return _equipment_slot_button(
+        qt,
+        slot,
+        equipped.get(slot),
+        app.inventory.compatible_items(character, slot),
+        on_equip,
+        on_unequip,
+    )
 
 
 def _equipment_slot_button(
@@ -123,8 +156,8 @@ def _equipment_slot_button(
                 return
             super().mousePressEvent(event)
 
-    label = slot.value.replace("_", " ").title()
-    text = f"{label}\n{item.name if item is not None else 'Empty'}"
+    label = SLOT_LABELS.get(slot, slot.value.replace("_", " ").title())
+    text = label if item is not None else f"{label}\nEmpty"
     button = EquipmentDropSlot(text)
     button.setObjectName(f"EquipmentSlot_{slot.value}")
     if hasattr(button, "setAcceptDrops"):
@@ -134,9 +167,32 @@ def _equipment_slot_button(
     if hasattr(button, "setToolTip"):
         detail = "Drop a compatible inventory item here or right-click to choose one."
         if item is not None:
-            detail = f"{item.name}\nRight-click to replace or unequip it."
+            from dnd_combat_engine.gui import widgets
+
+            detail = (
+                f"{widgets._inventory_item_tooltip(item)}\n\n"
+                "Right-click to replace or unequip it."
+            )
         button.setToolTip(detail)
+    if item is not None:
+        _set_equipment_item_icon(qt, button, item)
+        if hasattr(button, "setAccessibleName"):
+            button.setAccessibleName(f"{label}: {item.name}")
     return button
+
+
+def _set_equipment_item_icon(qt, button, item) -> None:
+    """Display the inventory icon for an equipped item."""
+    from dnd_combat_engine.gui import widgets
+
+    icon_path = widgets._inventory_icon_path(item)
+    icon_class = getattr(getattr(qt, "QtGui", None), "QIcon", None)
+    if icon_path is None or icon_class is None or not hasattr(button, "setIcon"):
+        return
+    button.setIcon(icon_class(str(icon_path)))
+    size_class = getattr(getattr(qt, "QtCore", None), "QSize", None)
+    if size_class is not None and hasattr(button, "setIconSize"):
+        button.setIconSize(size_class(40, 40))
 
 
 def _show_slot_menu(

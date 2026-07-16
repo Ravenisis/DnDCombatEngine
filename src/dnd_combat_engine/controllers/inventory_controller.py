@@ -46,6 +46,10 @@ class InventoryController:
         """Return total carried inventory weight."""
         return self.inventory_service.total_weight(character)
 
+    def quantity(self, character: Character, item_id: str) -> int:
+        """Return the current quantity of an inventory item."""
+        return self.inventory_service.quantity(character, item_id)
+
     def move_item(
         self,
         character: Character,
